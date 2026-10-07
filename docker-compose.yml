@@ -1,0 +1,69 @@
+# Local development. Start with: docker compose up -d
+# App:      http://localhost:8000/app      (dealer app)
+#           http://localhost:8000/platform (platform admin)
+# Mailpit:  http://localhost:8025          (catches all outgoing emails)
+services:
+  app:
+    build:
+      context: .
+      target: base
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: postgres
+      REDIS_HOST: redis
+      MAIL_HOST: mailpit
+      GOTENBERG_URL: http://gotenberg:3000
+    depends_on:
+      - postgres
+      - redis
+
+  queue:
+    build:
+      context: .
+      target: base
+    command: php artisan queue:work --tries=3
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      DB_HOST: postgres
+      REDIS_HOST: redis
+      MAIL_HOST: mailpit
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      APP_DB_USER: dealer
+      APP_DB_PASSWORD: secret
+      APP_DB_NAME: dealer
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./docker/postgres:/docker-entrypoint-initdb.d:ro
+
+  redis:
+    image: redis:7-alpine
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    ports:
+      - "3000:3000"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+volumes:
+  postgres:
