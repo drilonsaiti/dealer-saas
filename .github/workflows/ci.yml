@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: dealer_test
+      DB_USERNAME: dealer
+      DB_PASSWORD: secret
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, pgsql, intl, bcmath, gd, zip
+          coverage: none
+
+      # Composer cannot reach Packagist from the development sandbox, so CI resolves
+      # dependencies once and commits composer.lock back to the branch.
+      - name: Resolve dependencies when composer.lock is missing or stale
+        if: github.event_name == 'push'
+        run: |
+          if [ ! -f composer.lock ] || ! composer validate --no-check-publish --no-check-all --quiet 2>/dev/null; then
+            composer update --no-interaction --no-progress --no-scripts
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add composer.lock
+            git commit -m "Update composer.lock (resolved by CI)" || true
+            git push || true
+          fi
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Create restricted database role (RLS must not be bypassed)
+        run: |
+          PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -c "CREATE ROLE dealer LOGIN PASSWORD 'secret' NOSUPERUSER NOBYPASSRLS NOCREATEROLE CREATEDB;"
+          PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres -c "CREATE DATABASE dealer_test OWNER dealer;"
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Code style (Pint)
+        run: vendor/bin/pint --test
+
+      - name: Static analysis (Larastan)
+        run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+      - name: Tests (Pest)
+        run: php artisan test
