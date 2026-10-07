@@ -70,11 +70,10 @@ trait Auditable
      */
     private static function writeAuditLog(Model $model, string $event, array $old, array $new): void
     {
-        $tenantId = $model->getAttribute('tenant_id') ?? app(TenantContext::class)->id();
-
-        if ($model instanceof Tenant) {
-            $tenantId = $model->getKey();
-        }
+        // The tenant record itself has no tenant_id column; reading it would throw in strict mode.
+        $tenantId = $model instanceof Tenant
+            ? $model->getKey()
+            : $model->getAttribute('tenant_id') ?? app(TenantContext::class)->id();
 
         AuditLog::create([
             'tenant_id' => $tenantId,
