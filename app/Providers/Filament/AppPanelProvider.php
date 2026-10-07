@@ -42,7 +42,9 @@ class AppPanelProvider extends PanelProvider
             ->login()
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
             ->passwordReset()
-            ->profile(isSimple: false)
+            // The user profile (/app/profile) lives outside any dealer, so it cannot use the full
+            // layout: the sidebar and dealer menu need a tenant and crash without one.
+            ->profile(isSimple: true)
             ->colors([
                 'primary' => Color::Red,
                 'gray' => Color::Zinc,

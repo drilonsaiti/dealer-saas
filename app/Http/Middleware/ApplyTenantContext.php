@@ -34,10 +34,12 @@ class ApplyTenantContext
             $user->forceFill(['last_tenant_id' => $tenant->getKey()])->saveQuietly();
         }
 
-        try {
-            return $next($request);
-        } finally {
-            $this->context->clear();
-        }
+        // Clear when the request ends, not when this middleware returns: on Livewire requests
+        // (opening a modal, saving a form) Livewire runs the persistent middleware to completion
+        // *before* the component action runs, so a `finally` here would drop the tenant before
+        // any policy check and every action would be forbidden.
+        app()->terminating(fn () => $this->context->clear());
+
+        return $next($request);
     }
 }
