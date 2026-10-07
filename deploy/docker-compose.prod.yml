@@ -1,0 +1,70 @@
+# Production on one Swiss VPS: web (HTTPS via Caddy), queue, scheduler, PostgreSQL, Redis, Gotenberg.
+# Usage (on the server, in the app directory):
+#   cp .env.production .env   # fill in secrets, APP_KEY, DOMAIN, S3 credentials
+#   docker compose -f deploy/docker-compose.prod.yml up -d --build
+#   docker compose -f deploy/docker-compose.prod.yml exec web php artisan migrate --force
+x-app: &app
+  build:
+    context: ..
+    target: app
+  env_file: ../.env
+  restart: unless-stopped
+  volumes:
+    - storage:/app/storage
+  depends_on:
+    - postgres
+    - redis
+
+services:
+  web:
+    <<: *app
+    environment:
+      SERVER_NAME: ${DOMAIN:?set DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - storage:/app/storage
+      - caddy_data:/data
+      - caddy_config:/config
+
+  queue:
+    <<: *app
+    command: php artisan queue:work --tries=3 --max-time=3600
+
+  scheduler:
+    <<: *app
+    command: php artisan schedule:work
+
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set POSTGRES_SUPERUSER_PASSWORD}
+      APP_DB_USER: ${DB_USERNAME}
+      APP_DB_PASSWORD: ${DB_PASSWORD}
+      APP_DB_NAME: ${DB_DATABASE}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ../docker/postgres:/docker-entrypoint-initdb.d:ro
+      - ../deploy/backups:/backups
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis:/data
+
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    restart: unless-stopped
+
+volumes:
+  storage:
+  postgres:
+  redis:
+  caddy_data:
+  caddy_config:
