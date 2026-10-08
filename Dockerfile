@@ -5,10 +5,15 @@ FROM dunglas/frankenphp:1-php8.4 AS base
 
 RUN install-php-extensions pdo_pgsql pgsql intl bcmath gd zip redis pcntl opcache exif
 
-# OCR for scanned documents (DE/FR/IT/EN) and PDF tools (text extraction, page rendering).
+# OCR for scanned documents (DE/FR/IT/EN), PDF tools (text extraction, page rendering), Python for pyHanko.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-ita poppler-utils \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-ita poppler-utils python3-venv \
     && rm -rf /var/lib/apt/lists/*
+
+# Seal for signed PDFs (PAdES): pyHanko command line tool.
+RUN python3 -m venv /opt/pyhanko \
+    && /opt/pyhanko/bin/pip install --no-cache-dir pyhanko-cli \
+    && ln -s /opt/pyhanko/bin/pyhanko /usr/local/bin/pyhanko
 
 ENV SERVER_NAME=":80"
 

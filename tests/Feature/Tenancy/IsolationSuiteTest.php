@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Audit\MorphMap;
+use App\Domain\Documents\Actions\GenerateContract;
 use App\Domain\Documents\Actions\SetRequiredDocumentStatus;
 use App\Domain\Documents\Enums\RequiredDocumentStatus;
 use App\Domain\Import\Actions\CreateImportRun;
@@ -13,6 +14,8 @@ use App\Domain\Sales\Models\Sale;
 use App\Domain\Sales\Models\SaleItem;
 use App\Domain\Sales\Models\TradeIn;
 use App\Domain\Settings\Models\BankAccount;
+use App\Domain\Signatures\Actions\StartSigning;
+use App\Domain\Signatures\Enums\SigningMethod;
 use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Vehicles\Models\StockCycle;
@@ -85,6 +88,10 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
         TradeIn::create(['sale_id' => $sale->id, 'vehicle_data' => ['make' => 'Lada', 'model' => $marker], 'value_rp' => 100000]);
         BankAccount::factory()->create(['label' => "Konto {$marker}"]);
         app(SetRequiredDocumentStatus::class)($panda, 'coc', RequiredDocumentStatus::Requested, "Note {$marker}");
+
+        // A purchase contract out for signature (templates, signature requests, signers).
+        $contract = app(GenerateContract::class)($panda->purchase, 'de', "Vertrag {$marker}");
+        app(StartSigning::class)($contract, SigningMethod::OnDevice, [], auth()->user());
     });
 }
 
@@ -108,6 +115,7 @@ function tenantTables(bool $withExceptions = false): array
 
 beforeEach(function () {
     app()->setLocale('en');
+    fakeGotenberg();
     $this->a = makeDealer(['name' => 'Garage Alpha', 'slug' => 'garage-alpha']);
     $this->b = makeDealer(['name' => 'Garage Bravo', 'slug' => 'garage-bravo']);
     $this->adminA = makeMember($this->a, Role::Administrator);

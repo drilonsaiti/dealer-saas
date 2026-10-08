@@ -33,7 +33,7 @@ final class ContractActions
     public static function salesContract(): Action
     {
         return self::wizard('salesContract', fn (StockCycle $record): ?Sale => $record->activeSale)
-            ->label(__('Sales contract'))
+            ->label(__('Sales contract (PDF)'))
             ->icon(Heroicon::OutlinedDocumentText)
             ->visible(fn (StockCycle $record): bool => $record->activeSale !== null
                 && in_array($record->activeSale->status->value, ['reserved', 'contracted', 'invoiced'], true)
@@ -43,7 +43,7 @@ final class ContractActions
     public static function purchaseContract(): Action
     {
         return self::wizard('purchaseContract', fn (StockCycle $record): ?Purchase => $record->purchase)
-            ->label(__('Purchase contract'))
+            ->label(__('Purchase contract (PDF)'))
             ->icon(Heroicon::OutlinedDocumentText)
             ->visible(fn (StockCycle $record): bool => $record->purchase !== null
                 && (auth()->user()?->can('update', $record->purchase) ?? false));

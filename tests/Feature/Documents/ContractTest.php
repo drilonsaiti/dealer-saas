@@ -14,18 +14,11 @@ use App\Domain\Parties\Models\Party;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Purchase;
 use App\Domain\Sales\Actions\CancelSale;
-use App\Domain\Sales\Actions\ReserveVehicle;
-use App\Domain\Sales\Models\Sale;
 use App\Domain\Settings\Models\NumberSequence;
 use App\Domain\Tenancy\Enums\Role;
-use App\Domain\Vehicles\Enums\StockCycleStatus;
-use App\Domain\Vehicles\Models\StockCycle;
-use App\Domain\Vehicles\Models\Vehicle;
 use App\Filament\App\Resources\DocumentTemplates\Pages\ManageDocumentTemplates;
 use App\Filament\App\Resources\StockCycles\Pages\ViewStockCycle;
 use App\Support\BusinessRuleException;
-use Illuminate\Http\Client\Request;
-use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 
 /*
@@ -35,33 +28,12 @@ use Livewire\Livewire;
 
 beforeEach(function () {
     app()->setLocale('en');
-    config(['dealer.gotenberg_url' => 'http://gotenberg.test']);
-    // A fake PDF that changes whenever the HTML changes, like the real one.
-    Http::fake(['gotenberg.test/*' => function (Request $request) {
-        $boundary = str($request->header('Content-Type')[0] ?? '')->after('boundary=')->toString();
-
-        return Http::response('%PDF-1.7 fake '.md5(str_replace($boundary, '', $request->body())));
-    }]);
+    fakeGotenberg();
 
     $this->tenant = makeDealer(['name' => 'Aziri Automobile GmbH', 'slug' => 'aziri', 'street' => 'Industriestrasse 5', 'zip' => '3052', 'city' => 'Zollikofen']);
     $this->user = makeMember($this->tenant, Role::Sales);
     $this->actingAs($this->user);
 });
-
-function reservedSale(array $terms = []): Sale
-{
-    $cycle = StockCycle::factory()->status(StockCycleStatus::Listed)
-        ->for(Vehicle::factory()->state(['stammnummer' => '683737537', 'vin' => 'WBAXX110X0L123456', 'make' => 'BMW', 'model' => 'X3', 'variant' => '30i', 'first_registration_on' => '2020-06-19', 'power_kw' => 185]))
-        ->create(['mileage_in' => 79_310]);
-
-    return app(ReserveVehicle::class)($cycle, [
-        'buyer_party_id' => Party::factory()->create(['first_name' => 'Anna', 'last_name' => 'Muster', 'locale' => 'fr'])->id,
-        'price_rp' => 2_690_000,
-        'payment_type' => 'bank',
-        'items' => [['kind' => 'tyres', 'description' => '4 Winterräder', 'qty' => 1, 'unit_price_rp' => 80_000]],
-        ...$terms,
-    ]);
-}
 
 it('makes the sales contract in German, French, Italian and English', function (string $locale, string $title, string $clause) {
     asTenant($this->tenant, function () use ($locale, $title, $clause) {

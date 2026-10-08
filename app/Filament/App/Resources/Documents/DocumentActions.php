@@ -167,7 +167,8 @@ final class DocumentActions
             ->label(__('Replace file'))
             ->icon(Heroicon::OutlinedArrowPath)
             ->modalDescription(__('The new file becomes the current version; earlier versions are kept.'))
-            ->visible(fn (Document $record): bool => auth()->user()?->can('update', $record) ?? false)
+            // Generated contracts get new versions only by finalising or signing them.
+            ->visible(fn (Document $record): bool => $record->type_key === null && (auth()->user()?->can('update', $record) ?? false))
             ->schema([
                 FileUpload::make('file')->label(__('File'))->storeFiles(false)->maxSize((int) config('dealer.documents.max_upload_kb'))->required(),
             ])

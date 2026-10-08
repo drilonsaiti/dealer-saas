@@ -39,6 +39,24 @@ return [
     'gotenberg_url' => env('GOTENBERG_URL'),
 
     /*
+    | Own simple electronic signature (technical concept 8.5).
+    | - code_channel: how a customer signing by link gets the one-time code: "email" or "sms"
+    |   (sms needs a provider; until one is connected, "log" writes the SMS to the log).
+    | - seal: every signed PDF is sealed (PAdES) with the platform certificate through pyHanko.
+    |   Without seal_key/seal_cert a self-signed certificate is created (fine for testing; use a
+    |   certificate from a trusted CA in production). tsa_url adds a trusted RFC 3161 timestamp.
+    */
+    'signatures' => [
+        'link_valid_days' => (int) env('SIGNATURE_LINK_VALID_DAYS', 14),
+        'code_channel' => env('SIGNATURE_CODE_CHANNEL', 'email'),
+        'sms_driver' => env('SIGNATURE_SMS_DRIVER', 'log'),
+        'pyhanko' => env('SIGNATURE_PYHANKO', 'pyhanko'),
+        'seal_key' => env('SIGNATURE_SEAL_KEY'),
+        'seal_cert' => env('SIGNATURE_SEAL_CERT'),
+        'tsa_url' => env('SIGNATURE_TSA_URL'),
+    ],
+
+    /*
     | Imports can run for many minutes (a 1 GB document folder). In production they go to a
     | queue connection whose retry_after is longer than the job (redis-long / database-long).
     | Empty: the default connection.

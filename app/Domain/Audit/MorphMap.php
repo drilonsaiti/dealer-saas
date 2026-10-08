@@ -24,6 +24,8 @@ use App\Domain\Sales\Models\SaleItem;
 use App\Domain\Sales\Models\TradeIn;
 use App\Domain\Settings\Models\BankAccount;
 use App\Domain\Settings\Models\NumberSequence;
+use App\Domain\Signatures\Models\SignatureRequest;
+use App\Domain\Signatures\Models\Signer;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\Models\TenantMembership;
 use App\Domain\Vehicles\Models\StockCycle;
@@ -62,6 +64,8 @@ final class MorphMap
         'document_category' => DocumentCategory::class,
         'required_document' => RequiredDocument::class,
         'document_template' => DocumentTemplate::class,
+        'signature_request' => SignatureRequest::class,
+        'signer' => Signer::class,
         'import_preset' => ImportPreset::class,
         'import_run' => ImportRun::class,
         'import_row' => ImportRow::class,
@@ -91,6 +95,8 @@ final class MorphMap
             'document_version' => __('Document version'),
             'document_category' => __('Document category'),
             'document_template' => __('Document template'),
+            'signature_request' => __('Signature'),
+            'signer' => __('Signer'),
             'import_run' => __('Import'),
             default => $alias,
         };

@@ -67,7 +67,7 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: OCR and PDF tools (Tesseract with DE/FR/IT/EN, poppler)
-        run: sudo apt-get update -q && sudo apt-get install -y -q tesseract-ocr tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-ita poppler-utils
+        run: sudo apt-get update -q && sudo apt-get install -y -q tesseract-ocr tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-ita poppler-utils && pipx install pyhanko-cli
 
       - name: Create restricted database role (RLS must not be bypassed)
         run: |

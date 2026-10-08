@@ -15,6 +15,10 @@ use App\Domain\Purchasing\Models\Purchase;
 use App\Domain\Sales\Models\Sale;
 use App\Domain\Settings\Models\BankAccount;
 use App\Domain\Settings\Models\NumberSequence;
+use App\Domain\Signatures\Support\DocumentSealer;
+use App\Domain\Signatures\Support\LogSmsSender;
+use App\Domain\Signatures\Support\PyHankoSealer;
+use App\Domain\Signatures\Support\SmsSender;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\Models\TenantMembership;
 use App\Domain\Tenancy\TenantContext;
@@ -60,6 +64,10 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(TenantContext::class);
+        $this->app->bind(DocumentSealer::class, PyHankoSealer::class);
+        $this->app->bind(SmsSender::class, fn () => match (config('dealer.signatures.sms_driver')) {
+            default => new LogSmsSender,
+        });
     }
 
     public function boot(): void

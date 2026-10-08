@@ -82,5 +82,9 @@
             {{ __('Bank details') }}: {{ collect([$d['bank']['bank_name'], $d['bank']['holder'], 'IBAN '.$d['bank']['iban'], $d['bank']['bic'] ? 'BIC '.$d['bank']['bic'] : null])->filter()->implode(' · ') }}
         @endif
     </div>
+
+    @if (! empty($d['evidence']))
+        @include('documents.contracts._evidence')
+    @endif
 </body>
 </html>

@@ -61,6 +61,10 @@ class GenerateContract
                 throw new BusinessRuleException(__('This contract is already signed and cannot be changed.'));
             }
 
+            if ($existing?->status === DocumentStatus::OutForSignature) {
+                throw new BusinessRuleException(__('This contract is out for signature. Withdraw the signing first to change it.'));
+            }
+
             $template = $this->templates->active($type);
             $number = $existing->number ?? ($this->issueNumber)($type->numberSequence());
             $snapshot = $this->snapshot($subject, $template, $locale, $number, $remarks);

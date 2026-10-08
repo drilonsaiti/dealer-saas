@@ -9,6 +9,8 @@ use App\Domain\Import\Enums\ImporterType;
 use App\Domain\Import\Models\ImportPreset;
 use App\Domain\Import\Support\SpreadsheetReader;
 use App\Domain\Operations\Models\RestoreDrill;
+use App\Domain\Signatures\Actions\CancelSigning;
+use App\Domain\Signatures\Models\SignatureRequest;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
 use App\Domain\Vehicles\Actions\ArchiveDeliveredCycles;
@@ -57,6 +59,25 @@ Artisan::command('documents:ocr', function (TenantContext $context): void {
         }
     }
 })->purpose('Read the text of all documents that are still waiting for it');
+
+/*
+ * Signing links have an expiry date; expired requests are closed and the contract is "final" again.
+ */
+Artisan::command('signatures:expire', function (TenantContext $context): void {
+    $tenants = $context->bypass(fn () => Tenant::query()->where('status', Tenant::STATUS_ACTIVE)->get());
+
+    foreach ($tenants as $tenant) {
+        $expired = $context->run($tenant, fn (): int => SignatureRequest::query()->pending()->where('expires_at', '<', now())->get()
+            ->each(fn (SignatureRequest $request) => app(CancelSigning::class)($request, '', expired: true))
+            ->count());
+
+        if ($expired > 0) {
+            $this->info("{$tenant->name}: {$expired} signature request(s) expired");
+        }
+    }
+})->purpose('Close signing links that have expired');
+
+Schedule::command('signatures:expire')->hourly();
 
 /*
  * Sample files for the manual test workflow (docs/manual-test/README.md).

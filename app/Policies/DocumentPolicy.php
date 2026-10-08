@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Domain\Documents\Enums\DocumentStatus;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Tenancy\Enums\Permission;
 use App\Models\User;
@@ -37,6 +38,7 @@ class DocumentPolicy
 
     public function delete(User $user, Document $document): bool
     {
-        return $this->update($user, $document);
+        // Withdraw the signing first; the customer may be signing right now.
+        return $document->status !== DocumentStatus::OutForSignature && $this->update($user, $document);
     }
 }

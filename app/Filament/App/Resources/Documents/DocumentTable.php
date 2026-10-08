@@ -2,6 +2,7 @@
 
 namespace App\Filament\App\Resources\Documents;
 
+use App\Domain\Documents\Enums\DocumentStatus;
 use App\Domain\Documents\Enums\FolderGroup;
 use App\Domain\Documents\Enums\OcrStatus;
 use App\Domain\Documents\Models\Document;
@@ -34,6 +35,11 @@ final class DocumentTable
                     ->wrap()
                     ->searchable(query: fn (Builder $query, string $search): Builder => self::search($query, $search)),
                 TextColumn::make('document_on')->label(__('Date'))->date()->placeholder('–')->sortable(),
+                TextColumn::make('status')
+                    ->label(__('Status'))
+                    ->badge()
+                    ->formatStateUsing(fn (DocumentStatus $state): string => $state->getLabel())
+                    ->color(fn (DocumentStatus $state): string => $state->getColor()),
                 TextColumn::make('versions_count')->label(__('Versions'))->alignCenter(),
                 TextColumn::make('currentVersion.ocr_status')
                     ->label(__('Text'))
@@ -69,8 +75,13 @@ final class DocumentTable
             ->defaultSort('document_on', 'desc')
             ->recordActions([
                 DocumentActions::merge(),
+                SigningActions::start(),
+                SigningActions::continueHere(),
                 DocumentActions::open(),
                 ActionGroup::make([
+                    SigningActions::resendLink(),
+                    SigningActions::paper(),
+                    SigningActions::withdraw(),
                     DocumentActions::download(),
                     DocumentActions::recognizeText(),
                     DocumentActions::newVersion(),

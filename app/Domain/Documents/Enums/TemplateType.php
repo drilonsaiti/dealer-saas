@@ -3,6 +3,7 @@
 namespace App\Domain\Documents\Enums;
 
 use App\Domain\Settings\Enums\NumberSequenceKey;
+use App\Domain\Signatures\Enums\SignerRole;
 use Filament\Support\Contracts\HasLabel;
 
 /**
@@ -48,6 +49,18 @@ enum TemplateType: string implements HasLabel
         return match ($this) {
             self::SalesContract => 'documents.contracts.sales',
             self::PurchaseContract => 'documents.contracts.purchase',
+        };
+    }
+
+    /**
+     * Which signature field ("left" / "right" in the template) a signer fills.
+     */
+    public function signatureSide(SignerRole $role): string
+    {
+        return match ($this) {
+            // Seller left, buyer right; in a sale the dealer is the seller.
+            self::SalesContract => $role === SignerRole::Dealer ? 'left' : 'right',
+            self::PurchaseContract => $role === SignerRole::Customer ? 'left' : 'right',
         };
     }
 }

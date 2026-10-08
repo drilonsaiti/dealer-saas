@@ -112,3 +112,34 @@ Needs Gotenberg (`docker compose up -d` starts it; `GOTENBERG_URL` points to it)
 9. Settings → Vorlagen: **Neue Version**, change a clause, save (draft v2). Delete all clauses of one
    language and activate: refused. Fill them in again, **Aktivieren**: v1 becomes "Abgelöst".
    A new contract uses v2; the old one still shows v1's clauses.
+
+## 13. E-signature (Phase 2, step 2)
+
+Emails land in Mailpit (http://localhost:8025). The Docker image has pyHanko, so signed PDFs are sealed.
+
+**On the iPad / PC**
+1. Vehicle file → Documents tab → finalised contract (status "Abgeschlossen") → **Unterschreiben**.
+2. Choose "Hier auf diesem Gerät", check name and language → **Weiter**. The signing page opens.
+3. Customer: enter ID type and number, tick "Ausweis geprüft", the customer ticks "gelesen und einverstanden",
+   signs in the field → **Jetzt unterschreiben**. Expected: "Luca Rossi hat unterschrieben. Jetzt unterschreibt …".
+4. Dealer: tick, sign → **Jetzt unterschreiben**. Expected: status "Unterschrieben", version 2
+   `…_Unterschrieben.pdf` with both signatures and a third page "Nachweis der Unterschriften"
+   (ID number shown as *****567). The customer gets the PDF by email.
+5. Open the signed PDF in Adobe Reader: the signature panel shows the seal (self-signed certificate locally,
+   so Reader says "validity unknown"; a CA certificate fixes that in production).
+
+**By link**
+1. Another finalised contract → **Unterschreiben** → "Per Link", the customer's email → **Weiter**.
+   Status "Zur Unterschrift"; the email "… zum Unterschreiben" is in Mailpit.
+2. Open the link in a private window (no login): document in the customer's language → **Code senden**
+   → code from Mailpit → **Bestätigen** → tick, place, sign → **Jetzt unterschreiben**.
+3. In the vehicle file: **Gegenzeichnen** → sign. Expected as above; the evidence page says
+   "Link gesendet an … Einmalcode … bestätigt am …".
+
+**Other cases**
+- Wrong code five times: the code is blocked, ask for a new one.
+- "Unterschrift zurückziehen" (with a reason): the link stops working, the contract is "Abgeschlossen" again.
+- "Link erneut senden": a new link, the old one stops working.
+- "Auf Papier unterschrieben": upload the scan; it becomes the signed version.
+- A signed contract cannot be finalised again, replaced or deleted.
+- Links expire after 14 days (`php artisan signatures:expire` runs hourly).

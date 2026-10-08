@@ -6,6 +6,7 @@ use App\Domain\Documents\Models\Document;
 use App\Domain\Documents\Models\DocumentCategory;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Filament\App\Resources\Documents\Pages\ListDocuments;
+use App\Filament\App\Resources\Documents\Pages\SignDocument;
 use App\Filament\App\Resources\StockCycles\RelationManagers\DocumentsRelationManager;
 use App\Filament\App\Resources\StockCycles\StockCycleResource;
 use BackedEnum;
@@ -150,6 +151,7 @@ class DocumentResource extends Resource
     {
         return [
             'index' => ListDocuments::route('/'),
+            'sign' => SignDocument::route('/{record}/sign'),
         ];
     }
 }
