@@ -41,11 +41,16 @@ enum Role: string implements HasLabel
                 Permission::BankAccountsManage,
                 Permission::NumberingManage,
                 Permission::AuditView,
+                Permission::VehiclesView,
             ],
             self::Sales => [
                 Permission::SettingsView,
+                Permission::VehiclesView,
+                Permission::VehiclesManage,
             ],
-            self::ReadOnly => [],
+            self::ReadOnly => [
+                Permission::VehiclesView,
+            ],
         };
     }
 

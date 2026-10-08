@@ -58,5 +58,5 @@ it('maps permissions to roles', function () {
         ->and(Role::Accounting->allows(Permission::BankAccountsManage))->toBeTrue()
         ->and(Role::Accounting->allows(Permission::MembersManage))->toBeFalse()
         ->and(Role::Sales->allows(Permission::BankAccountsManage))->toBeFalse()
-        ->and(Role::ReadOnly->permissions())->toBe([]);
+        ->and(Role::ReadOnly->permissions())->toBe([Permission::VehiclesView]); // look, never change
 });

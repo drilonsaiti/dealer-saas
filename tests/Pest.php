@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Settings\Enums\NumberSequenceKey;
+use App\Domain\Settings\Models\NumberSequence;
 use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
@@ -25,6 +27,26 @@ function tenantContext(): TenantContext
 function makeTenant(array $attributes = []): Tenant
 {
     return tenantContext()->bypass(fn () => Tenant::factory()->create($attributes));
+}
+
+/**
+ * A dealer with the default number ranges, as CreateTenant sets them up.
+ */
+function makeDealer(array $attributes = []): Tenant
+{
+    $tenant = makeTenant($attributes);
+
+    asTenant($tenant, function () {
+        foreach (NumberSequenceKey::cases() as $key) {
+            NumberSequence::create([
+                'key' => $key,
+                'pattern' => $key->defaultPattern(),
+                'reset_yearly' => $key->resetsYearlyByDefault(),
+            ]);
+        }
+    });
+
+    return $tenant;
 }
 
 function makeMember(Tenant $tenant, Role $role = Role::Sales, array $attributes = []): User

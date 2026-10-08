@@ -13,4 +13,6 @@ enum Permission: string
     case NumberingManage = 'numbering.manage';
     case MembersManage = 'members.manage';
     case AuditView = 'audit.view';
+    case VehiclesView = 'vehicles.view';
+    case VehiclesManage = 'vehicles.manage';
 }
