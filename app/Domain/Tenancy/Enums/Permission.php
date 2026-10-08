@@ -13,4 +13,17 @@ enum Permission: string
     case NumberingManage = 'numbering.manage';
     case MembersManage = 'members.manage';
     case AuditView = 'audit.view';
+    case VehiclesView = 'vehicles.view';
+    case VehiclesManage = 'vehicles.manage';
+    case PartiesView = 'parties.view';
+    case PartiesManage = 'parties.manage';
+    case PurchasesManage = 'purchases.manage';
+    case CostsManage = 'costs.manage';
+    case CataloguesManage = 'catalogues.manage';
+    case SalesManage = 'sales.manage';
+    case ReportsView = 'reports.view';
+    case DocumentsView = 'documents.view';
+    case DocumentsManage = 'documents.manage';
+    case DocumentsViewSensitive = 'documents.view_sensitive';
+    case ImportsManage = 'imports.manage';
 }

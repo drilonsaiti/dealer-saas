@@ -26,4 +26,25 @@ return [
     */
     'enforce_mfa' => env('DEALER_ENFORCE_MFA', true),
 
+    /*
+    | Documents: stored under tenants/{tenant_id}/documents/ on this disk (S3-compatible
+    | object storage in production). OCR languages are those installed for Tesseract.
+    */
+    'documents' => [
+        'disk' => env('DOCUMENTS_DISK', 'local'),
+        'max_upload_kb' => (int) env('DOCUMENTS_MAX_UPLOAD_KB', 20480),
+        'ocr_languages' => env('OCR_LANGUAGES', 'deu+fra+ita+eng'),
+    ],
+
+    'gotenberg_url' => env('GOTENBERG_URL'),
+
+    /*
+    | Imports can run for many minutes (a 1 GB document folder). In production they go to a
+    | queue connection whose retry_after is longer than the job (redis-long / database-long).
+    | Empty: the default connection.
+    */
+    'imports' => [
+        'queue_connection' => env('IMPORT_QUEUE_CONNECTION'),
+    ],
+
 ];

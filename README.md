@@ -6,16 +6,22 @@ isolated by the application **and** by PostgreSQL Row-Level Security.
 
 Technical concept: see the "Dealer Management SaaS – Technical Concept" document.
 
-## Status: Phase 0 (foundation)
+## Status: Phase 1 (vehicles, purchase, sale, documents, import)
 
 | Area | What exists |
 | --- | --- |
+| Vehicles | Vehicle master data and vehicle files (stock cycles) with a guarded status flow, buy-backs as new files on the same vehicle, tyre sets, nightly archiving |
+| Purchase & costs | Contacts (with duplicate check), purchases, cost categories, costs (draft → confirmed, split), open promises (commitments) that block handover |
+| Sales | Reservation, contract, trade-ins, cancellation, handover; gross margin per file; dashboard (stock, ageing, margin per month) |
+| Documents | Versions (never overwritten), exact and near duplicates, OCR (Tesseract, DE/FR/IT/EN) with full-text search, required-documents checklist, vehicle file export (ZIP + PDF overview via Gotenberg) |
+| Import | Vehicles, costs (Excel/CSV) and document folders (ZIP): column mapping with presets, check first (dry run), per-row report, re-runnable, roll back; `php artisan import:run` for large files; stock list export |
+| Isolation | Acceptance test 15 (`tests/Feature/Tenancy/IsolationSuiteTest.php`): dealer B has one of everything, dealer A sees none of it in SQL, Eloquent, any list or global search |
 | Tenancy | Tenants, memberships, `BelongsToTenant` trait, `TenantContext`, RLS on every tenant table, tenant carried into queued jobs |
 | Access | Dealer app at `/app/{dealer}`, platform admin at `/platform`, roles per dealer (Administrator, Verkauf, Buchhaltung, Nur-Lesen), 2FA (app or email) required for administrators and accounting, idle sign-out |
 | Audit | Append-only change log (DB trigger), status history, change log screen |
 | Languages | UI in DE / FR / IT / EN (`lang/*.json`), language per user, CI test fails on missing translations |
 | Settings | Company profile, bank accounts with IBAN / QR-IBAN validation, numbering (prefix, pattern, start number, yearly reset, gap-free issuing) |
-| Ops | Docker (local + single-VPS production), CI (Pint, Larastan level 6, Pest), backup and restore-drill scripts |
+| Ops | Docker (local + single-VPS production), CI (Pint, Larastan level 6, Pest), backup and restore-drill scripts; drill results under Platform → Restore drills, with a warning when none succeeded in 35 days |
 
 ## Local setup
 
@@ -45,6 +51,22 @@ Demo logins (password `password`):
 | http://localhost:8000/platform | `platform@example.ch` | Platform admin, create dealers here |
 
 Outgoing emails (invitations, password resets, 2FA codes) land in Mailpit: http://localhost:8025
+
+OCR needs `tesseract-ocr` (with `deu`, `fra`, `ita` language data) and `poppler-utils`
+(`pdftotext`, `pdftoppm`, `pdfinfo`); the Docker image has them. Imports and OCR run in the queue,
+so locally also start a worker (`php artisan queue:work`) unless `QUEUE_CONNECTION=sync`.
+
+### Importing a dealer's existing data
+
+In the app: Settings → Imports → New import. Order: vehicles first, then costs, then the
+document folder ZIP (it links files to vehicles by Stammnummer). Every import is checked first
+and can be rolled back. Large files from the server's disk:
+
+```bash
+php artisan import:run aziri vehicles /path/Fahrzeuge.xlsx --sheet=Fahrzeuge          # check only
+php artisan import:run aziri vehicles /path/Fahrzeuge.xlsx --sheet=Fahrzeuge --commit # import
+php artisan import:run aziri documents /path/Ordner.zip --commit
+```
 
 ## Checks
 
@@ -89,3 +111,7 @@ Backups (cron on the host):
 15 2 * * *  /opt/dealer-saas/deploy/backup.sh        # nightly dump to off-site storage
 30 3 1 * *  /opt/dealer-saas/deploy/restore-test.sh  # monthly restore drill
 ```
+
+The restore drill records its result with `php artisan backup:record-drill` (shown under
+Platform → Restore drills). Set `IMPORT_QUEUE_CONNECTION=redis-long` in production so long imports
+run in the `queue-long` service.
