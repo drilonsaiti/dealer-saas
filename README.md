@@ -25,14 +25,32 @@ Technical concept: see the "Dealer Management SaaS – Technical Concept" docume
 
 ## Local setup
 
-Requirements: PHP 8.3+ with `pdo_pgsql`, `intl`, `bcmath`; Composer; PostgreSQL 16+ (or Docker).
+### With Docker (recommended, also on Windows)
+
+```bash
+cp .env.example .env          # then: php artisan key:generate, or set APP_KEY yourself
+docker compose up -d          # first start: installs composer packages and migrates (1–2 min)
+docker compose exec app php artisan db:seed     # demo data, once
+```
+
+Open http://localhost:8000/app. After every `git pull`: `docker compose restart app` (installs new
+packages, runs new migrations, refreshes the Filament cache). Code changes show up without a restart.
+
+The app container runs FrankenPHP, which serves several requests at once; `vendor/` lives in a
+Docker volume because reading it through a Windows bind mount is slow. On Windows the project is
+fastest inside WSL 2 (e.g. `\\wsl$\Ubuntu\home\you\dealer-saas`) rather than under `C:\Users`.
+Run artisan commands in the container: `docker compose exec app php artisan ...`.
+
+### Without Docker for the app
+
+Requirements: PHP 8.3+ with `pdo_pgsql`, `intl`, `bcmath`; Composer; PostgreSQL 16+.
 
 ```bash
 composer install
 cp .env.example .env
 php artisan key:generate
 
-# Database: either start everything with Docker ...
+# Database: either start only the services with Docker ...
 docker compose up -d postgres redis mailpit gotenberg
 # ... or create the role yourself (it must NOT be superuser and must NOT have BYPASSRLS):
 #   CREATE ROLE dealer LOGIN PASSWORD 'secret' NOSUPERUSER NOBYPASSRLS CREATEDB;
@@ -54,7 +72,8 @@ Outgoing emails (invitations, password resets, 2FA codes) land in Mailpit: http:
 
 OCR needs `tesseract-ocr` (with `deu`, `fra`, `ita` language data) and `poppler-utils`
 (`pdftotext`, `pdftoppm`, `pdfinfo`); the Docker image has them. Imports and OCR run in the queue,
-so locally also start a worker (`php artisan queue:work`) unless `QUEUE_CONNECTION=sync`.
+so locally also start a worker (`php artisan queue:work`, or `docker compose --profile queue up -d`)
+unless `QUEUE_CONNECTION=sync` (the default in `.env.example`).
 
 ### Importing a dealer's existing data
 

@@ -6,13 +6,17 @@ use App\Domain\Audit\Concerns\Auditable;
 use App\Domain\Audit\Concerns\TracksAuthors;
 use App\Domain\Documents\Enums\DocumentSource;
 use App\Domain\Documents\Enums\DocumentStatus;
+use App\Domain\Parties\Models\Party;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Domain\Vehicles\Models\StockCycle;
+use App\Support\SearchTerms;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -34,6 +38,7 @@ use Illuminate\Support\Carbon;
  * @property-read DocumentCategory $category
  * @property-read DocumentVersion|null $currentVersion
  * @property-read Document|null $possibleDuplicateOf
+ * @property-read Collection<int, StockCycle> $stockCycles
  */
 class Document extends Model
 {
@@ -91,6 +96,22 @@ class Document extends Model
     }
 
     /**
+     * @return MorphToMany<StockCycle, $this>
+     */
+    public function stockCycles(): MorphToMany
+    {
+        return $this->morphedByMany(StockCycle::class, 'linkable', 'document_links');
+    }
+
+    /**
+     * @return MorphToMany<Party, $this>
+     */
+    public function parties(): MorphToMany
+    {
+        return $this->morphedByMany(Party::class, 'linkable', 'document_links');
+    }
+
+    /**
      * @return BelongsTo<Document, $this>
      */
     public function possibleDuplicateOf(): BelongsTo
@@ -106,6 +127,28 @@ class Document extends Model
         $query->whereHas('links', fn (Builder $links) => $links
             ->where('linkable_type', $record->getMorphClass())
             ->where('linkable_id', $record->getKey()));
+    }
+
+    /**
+     * One search word: title, file name, recognised text (word beginnings, so "Kaufv" finds
+     * "Kaufvertrag"), or the vehicle / contact the document belongs to. Call once per word;
+     * all words must match, e.g. "Kaufvertrag Corolla".
+     *
+     * @param  Builder<Document>  $query
+     */
+    public function scopeMatchingWord(Builder $query, string $word): void
+    {
+        $like = SearchTerms::like($word);
+        $prefix = SearchTerms::prefixQuery($word);
+
+        $query->where(fn (Builder $where) => $where
+            ->whereRaw('lower(documents.title) like ?', [$like])
+            ->orWhereHas('versions', fn (Builder $versions) => $versions
+                ->whereRaw('lower(document_versions.original_name) like ?', [$like])
+                ->when($prefix !== null, fn (Builder $text) => $text->orWhereRaw("document_versions.search_vector @@ to_tsquery('simple', ?)", [$prefix])))
+            ->orWhereHas('stockCycles', fn (Builder $cycles) => $cycles->matchingWord($word))
+            ->orWhereHas('parties', fn (Builder $parties) => $parties
+                ->whereRaw("lower(concat_ws(' ', parties.company_name, parties.first_name, parties.last_name)) like ?", [$like])));
     }
 
     /**

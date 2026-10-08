@@ -6,11 +6,13 @@ Menu names below are the German ones; switch the language in the profile if you 
 ## 0. Setup
 
 ```bash
-docker compose up -d postgres redis mailpit gotenberg   # or a local PostgreSQL 16+ (non-superuser role)
-cp .env.example .env                                     # QUEUE_CONNECTION=sync (OCR runs immediately)
-php artisan migrate:fresh --seed
-php artisan serve
+cp .env.example .env                                   # QUEUE_CONNECTION=sync: text reading runs immediately
+docker compose up -d                                   # app on http://localhost:8000
+docker compose exec app php artisan migrate:fresh --seed
 ```
+
+Without Docker for the app: `docker compose up -d postgres redis mailpit gotenberg`, then
+`php artisan migrate:fresh --seed` and `php artisan serve`.
 
 Logins (password `password` for all):
 
@@ -66,7 +68,13 @@ BMW 205 → Photos → upload `foto-vorne.png`, `foto-hinten.png`, set the first
 
 ## 7. Scan and OCR
 
-Any vehicle → Documents → upload `scan-kaufvertrag.png`, category purchase contract. Status shows "pending". Use the row action **Read text now** (or `php artisan documents:ocr`). Expected: status "done", and searching for a word from the scan finds the document. Without `sync` and without `php artisan queue:work`, OCR stays pending; that is the reason it did before.
+Any vehicle → Documents → upload `scan-kaufvertrag.png`, category purchase contract. Status shows "pending". Use the row action **Read text now** (or `php artisan documents:ocr`). Expected: status "done", and searching for a word from the scan finds the document.
+
+Search works in the documents list and in the global search at the top (Ctrl+K). Every word must
+match the title, file name, recognised text or the vehicle / contact the document belongs to; word
+beginnings are enough. With the demo data, "Kaufvertrag Toyota Corolla", "Kaufv Coro" and
+"683.737.537" all find the Corolla purchase contract; the global search result opens the vehicle
+file's documents tab. Without `sync` and without `php artisan queue:work`, OCR stays pending; that is the reason it did before.
 
 ## 8. Download names
 

@@ -4,14 +4,20 @@ namespace App\Filament\App\Resources\Documents;
 
 use App\Domain\Documents\Models\Document;
 use App\Domain\Documents\Models\DocumentCategory;
+use App\Domain\Vehicles\Models\StockCycle;
 use App\Filament\App\Resources\Documents\Pages\ListDocuments;
+use App\Filament\App\Resources\StockCycles\RelationManagers\DocumentsRelationManager;
+use App\Filament\App\Resources\StockCycles\StockCycleResource;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * All documents, searchable by title, file name and recognised text; also the inbox of
@@ -60,6 +66,84 @@ class DocumentResource extends Resource
             ->headerActions([
                 DocumentActions::upload(fn (): array => []),
             ]);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['title'];
+    }
+
+    /**
+     * Global search looks into the recognised text too, so "Kaufvertrag Corolla" finds the contract.
+     *
+     * @param  Builder<Document>  $query
+     */
+    protected static function applyGlobalSearchAttributeConstraints(Builder $query, string $search): void
+    {
+        $query->visibleTo(DocumentActions::canSeeSensitive());
+        DocumentTable::search($query, $search);
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with(['category', 'currentVersion', 'stockCycles.vehicle']);
+    }
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        /** @var Document $record */
+        return $record->title;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        /** @var Document $record */
+        return array_filter([
+            __('Vehicle file') => $record->stockCycles->map(fn (StockCycle $cycle): string => $cycle->title())->implode(', '),
+            __('Category') => $record->category->name,
+        ]);
+    }
+
+    /**
+     * The documents tab of the vehicle file, or the documents list for unassigned ones.
+     */
+    public static function getGlobalSearchResultUrl(Model $record): ?string
+    {
+        /** @var Document $record */
+        $cycle = $record->stockCycles->first();
+
+        if ($cycle !== null && StockCycleResource::canView($cycle)) {
+            $tab = array_search(DocumentsRelationManager::class, StockCycleResource::getRelations(), true);
+
+            return StockCycleResource::getUrl('view', ['record' => $cycle, 'relation' => (string) $tab]);
+        }
+
+        return static::getUrl('index', ['search' => $record->title]);
+    }
+
+    /**
+     * @return array<Action>
+     */
+    public static function getGlobalSearchResultActions(Model $record): array
+    {
+        /** @var Document $record */
+        $version = $record->currentVersion;
+
+        if ($version === null) {
+            return [];
+        }
+
+        return [
+            Action::make('open')
+                ->label(__('Open document'))
+                ->url(Storage::disk($version->disk)->temporaryUrl($version->path, now()->addMinutes(30)), shouldOpenInNewTab: true),
+        ];
     }
 
     public static function getPages(): array

@@ -20,6 +20,8 @@ x-app: &app
 services:
   web:
     <<: *app
+    # Cache config, routes, views and Filament components on every start (after each deploy).
+    command: sh -c "php artisan optimize && exec frankenphp run --config /etc/frankenphp/Caddyfile --adapter caddyfile"
     environment:
       QUEUE_CONNECTION: redis
       SERVER_NAME: ${DOMAIN:?set DOMAIN in .env}

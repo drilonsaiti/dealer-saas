@@ -16,6 +16,7 @@ use App\Filament\App\Resources\StockCycles\RelationManagers\StatusHistoryRelatio
 use App\Filament\App\Resources\StockCycles\RelationManagers\TyreSetsRelationManager;
 use App\Filament\App\Resources\StockCycles\Schemas\StockCycleInfolist;
 use App\Support\Money;
+use App\Support\SearchTerms;
 use App\Support\SwissFormat;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -138,27 +139,16 @@ class StockCycleResource extends Resource
     }
 
     /**
-     * Search by name, VIN, plate and Stammnummer, with or without dots ("683.737.537").
-     *
      * @param  Builder<StockCycle>  $query
      * @return Builder<StockCycle>
      */
     public static function searchVehicles(Builder $query, string $search): Builder
     {
-        $term = mb_strtolower(trim($search));
-        $digits = preg_replace('/\D/', '', $search) ?? '';
+        foreach (SearchTerms::words($search) as $word) {
+            $query->matchingWord($word);
+        }
 
-        return $query->whereHas('vehicle', function (Builder $vehicle) use ($term, $digits): void {
-            $vehicle->where(function (Builder $where) use ($term, $digits): void {
-                foreach (['make', 'model', 'variant', 'internal_label', 'vin', 'plate'] as $column) {
-                    $where->orWhereRaw("lower({$column}) like ?", ["%{$term}%"]);
-                }
-
-                if (strlen($digits) >= 3) {
-                    $where->orWhere('stammnummer', 'like', "%{$digits}%");
-                }
-            });
-        });
+        return $query;
     }
 
     public static function getRelations(): array
@@ -191,11 +181,13 @@ class StockCycleResource extends Resource
     }
 
     /**
+     * Every word must match the file number or the vehicle ("Toyota Corolla", "683.737.537").
+     *
      * @param  Builder<StockCycle>  $query
      */
-    public static function modifyGlobalSearchQuery(Builder $query, string $search): void
+    protected static function applyGlobalSearchAttributeConstraints(Builder $query, string $search): void
     {
-        $query->orWhere(fn (Builder $or) => self::searchVehicles($or, $search));
+        self::searchVehicles($query, $search);
     }
 
     public static function getGlobalSearchEloquentQuery(): Builder
