@@ -33,22 +33,6 @@ beforeEach(function () {
     $this->actingAs($this->user);
 });
 
-function fakeFile(string $content, string $name = 'scan.pdf'): string
-{
-    $path = tempnam(sys_get_temp_dir(), 'doc');
-    file_put_contents($path, $content);
-
-    return $path.'|'.$name;
-}
-
-function storeDoc(string $categoryKey, string $content, array $attributes = [], array $links = []): Document
-{
-    [$path, $name] = explode('|', fakeFile($content, $attributes['original_name'] ?? 'scan.pdf'));
-    $category = DocumentCategory::where('key', $categoryKey)->firstOrFail();
-
-    return app(StoreDocument::class)($path, $category, ['original_name' => $name, ...$attributes], $links);
-}
-
 it('stores a document under the dealer prefix and links it to the vehicle file', function () {
     Bus::fake([RunOcr::class]);
 
@@ -235,7 +219,7 @@ it('exports the whole vehicle file as ZIP with folders and a PDF overview', func
 
     $zipPath = asTenant($this->tenant, function () {
         $cycle = StockCycle::factory()->status(StockCycleStatus::Sold)
-            ->for(Vehicle::factory()->state(['stammnummer' => '683737537']))
+            ->for(Vehicle::factory()->state(['stammnummer' => '683737537', 'make' => 'BMW', 'model' => 'X3']))
             ->create();
         Purchase::factory()->create(['stock_cycle_id' => $cycle->id]);
         $contract = storeDoc('sales_contract', 'contract v1', ['document_on' => '2026-07-14', 'locale' => 'de'], [$cycle]);
@@ -253,9 +237,9 @@ it('exports the whole vehicle file as ZIP with folders and a PDF overview', func
 
     expect($names)->toContain('01_Ankauf/')
         ->toContain('06_Leasing_Finanzierung/')
-        ->toContain('04_Verkauf_Zahlungen/683737537_2026-07-14_Kaufvertrag-Verkauf_DE_Definitiv.pdf')
-        ->toContain('04_Verkauf_Zahlungen/683737537_2026-07-14_Kaufvertrag-Verkauf_DE_Definitiv_v1.pdf')
-        ->toContain('02_Fahrzeugunterlagen/683737537_UNDATIERT_Foto_Definitiv.jpg')
+        ->toContain('04_Verkauf_Zahlungen/04_Verkauf-Zahlungen_BMW-X3_Kaufvertrag-Verkauf_2026-07-14_01.pdf')
+        ->toContain('04_Verkauf_Zahlungen/04_Verkauf-Zahlungen_BMW-X3_Kaufvertrag-Verkauf_2026-07-14_01_v1.pdf')
+        ->toContain('02_Fahrzeugunterlagen/02_Fahrzeugunterlagen_BMW-X3_Foto_UNDATIERT_01.jpg')
         ->toContain('683737537_Übersicht.pdf')
         ->and(collect($names)->filter(fn ($n) => str_contains($n, 'Ausweis')))->toBeEmpty()
         ->and($zip->getFromName('683737537_Übersicht.pdf'))->toBe('%PDF-1.7 overview');

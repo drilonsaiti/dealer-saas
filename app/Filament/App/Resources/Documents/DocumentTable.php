@@ -74,6 +74,7 @@ final class DocumentTable
                 DocumentActions::open(),
                 ActionGroup::make([
                     DocumentActions::download(),
+                    DocumentActions::recognizeText(),
                     DocumentActions::newVersion(),
                     DocumentActions::edit(),
                     DocumentActions::delete(),

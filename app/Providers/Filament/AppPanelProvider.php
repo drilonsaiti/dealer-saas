@@ -10,6 +10,7 @@ use App\Http\Middleware\ApplyTenantContext;
 use App\Http\Middleware\EnforceIdleTimeout;
 use App\Http\Middleware\RequireMultiFactorAuthenticationForRole;
 use App\Http\Middleware\SetLocale;
+use App\Http\Middleware\SetLocaleForTenant;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Auth\MultiFactor\Email\EmailAuthentication;
 use Filament\Http\Middleware\Authenticate;
@@ -85,6 +86,7 @@ class AppPanelProvider extends PanelProvider
             ])
             ->tenantMiddleware([
                 ApplyTenantContext::class,
+                SetLocaleForTenant::class, // again, now that the dealer (and its language) is known
                 EnforceIdleTimeout::class,
             ], isPersistent: true);
     }

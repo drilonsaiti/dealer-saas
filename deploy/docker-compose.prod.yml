@@ -8,6 +8,8 @@ x-app: &app
     context: ..
     target: app
   env_file: ../.env
+  environment:
+    QUEUE_CONNECTION: redis   # uploads, text reading and imports run in the queue services
   restart: unless-stopped
   volumes:
     - storage:/app/storage
@@ -19,6 +21,7 @@ services:
   web:
     <<: *app
     environment:
+      QUEUE_CONNECTION: redis
       SERVER_NAME: ${DOMAIN:?set DOMAIN in .env}
     ports:
       - "80:80"

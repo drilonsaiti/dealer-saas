@@ -58,7 +58,7 @@ class EditCompanyProfile extends EditTenantProfile
                     Grid::make(2)->schema([
                         Select::make('default_locale')
                             ->label(__('Default language'))
-                            ->helperText(__('Used for new users, new customers and your own reports.'))
+                            ->helperText(__('Language of the screens for users without a language of their own; also the default for new customers and your own reports.'))
                             ->options(config('dealer.locale_names'))
                             ->required(),
                         ColorPicker::make('brand_color')->label(__('Brand colour')),
@@ -96,5 +96,13 @@ class EditCompanyProfile extends EditTenantProfile
         $data['settings'] = array_replace_recursive($tenant->settings ?? [], $data['settings'] ?? []);
 
         return $data;
+    }
+
+    /**
+     * Reload so a changed default language applies to this very screen.
+     */
+    protected function getRedirectUrl(): ?string
+    {
+        return static::getUrl();
     }
 }

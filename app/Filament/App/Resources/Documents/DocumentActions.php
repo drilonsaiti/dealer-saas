@@ -6,8 +6,11 @@ use App\Domain\Documents\Actions\AddDocumentVersion;
 use App\Domain\Documents\Actions\DeleteDocument;
 use App\Domain\Documents\Actions\MergeDocuments;
 use App\Domain\Documents\Actions\StoreDocument;
+use App\Domain\Documents\Enums\OcrStatus;
+use App\Domain\Documents\Jobs\RunOcr;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Documents\Models\DocumentCategory;
+use App\Domain\Documents\Support\DocumentFileName;
 use App\Domain\Documents\Support\DuplicateDocument;
 use App\Domain\Tenancy\Enums\Permission;
 use App\Models\User;
@@ -125,7 +128,36 @@ final class DocumentActions
             ->action(function (Document $record): StreamedResponse {
                 $version = $record->currentVersion;
 
-                return Storage::disk($version->disk)->download($version->path, $version->original_name);
+                return Storage::disk($version->disk)->download($version->path, DocumentFileName::forDownload($record, $version));
+            });
+    }
+
+    /**
+     * Reads the text of a scan or photo right now, without waiting for the queue worker.
+     */
+    public static function recognizeText(): Action
+    {
+        return Action::make('recognizeText')
+            ->label(__('Read text now'))
+            ->icon(Heroicon::OutlinedDocumentMagnifyingGlass)
+            ->visible(fn (Document $record): bool => in_array($record->currentVersion?->ocr_status, [OcrStatus::Pending, OcrStatus::Failed], true)
+                && (auth()->user()?->can('update', $record) ?? false))
+            ->action(function (Document $record): void {
+                $version = $record->currentVersion;
+
+                if ($version === null) {
+                    return;
+                }
+
+                $version->forceFill(['ocr_status' => OcrStatus::Pending])->save();
+                app()->call([new RunOcr($version->getKey()), 'handle']); // here and now, not through the queue
+
+                $status = $version->refresh()->ocr_status;
+
+                Notification::make()
+                    ->title($status === OcrStatus::Done ? __('The text was read; the document is now searchable.') : __('The text could not be read. Is Tesseract installed?'))
+                    ->{$status === OcrStatus::Done ? 'success' : 'danger'}()
+                    ->send();
             });
     }
 

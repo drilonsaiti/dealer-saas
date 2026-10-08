@@ -21,7 +21,7 @@ class EditProfile extends BaseEditProfile
             Select::make('locale')
                 ->label(__('Language'))
                 ->options(config('dealer.locale_names'))
-                ->required()
+                ->placeholder(Filament::getCurrentPanel()?->getId() === 'platform' ? __('Automatic (browser)') : __('Automatic (language of the dealer)'))
                 ->native(false),
             $this->getPasswordFormComponent(),
             $this->getPasswordConfirmationFormComponent(),

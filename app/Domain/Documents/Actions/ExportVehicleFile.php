@@ -4,7 +4,7 @@ namespace App\Domain\Documents\Actions;
 
 use App\Domain\Documents\Enums\FolderGroup;
 use App\Domain\Documents\Models\Document;
-use App\Domain\Documents\Models\DocumentVersion;
+use App\Domain\Documents\Support\DocumentFileName;
 use App\Domain\Documents\Support\PdfRenderer;
 use App\Domain\Reporting\CalculateMargin;
 use App\Domain\Tenancy\TenantContext;
@@ -77,7 +77,7 @@ class ExportVehicleFile
 
         foreach ($documents as $document) {
             foreach ($document->versions as $version) {
-                $name = $this->entryName($prefix, $document, $version, $locale);
+                $name = DocumentFileName::make($document, $version, $cycle, DocumentFileName::sequenceIn($documents, $document), $locale);
                 $name = $this->unique($name, $used);
                 $zip->addFromString($document->category->folder_group->folderName($locale).'/'.$name, $version->contents());
             }
@@ -104,32 +104,6 @@ class ExportVehicleFile
         $zip->close();
 
         return $zipPath;
-    }
-
-    /**
-     * 683737537_2026-07-14_Kaufvertrag_DE_Unterschrieben.pdf (older versions get _v1, _v2...).
-     */
-    private function entryName(string $prefix, Document $document, DocumentVersion $version, string $locale): string
-    {
-        $parts = [
-            $prefix,
-            $document->document_on?->format('Y-m-d') ?? 'UNDATIERT',
-            str_replace(' ', '-', $document->category->getTranslation('name', $locale)),
-        ];
-
-        if (filled($document->locale)) {
-            $parts[] = strtoupper((string) $document->locale);
-        }
-
-        $parts[] = str_replace(' ', '-', $document->status->getLabel());
-
-        if ($version->getKey() !== $document->current_version_id) {
-            $parts[] = 'v'.$version->version_no;
-        }
-
-        $name = implode('_', $parts);
-
-        return preg_replace('/[\\\\\/:*?"<>|]+/', '-', $name).'.'.$version->extension();
     }
 
     /**

@@ -1,5 +1,8 @@
 <?php
 
+use App\Domain\Documents\Enums\OcrStatus;
+use App\Domain\Documents\Jobs\RunOcr;
+use App\Domain\Documents\Models\DocumentVersion;
 use App\Domain\Import\Actions\CreateImportRun;
 use App\Domain\Import\Actions\RunImport;
 use App\Domain\Import\Enums\ImporterType;
@@ -29,6 +32,30 @@ Artisan::command('vehicles:archive', function (TenantContext $context, ArchiveDe
 })->purpose('Archive vehicle files delivered longer ago than the dealer\'s archive period');
 
 Schedule::command('vehicles:archive')->dailyAt('02:45');
+
+/*
+ * Reads the text of every scan still waiting for it, for all dealers. For local work without a
+ * queue worker, or to catch up after the worker was down.
+ */
+Artisan::command('documents:ocr', function (TenantContext $context): void {
+    $tenants = $context->bypass(fn () => Tenant::query()->where('status', Tenant::STATUS_ACTIVE)->get());
+
+    foreach ($tenants as $tenant) {
+        $done = $context->run($tenant, function (): int {
+            $ids = DocumentVersion::query()->where('ocr_status', OcrStatus::Pending)->pluck('id');
+
+            foreach ($ids as $id) {
+                app()->call([new RunOcr($id), 'handle']);
+            }
+
+            return $ids->count();
+        });
+
+        if ($done > 0) {
+            $this->info("{$tenant->name}: {$done} document(s) processed");
+        }
+    }
+})->purpose('Read the text of all documents that are still waiting for it');
 
 /*
  * Large imports (e.g. a 1 GB document folder) from the server's disk instead of a browser upload.

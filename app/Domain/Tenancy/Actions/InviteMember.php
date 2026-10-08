@@ -32,7 +32,6 @@ class InviteMember
                 'name' => filled($name) ? $name : Str::before($email, '@'),
                 'email' => $email,
                 'password' => Hash::make(Str::random(40)),
-                'locale' => $tenant->default_locale,
             ]);
         }
 

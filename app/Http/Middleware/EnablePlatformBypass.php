@@ -24,10 +24,11 @@ class EnablePlatformBypass
 
         $this->context->enableBypass();
 
-        try {
-            return $next($request);
-        } finally {
-            $this->context->clear();
-        }
+        // Cleared when the request ends, not when this middleware returns: Livewire replays
+        // persistent middleware before it runs the component (a save), and clearing here would
+        // drop the bypass in time for the policies to answer 403.
+        app()->terminating(fn () => $this->context->clear());
+
+        return $next($request);
     }
 }

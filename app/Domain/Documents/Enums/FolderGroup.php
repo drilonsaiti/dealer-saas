@@ -28,6 +28,11 @@ enum FolderGroup: string implements HasLabel
         };
     }
 
+    public function labelIn(string $locale): string
+    {
+        return (string) __($this->labelKey(), locale: $locale);
+    }
+
     public function number(): string
     {
         return substr($this->value, 0, 2);

@@ -105,3 +105,19 @@ function attachPhoto(StockCycle $cycle): Document
 
     return app(StoreDocument::class)($path, $category, ['original_name' => 'front.png'], [$cycle]);
 }
+
+function fakeFile(string $content, string $name = 'scan.pdf'): string
+{
+    $path = tempnam(sys_get_temp_dir(), 'doc');
+    file_put_contents($path, $content);
+
+    return $path.'|'.$name;
+}
+
+function storeDoc(string $categoryKey, string $content, array $attributes = [], array $links = []): Document
+{
+    [$path, $name] = explode('|', fakeFile($content, $attributes['original_name'] ?? 'scan.pdf'));
+    $category = DocumentCategory::where('key', $categoryKey)->firstOrFail();
+
+    return app(StoreDocument::class)($path, $category, ['original_name' => $name, ...$attributes], $links);
+}

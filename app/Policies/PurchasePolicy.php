@@ -27,7 +27,7 @@ class PurchasePolicy
 
     public function update(User $user, Purchase $purchase): bool
     {
-        return $this->allows($user, Permission::PurchasesManage) && ! $purchase->stockCycle->isLocked();
+        return $this->allows($user, Permission::PurchasesManage) && ! $purchase->loadMissing('stockCycle')->stockCycle->isLocked();
     }
 
     public function delete(User $user, Purchase $purchase): bool
