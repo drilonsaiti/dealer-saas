@@ -14,6 +14,8 @@ use App\Policies\BankAccountPolicy;
 use App\Policies\NumberSequencePolicy;
 use App\Policies\TenantMembershipPolicy;
 use App\Policies\TenantPolicy;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Events\TransactionRolledBack;
@@ -40,11 +42,22 @@ class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap(MorphMap::MAP);
 
         $this->registerPolicies();
+        $this->configureFilamentLayout();
         $this->carryTenantIntoQueuedJobs();
 
         // A rollback also rolls back set_config() calls made inside the transaction;
         // re-sync the database settings with the context the application believes in.
         Event::listen(TransactionRolledBack::class, fn () => $this->app->make(TenantContext::class)->reapply());
+    }
+
+    /**
+     * Filament's root form schema has two columns, so a lone Grid or Section would fill only the
+     * left half of every modal and page. Ours always take the full width and lay out their own columns.
+     */
+    private function configureFilamentLayout(): void
+    {
+        Grid::configureUsing(fn (Grid $grid): Grid => $grid->columnSpanFull());
+        Section::configureUsing(fn (Section $section): Section => $section->columnSpanFull());
     }
 
     private function registerPolicies(): void
