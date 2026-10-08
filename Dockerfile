@@ -4,6 +4,11 @@ FROM dunglas/frankenphp:1-php8.4 AS base
 
 RUN install-php-extensions pdo_pgsql pgsql intl bcmath gd zip redis pcntl opcache exif
 
+# OCR for scanned documents (DE/FR/IT/EN) and PDF tools (text extraction, page rendering).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-deu tesseract-ocr-fra tesseract-ocr-ita poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV SERVER_NAME=":80" \
     APP_ENV=production \
     APP_DEBUG=false

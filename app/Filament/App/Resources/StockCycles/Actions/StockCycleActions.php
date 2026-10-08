@@ -2,6 +2,11 @@
 
 namespace App\Filament\App\Resources\StockCycles\Actions;
 
+use App\Domain\Documents\Actions\ExportVehicleFile;
+use App\Domain\Documents\Actions\RequiredDocumentsChecklist;
+use App\Domain\Documents\Actions\SetRequiredDocumentStatus;
+use App\Domain\Documents\Enums\RequiredDocumentStatus;
+use App\Domain\Documents\Models\Document;
 use App\Domain\Purchasing\Actions\RecordPurchase;
 use App\Domain\Purchasing\Models\Purchase;
 use App\Domain\Sales\Actions\CancelSale;
@@ -14,6 +19,7 @@ use App\Domain\Vehicles\Actions\OpenStockCycle;
 use App\Domain\Vehicles\Actions\TransitionStockCycle;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
 use App\Domain\Vehicles\Models\StockCycle;
+use App\Filament\App\Resources\Documents\DocumentActions;
 use App\Filament\App\Resources\StockCycles\Schemas\PurchaseForm;
 use App\Filament\App\Resources\StockCycles\Schemas\SaleForm;
 use App\Filament\App\Resources\StockCycles\Schemas\StockCycleInfolist;
@@ -23,10 +29,12 @@ use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Header actions of the vehicle file. They only collect input and call the domain actions.
@@ -213,6 +221,61 @@ final class StockCycleActions
         }
 
         Notification::make()->title($success)->success()->send();
+    }
+
+    /**
+     * The whole file as ZIP: six folders with every document version plus an overview PDF.
+     */
+    public static function export(): Action
+    {
+        return Action::make('export')
+            ->label(__('Export file'))
+            ->icon(Heroicon::OutlinedArchiveBoxArrowDown)
+            ->color('gray')
+            ->visible(fn (): bool => auth()->user()?->can('viewAny', Document::class) ?? false)
+            ->action(function (StockCycle $record): BinaryFileResponse {
+                $export = app(ExportVehicleFile::class);
+                $path = $export($record, DocumentActions::canSeeSensitive());
+
+                return response()->download($path, $export->fileName($record))->deleteFileAfterSend();
+            });
+    }
+
+    /**
+     * Mark a required document as requested or not needed (present/missing are computed).
+     */
+    public static function documentChecklist(): Action
+    {
+        return Action::make('documentChecklist')
+            ->label(__('Required documents'))
+            ->icon(Heroicon::OutlinedClipboardDocumentList)
+            ->color('gray')
+            ->visible(fn (StockCycle $record): bool => ! $record->isLocked()
+                && app(RequiredDocumentsChecklist::class)->requiredKeys($record) !== []
+                && (auth()->user()?->can('create', Document::class) ?? false))
+            ->modalHeading(__('Required documents'))
+            ->schema(fn (StockCycle $record): array => [
+                Select::make('category_key')
+                    ->label(__('Document'))
+                    ->options(app(RequiredDocumentsChecklist::class)($record)
+                        ->filter(fn (array $item): bool => $item['status'] !== RequiredDocumentStatus::Present)
+                        ->mapWithKeys(fn (array $item): array => [$item['key'] => $item['label'].' ('.$item['status']->getLabel().')'])
+                        ->all())
+                    ->required(),
+                Select::make('status')
+                    ->label(__('Status'))
+                    ->options([
+                        RequiredDocumentStatus::Requested->value => RequiredDocumentStatus::Requested->getLabel(),
+                        RequiredDocumentStatus::NotRequired->value => RequiredDocumentStatus::NotRequired->getLabel(),
+                        RequiredDocumentStatus::Missing->value => RequiredDocumentStatus::Missing->getLabel(),
+                    ])
+                    ->required(),
+                TextInput::make('note')->label(__('Note'))->placeholder(__('e.g. asked the seller on 14.07.'))->maxLength(255),
+            ])
+            ->action(function (StockCycle $record, array $data): void {
+                app(SetRequiredDocumentStatus::class)($record, (string) $data['category_key'], RequiredDocumentStatus::from((string) $data['status']), $data['note'] ?? null);
+                Notification::make()->title(__('Saved.'))->success()->send();
+            });
     }
 
     /**

@@ -26,4 +26,16 @@ return [
     */
     'enforce_mfa' => env('DEALER_ENFORCE_MFA', true),
 
+    /*
+    | Documents: stored under tenants/{tenant_id}/documents/ on this disk (S3-compatible
+    | object storage in production). OCR languages are those installed for Tesseract.
+    */
+    'documents' => [
+        'disk' => env('DOCUMENTS_DISK', 'local'),
+        'max_upload_kb' => (int) env('DOCUMENTS_MAX_UPLOAD_KB', 20480),
+        'ocr_languages' => env('OCR_LANGUAGES', 'deu+fra+ita+eng'),
+    ],
+
+    'gotenberg_url' => env('GOTENBERG_URL'),
+
 ];

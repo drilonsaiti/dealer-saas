@@ -2,6 +2,7 @@
 
 namespace App\Domain\Tenancy\Actions;
 
+use App\Domain\Documents\Actions\InstallDefaultDocumentCategories;
 use App\Domain\Purchasing\Actions\InstallDefaultCostCategories;
 use App\Domain\Settings\Enums\NumberSequenceKey;
 use App\Domain\Settings\Models\NumberSequence;
@@ -21,6 +22,7 @@ class CreateTenant
         private readonly TenantContext $context,
         private readonly InviteMember $inviteMember,
         private readonly InstallDefaultCostCategories $installCostCategories,
+        private readonly InstallDefaultDocumentCategories $installDocumentCategories,
     ) {}
 
     /**
@@ -43,6 +45,7 @@ class CreateTenant
                 }
 
                 ($this->installCostCategories)();
+                ($this->installDocumentCategories)();
 
                 ($this->inviteMember)($tenant, $adminEmail, $adminName, Role::Administrator, $sendInvitation);
             });

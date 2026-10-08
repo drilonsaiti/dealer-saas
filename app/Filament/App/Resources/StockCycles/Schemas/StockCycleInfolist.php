@@ -2,6 +2,8 @@
 
 namespace App\Filament\App\Resources\StockCycles\Schemas;
 
+use App\Domain\Documents\Actions\RequiredDocumentsChecklist;
+use App\Domain\Documents\Enums\RequiredDocumentStatus;
 use App\Domain\Purchasing\Enums\VatSituation;
 use App\Domain\Reporting\CalculateMargin;
 use App\Domain\Reporting\Margin;
@@ -102,6 +104,23 @@ final class StockCycleInfolist
                         TextEntry::make('activeSale.planned_handover_on')->label(__('Planned handover'))->date()->placeholder('–'),
                     ]),
                     TextEntry::make('activeSale.remarks')->label(__('Remarks'))->placeholder('–'),
+                ]),
+            Section::make(__('Required documents'))
+                ->visible(fn (StockCycle $record): bool => app(RequiredDocumentsChecklist::class)->requiredKeys($record) !== [])
+                ->collapsible()
+                ->schema([
+                    TextEntry::make('required_documents')
+                        ->hiddenLabel()
+                        ->state(fn (StockCycle $record): array => app(RequiredDocumentsChecklist::class)($record)
+                            ->map(fn (array $item): string => $item['label'].': '.$item['status']->getLabel().($item['note'] ? ' – '.$item['note'] : ''))
+                            ->all())
+                        ->badge()
+                        ->color(fn (string $state): string => match (true) {
+                            str_contains($state, RequiredDocumentStatus::Missing->getLabel()) => 'danger',
+                            str_contains($state, RequiredDocumentStatus::Requested->getLabel()) => 'warning',
+                            str_contains($state, RequiredDocumentStatus::Present->getLabel()) => 'success',
+                            default => 'gray',
+                        }),
                 ]),
             Section::make(__('Margin'))
                 ->description(fn (StockCycle $record): string => self::margin($record)->isProvisional

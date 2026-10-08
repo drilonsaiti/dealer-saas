@@ -2,6 +2,7 @@
 
 namespace App\Domain\Reporting;
 
+use App\Domain\Documents\Actions\RequiredDocumentsChecklist;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\Purchase;
@@ -105,7 +106,7 @@ class StockReport
     /**
      * Promises to customers not yet kept, and reservations running out within the given days.
      *
-     * @return array{open_promises: int, expiring_reservations: int, open_seller_payments: int}
+     * @return array{open_promises: int, expiring_reservations: int, open_seller_payments: int, files_missing_documents: int}
      */
     public function openItems(int $reservationDays = 2, ?Carbon $today = null): array
     {
@@ -117,6 +118,11 @@ class StockReport
                 ->where('status', SaleStatus::Reserved)
                 ->whereNotNull('reserved_until')
                 ->where('reserved_until', '<=', $today->copy()->addDays($reservationDays)->toDateString())
+                ->count(),
+            'files_missing_documents' => StockCycle::query()
+                ->whereIn('status', StockCycleStatus::openValues())
+                ->get()
+                ->filter(fn (StockCycle $cycle): bool => app(RequiredDocumentsChecklist::class)->missingCount($cycle) > 0)
                 ->count(),
             'open_seller_payments' => StockCycle::query()
                 ->whereIn('status', StockCycleStatus::openValues())

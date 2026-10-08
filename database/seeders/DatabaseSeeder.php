@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Documents\Actions\StoreDocument;
+use App\Domain\Documents\Models\DocumentCategory;
 use App\Domain\Parties\Models\Party;
 use App\Domain\Purchasing\Actions\ConfirmCost;
 use App\Domain\Purchasing\Actions\RecordCost;
@@ -17,6 +19,7 @@ use App\Domain\Tenancy\TenantContext;
 use App\Domain\Vehicles\Actions\RecordVehicle;
 use App\Domain\Vehicles\Actions\TransitionStockCycle;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
+use App\Domain\Vehicles\Models\StockCycle;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -89,6 +92,8 @@ class DatabaseSeeder extends Seeder
         );
         $transition($corolla, StockCycleStatus::Arrived, data: ['on' => now()->subDays(45)->toDateString()]);
         $transition($corolla, StockCycleStatus::ReadyForSale, data: ['on' => now()->subDays(30)->toDateString()]);
+        $this->demoPhoto($corolla, 'Toyota Corolla', [236, 236, 236]);
+        $this->demoPdf($corolla, 'purchase_contract', 'Kaufvertrag Toyota Corolla 1.8 Hybrid, Stammnummer 683.737.537, Preis CHF 15200.00', now()->subDays(48)->toDateString());
         $transition($corolla, StockCycleStatus::Listed, data: ['on' => now()->subDays(29)->toDateString()]);
 
         $x3 = $record(
@@ -118,6 +123,7 @@ class DatabaseSeeder extends Seeder
             $purchase($privateSeller, 'private', 2_050_000, 120),
         );
         $transition($tucson, StockCycleStatus::ReadyForSale, data: ['on' => now()->subDays(100)->toDateString()]);
+        $this->demoPhoto($tucson, 'Hyundai Tucson', [60, 70, 80]);
         $transition($tucson, StockCycleStatus::Listed, data: ['on' => now()->subDays(99)->toDateString()]);
         $buyer = Party::create(['kind' => 'person', 'roles' => ['customer'], 'salutation' => 'ms', 'first_name' => 'Anna', 'last_name' => 'Meier', 'street' => 'Länggassstrasse 20', 'zip' => '3012', 'city' => 'Bern', 'email' => 'anna.meier@example.ch', 'mobile' => '079 222 33 44']);
         $sale = app(ContractSale::class)($tucson, [
@@ -141,8 +147,64 @@ class DatabaseSeeder extends Seeder
             $purchase($reflex, 'company', 1_880_000, 20),
         );
         $transition($octavia, StockCycleStatus::ReadyForSale, data: ['on' => now()->subDays(12)->toDateString()]);
+        $this->demoPhoto($octavia, 'Skoda Octavia', [40, 80, 140]);
         $transition($octavia, StockCycleStatus::Listed, data: ['on' => now()->subDays(12)->toDateString()]);
         $customer = Party::create(['kind' => 'person', 'roles' => ['customer'], 'salutation' => 'mr', 'first_name' => 'Luca', 'last_name' => 'Rossi', 'zip' => '6900', 'city' => 'Lugano', 'locale' => 'it', 'mobile' => '076 111 22 33']);
         app(ReserveVehicle::class)($octavia, ['buyer_party_id' => $customer->id, 'price_rp' => 2_290_000, 'locale' => 'it', 'reserved_until' => now()->addDay()->toDateString()]);
+    }
+
+    /**
+     * @param  array{int, int, int}  $rgb
+     */
+    private function demoPhoto(StockCycle $cycle, string $label, array $rgb): void
+    {
+        $image = imagecreatetruecolor(800, 500);
+        imagefill($image, 0, 0, imagecolorallocate($image, ...$rgb));
+        $ink = array_sum($rgb) > 380 ? imagecolorallocate($image, 30, 30, 30) : imagecolorallocate($image, 245, 245, 245);
+        imagestring($image, 5, 30, 30, $label, $ink);
+        $path = tempnam(sys_get_temp_dir(), 'demo').'.jpg';
+        imagejpeg($image, $path, 85);
+
+        $category = DocumentCategory::query()->where('key', 'photo')->firstOrFail();
+        app(StoreDocument::class)($path, $category, ['original_name' => 'front.jpg'], [$cycle]);
+        unlink($path);
+    }
+
+    /**
+     * A one-page PDF with a line of real text (so search and OCR have something to find).
+     */
+    private function demoPdf(StockCycle $cycle, string $categoryKey, string $text, string $date): void
+    {
+        $stream = 'BT /F1 11 Tf 50 780 Td ('.str_replace(['\\', '(', ')'], ['\\\\', '\\(', '\\)'], $text).') Tj ET';
+        $objects = [
+            '<< /Type /Catalog /Pages 2 0 R >>',
+            '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+            '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>',
+            '<< /Length '.strlen($stream)." >>\nstream\n{$stream}\nendstream",
+            '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+        ];
+        $pdf = "%PDF-1.4\n";
+        $offsets = [];
+
+        foreach ($objects as $i => $object) {
+            $offsets[] = strlen($pdf);
+            $pdf .= ($i + 1)." 0 obj\n{$object}\nendobj\n";
+        }
+
+        $xref = strlen($pdf);
+        $pdf .= 'xref'."\n0 ".(count($objects) + 1)."\n0000000000 65535 f \n";
+
+        foreach ($offsets as $offset) {
+            $pdf .= sprintf("%010d 00000 n \n", $offset);
+        }
+
+        $pdf .= 'trailer << /Size '.(count($objects) + 1)." /Root 1 0 R >>\nstartxref\n{$xref}\n%%EOF\n";
+
+        $path = tempnam(sys_get_temp_dir(), 'demo').'.pdf';
+        file_put_contents($path, $pdf);
+
+        $category = DocumentCategory::query()->where('key', $categoryKey)->firstOrFail();
+        app(StoreDocument::class)($path, $category, ['original_name' => 'kaufvertrag.pdf', 'document_on' => $date, 'locale' => 'de'], [$cycle]);
+        unlink($path);
     }
 }

@@ -64,6 +64,9 @@ class StockOverview extends StatsOverviewWidget
                 ->icon(Heroicon::OutlinedClipboardDocumentCheck),
             Stat::make(__('Sellers not paid yet'), (string) $open['open_seller_payments'])
                 ->icon(Heroicon::OutlinedCreditCard),
+            Stat::make(__('Files with missing documents'), (string) $open['files_missing_documents'])
+                ->color($open['files_missing_documents'] > 0 ? 'warning' : 'gray')
+                ->icon(Heroicon::OutlinedDocumentMagnifyingGlass),
         ];
     }
 }

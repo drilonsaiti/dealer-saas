@@ -40,6 +40,7 @@ it('walks the main flow and records every step', function () {
         transition($cycle, StockCycleStatus::InPreparation);
         transition($cycle, StockCycleStatus::ReadyForSale);
         $cycle->update(['list_price_rp' => 2_190_000]);
+        attachPhoto($cycle);
         transition($cycle, StockCycleStatus::Listed);
         $sale = app(ContractSale::class)($cycle, ['buyer_party_id' => Party::factory()->create()->id, 'price_rp' => 2_190_000]);
         app(HandOverVehicle::class)($sale, 79400);

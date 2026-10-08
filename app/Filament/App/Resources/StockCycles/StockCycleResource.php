@@ -11,6 +11,7 @@ use App\Filament\App\Resources\StockCycles\Pages\ListStockCycles;
 use App\Filament\App\Resources\StockCycles\Pages\ViewStockCycle;
 use App\Filament\App\Resources\StockCycles\RelationManagers\CommitmentsRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\CostsRelationManager;
+use App\Filament\App\Resources\StockCycles\RelationManagers\DocumentsRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\StatusHistoryRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\TyreSetsRelationManager;
 use App\Filament\App\Resources\StockCycles\Schemas\StockCycleInfolist;
@@ -163,6 +164,7 @@ class StockCycleResource extends Resource
     public static function getRelations(): array
     {
         return [
+            DocumentsRelationManager::class,
             CostsRelationManager::class,
             CommitmentsRelationManager::class,
             StatusHistoryRelationManager::class,

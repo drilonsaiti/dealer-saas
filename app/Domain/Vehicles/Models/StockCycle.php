@@ -5,6 +5,7 @@ namespace App\Domain\Vehicles\Models;
 use App\Domain\Audit\Concerns\Auditable;
 use App\Domain\Audit\Concerns\TracksAuthors;
 use App\Domain\Audit\Models\StatusHistory;
+use App\Domain\Documents\Models\Document;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\Purchase;
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -162,6 +164,16 @@ class StockCycle extends Model
     public function commitments(): HasMany
     {
         return $this->hasMany(Commitment::class);
+    }
+
+    /**
+     * Documents of this file (a document can also belong to a party or another file).
+     *
+     * @return MorphToMany<Document, $this>
+     */
+    public function documents(): MorphToMany
+    {
+        return $this->morphToMany(Document::class, 'linkable', 'document_links');
     }
 
     /**

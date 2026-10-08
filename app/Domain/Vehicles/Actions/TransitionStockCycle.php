@@ -3,6 +3,7 @@
 namespace App\Domain\Vehicles\Actions;
 
 use App\Domain\Audit\Models\StatusHistory;
+use App\Domain\Documents\Models\Document;
 use App\Domain\Sales\Enums\SaleStatus;
 use App\Domain\Sales\Models\Sale;
 use App\Domain\Settings\Actions\IssueNumber;
@@ -91,7 +92,7 @@ class TransitionStockCycle
             StockCycleStatus::Purchased => $this->purchaseProblems($cycle),
             StockCycleStatus::Reserved => $this->activeSale($cycle)?->status === SaleStatus::Reserved ? [] : [__('Reserve the vehicle for a customer first.')],
             StockCycleStatus::Sold => $this->activeSale($cycle)?->status === SaleStatus::Contracted ? [] : [__('Record the sale contract first.')],
-            StockCycleStatus::Listed => $cycle->list_price_rp === null ? [__('Set a list price before listing the vehicle.')] : [],
+            StockCycleStatus::Listed => $this->listingProblems($cycle),
             StockCycleStatus::Delivered => $this->deliveryProblems($cycle, $data),
             StockCycleStatus::Archived => $this->archiveProblems($cycle),
             default => [],
@@ -196,6 +197,31 @@ class TransitionStockCycle
         if ($cycle->number === null) {
             $cycle->number = ($this->issueNumber)(NumberSequenceKey::StockCycle);
         }
+    }
+
+    /**
+     * Listing needs a price and at least one photo in the file.
+     *
+     * @return list<string>
+     */
+    private function listingProblems(StockCycle $cycle): array
+    {
+        $problems = [];
+
+        if ($cycle->list_price_rp === null) {
+            $problems[] = __('Set a list price before listing the vehicle.');
+        }
+
+        $hasPhoto = Document::query()
+            ->linkedTo($cycle)
+            ->whereHas('category', fn ($query) => $query->where('key', 'photo'))
+            ->exists();
+
+        if (! $hasPhoto) {
+            $problems[] = __('Add at least one photo before listing the vehicle.');
+        }
+
+        return $problems;
     }
 
     private function activeSale(StockCycle $cycle): ?Sale

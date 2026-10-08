@@ -22,4 +22,7 @@ enum Permission: string
     case CataloguesManage = 'catalogues.manage';
     case SalesManage = 'sales.manage';
     case ReportsView = 'reports.view';
+    case DocumentsView = 'documents.view';
+    case DocumentsManage = 'documents.manage';
+    case DocumentsViewSensitive = 'documents.view_sensitive';
 }

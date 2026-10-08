@@ -5,6 +5,7 @@ namespace App\Filament\App\Resources\StockCycles\Pages;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Filament\App\Resources\StockCycles\Actions\StockCycleActions;
 use App\Filament\App\Resources\StockCycles\StockCycleResource;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Contracts\Support\Htmlable;
@@ -32,8 +33,12 @@ class ViewStockCycle extends ViewRecord
             StockCycleActions::handOver(),
             StockCycleActions::cancelSale(),
             StockCycleActions::changeStatus(),
-            StockCycleActions::openNewCycle(),
-            EditAction::make(),
+            ActionGroup::make([
+                EditAction::make(),
+                StockCycleActions::documentChecklist(),
+                StockCycleActions::export(),
+                StockCycleActions::openNewCycle(),
+            ])->label(__('More'))->button()->color('gray'),
         ];
     }
 }

@@ -4,6 +4,11 @@ namespace App\Domain\Audit;
 
 use App\Domain\Audit\Models\AuditLog;
 use App\Domain\Audit\Models\StatusHistory;
+use App\Domain\Documents\Models\Document;
+use App\Domain\Documents\Models\DocumentCategory;
+use App\Domain\Documents\Models\DocumentLink;
+use App\Domain\Documents\Models\DocumentVersion;
+use App\Domain\Documents\Models\RequiredDocument;
 use App\Domain\Parties\Models\Party;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
@@ -46,6 +51,11 @@ final class MorphMap
         'sale' => Sale::class,
         'sale_item' => SaleItem::class,
         'trade_in' => TradeIn::class,
+        'document' => Document::class,
+        'document_version' => DocumentVersion::class,
+        'document_link' => DocumentLink::class,
+        'document_category' => DocumentCategory::class,
+        'required_document' => RequiredDocument::class,
     ];
 
     public static function label(string $alias): string
@@ -67,6 +77,9 @@ final class MorphMap
             'sale' => __('Sale'),
             'sale_item' => __('Sale item'),
             'trade_in' => __('Trade-in'),
+            'document' => __('Document'),
+            'document_version' => __('Document version'),
+            'document_category' => __('Document category'),
             default => $alias,
         };
     }

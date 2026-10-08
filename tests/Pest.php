@@ -1,11 +1,16 @@
 <?php
 
+use App\Domain\Documents\Actions\InstallDefaultDocumentCategories;
+use App\Domain\Documents\Actions\StoreDocument;
+use App\Domain\Documents\Models\Document;
+use App\Domain\Documents\Models\DocumentCategory;
 use App\Domain\Purchasing\Actions\InstallDefaultCostCategories;
 use App\Domain\Settings\Enums\NumberSequenceKey;
 use App\Domain\Settings\Models\NumberSequence;
 use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
+use App\Domain\Vehicles\Models\StockCycle;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -47,6 +52,7 @@ function makeDealer(array $attributes = []): Tenant
         }
 
         app(InstallDefaultCostCategories::class)();
+        app(InstallDefaultDocumentCategories::class)();
     });
 
     return $tenant;
@@ -81,4 +87,20 @@ function useAppPanel(Tenant $tenant, User $user): void
     Filament::setCurrentPanel('app');
     Filament::setTenant($tenant);
     tenantContext()->set($tenant);
+}
+
+/**
+ * A small photo in the vehicle file (listing needs one). Uses a fresh image each call,
+ * so the exact-duplicate check never refuses it.
+ */
+function attachPhoto(StockCycle $cycle): Document
+{
+    $path = tempnam(sys_get_temp_dir(), 'photo').'.png';
+    $image = imagecreatetruecolor(4, 4);
+    imagesetpixel($image, random_int(0, 3), random_int(0, 3), random_int(1, 0xFFFFFF));
+    imagepng($image, $path);
+
+    $category = DocumentCategory::query()->where('key', 'photo')->firstOrFail();
+
+    return app(StoreDocument::class)($path, $category, ['original_name' => 'front.png'], [$cycle]);
 }
