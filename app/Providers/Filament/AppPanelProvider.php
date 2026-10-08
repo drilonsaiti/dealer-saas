@@ -56,7 +56,7 @@ class AppPanelProvider extends PanelProvider
                     AppAuthentication::make()->recoverable(),
                     EmailAuthentication::make(),
                 ],
-                isRequired: true,
+                isRequired: fn (): bool => (bool) config('dealer.enforce_mfa'),
             )
             ->multiFactorAuthenticationRequiredMiddlewareName(RequireMultiFactorAuthenticationForRole::class)
             ->discoverResources(in: app_path('Filament/App/Resources'), for: 'App\\Filament\\App\\Resources')
