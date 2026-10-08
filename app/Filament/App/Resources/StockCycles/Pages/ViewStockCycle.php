@@ -26,6 +26,7 @@ class ViewStockCycle extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            StockCycleActions::recordPurchase(),
             StockCycleActions::changeStatus(),
             StockCycleActions::openNewCycle(),
             EditAction::make(),

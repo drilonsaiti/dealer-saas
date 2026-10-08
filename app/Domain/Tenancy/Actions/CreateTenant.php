@@ -2,6 +2,7 @@
 
 namespace App\Domain\Tenancy\Actions;
 
+use App\Domain\Purchasing\Actions\InstallDefaultCostCategories;
 use App\Domain\Settings\Enums\NumberSequenceKey;
 use App\Domain\Settings\Models\NumberSequence;
 use App\Domain\Tenancy\Enums\Role;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * Sets up a new dealer: the tenant, its default number sequences and its first administrator.
+ * Sets up a new dealer: the tenant, its default number sequences and cost categories, and its first administrator.
  * Used by the platform panel and by seeders.
  */
 class CreateTenant
@@ -19,6 +20,7 @@ class CreateTenant
     public function __construct(
         private readonly TenantContext $context,
         private readonly InviteMember $inviteMember,
+        private readonly InstallDefaultCostCategories $installCostCategories,
     ) {}
 
     /**
@@ -39,6 +41,8 @@ class CreateTenant
                         'reset_yearly' => $key->resetsYearlyByDefault(),
                     ]);
                 }
+
+                ($this->installCostCategories)();
 
                 ($this->inviteMember)($tenant, $adminEmail, $adminName, Role::Administrator, $sendInvitation);
             });

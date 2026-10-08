@@ -5,6 +5,9 @@ namespace App\Domain\Vehicles\Models;
 use App\Domain\Audit\Concerns\Auditable;
 use App\Domain\Audit\Concerns\TracksAuthors;
 use App\Domain\Audit\Models\StatusHistory;
+use App\Domain\Purchasing\Models\Commitment;
+use App\Domain\Purchasing\Models\Cost;
+use App\Domain\Purchasing\Models\Purchase;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
 use Database\Factories\StockCycleFactory;
@@ -15,6 +18,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 
@@ -44,6 +48,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $notes
  * @property string|null $legacy_ref
  * @property-read Vehicle $vehicle
+ * @property-read Purchase|null $purchase
  */
 #[UseFactory(StockCycleFactory::class)]
 class StockCycle extends Model
@@ -72,12 +77,12 @@ class StockCycle extends Model
         return [
             'status' => StockCycleStatus::class,
             'file_year' => 'integer',
-            'purchased_on' => 'date',
-            'ready_on' => 'date',
-            'listed_on' => 'date',
-            'sold_on' => 'date',
-            'delivered_on' => 'date',
-            'archived_on' => 'date',
+            'purchased_on' => 'date:Y-m-d',
+            'ready_on' => 'date:Y-m-d',
+            'listed_on' => 'date:Y-m-d',
+            'sold_on' => 'date:Y-m-d',
+            'delivered_on' => 'date:Y-m-d',
+            'archived_on' => 'date:Y-m-d',
             'planned_price_rp' => 'integer',
             'list_price_rp' => 'integer',
             'mileage_in' => 'integer',
@@ -101,6 +106,30 @@ class StockCycle extends Model
     public function tyreSets(): HasMany
     {
         return $this->hasMany(TyreSet::class, 'vehicle_id', 'vehicle_id');
+    }
+
+    /**
+     * @return HasOne<Purchase, $this>
+     */
+    public function purchase(): HasOne
+    {
+        return $this->hasOne(Purchase::class);
+    }
+
+    /**
+     * @return HasMany<Cost, $this>
+     */
+    public function costs(): HasMany
+    {
+        return $this->hasMany(Cost::class);
+    }
+
+    /**
+     * @return HasMany<Commitment, $this>
+     */
+    public function commitments(): HasMany
+    {
+        return $this->hasMany(Commitment::class);
     }
 
     /**

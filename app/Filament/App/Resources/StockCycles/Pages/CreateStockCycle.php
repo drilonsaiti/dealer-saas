@@ -4,11 +4,11 @@ namespace App\Filament\App\Resources\StockCycles\Pages;
 
 use App\Domain\Vehicles\Actions\RecordVehicle;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
+use App\Filament\App\Resources\StockCycles\Schemas\PurchaseForm;
 use App\Filament\App\Resources\StockCycles\Schemas\VehicleForm;
 use App\Filament\App\Resources\StockCycles\StockCycleResource;
 use App\Filament\Support\MoneyInput;
 use App\Support\BusinessRuleException;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -50,19 +50,17 @@ class CreateStockCycle extends CreateRecord
                         ->inline()
                         ->live()
                         ->required(),
-                    Grid::make(4)->schema([
-                        DatePicker::make('purchased_on')
-                            ->label(__('Purchase date'))
-                            ->default(now())
-                            ->maxDate(now())
-                            ->visible(fn (Get $get): bool => $get('status') === StockCycleStatus::Purchased->value)
-                            ->required(fn (Get $get): bool => $get('status') === StockCycleStatus::Purchased->value),
+                    Grid::make(3)->schema([
                         TextInput::make('mileage_in')->label(__('Mileage at purchase'))->integer()->minValue(0)->suffix('km'),
                         MoneyInput::make('planned_price_rp')->label(__('Planned price')),
                         MoneyInput::make('list_price_rp')->label(__('List price')),
                     ]),
                     Textarea::make('notes')->label(__('Notes'))->rows(2),
                 ]),
+            Section::make(__('Purchase'))
+                ->schema(PurchaseForm::components(withMileage: false))
+                ->statePath('purchase')
+                ->visible(fn (Get $get): bool => $get('status') === StockCycleStatus::Purchased->value),
         ]);
     }
 
@@ -80,8 +78,9 @@ class CreateStockCycle extends CreateRecord
                     'list_price_rp' => $data['list_price_rp'] ?? null,
                     'notes' => $data['notes'] ?? null,
                 ],
-                StockCycleStatus::from((string) $data['status']),
-                $data['purchased_on'] ?? null,
+                $data['status'] === StockCycleStatus::Purchased->value
+                    ? [...($data['purchase'] ?? []), 'mileage' => $data['mileage_in'] ?? null]
+                    : null,
             );
         } catch (BusinessRuleException $e) {
             Notification::make()->title($e->getMessage())->danger()->send();

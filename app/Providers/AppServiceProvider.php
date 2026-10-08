@@ -4,6 +4,11 @@ namespace App\Providers;
 
 use App\Domain\Audit\Models\AuditLog;
 use App\Domain\Audit\MorphMap;
+use App\Domain\Parties\Models\Party;
+use App\Domain\Purchasing\Models\Commitment;
+use App\Domain\Purchasing\Models\Cost;
+use App\Domain\Purchasing\Models\CostCategory;
+use App\Domain\Purchasing\Models\Purchase;
 use App\Domain\Settings\Models\BankAccount;
 use App\Domain\Settings\Models\NumberSequence;
 use App\Domain\Tenancy\Models\Tenant;
@@ -14,7 +19,12 @@ use App\Domain\Vehicles\Models\TyreSet;
 use App\Domain\Vehicles\Models\Vehicle;
 use App\Policies\AuditLogPolicy;
 use App\Policies\BankAccountPolicy;
+use App\Policies\CommitmentPolicy;
+use App\Policies\CostCategoryPolicy;
+use App\Policies\CostPolicy;
 use App\Policies\NumberSequencePolicy;
+use App\Policies\PartyPolicy;
+use App\Policies\PurchasePolicy;
 use App\Policies\StockCyclePolicy;
 use App\Policies\TenantMembershipPolicy;
 use App\Policies\TenantPolicy;
@@ -92,6 +102,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Vehicle::class, VehiclePolicy::class);
         Gate::policy(StockCycle::class, StockCyclePolicy::class);
         Gate::policy(TyreSet::class, TyreSetPolicy::class);
+        Gate::policy(Party::class, PartyPolicy::class);
+        Gate::policy(Purchase::class, PurchasePolicy::class);
+        Gate::policy(Cost::class, CostPolicy::class);
+        Gate::policy(CostCategory::class, CostCategoryPolicy::class);
+        Gate::policy(Commitment::class, CommitmentPolicy::class);
     }
 
     /**

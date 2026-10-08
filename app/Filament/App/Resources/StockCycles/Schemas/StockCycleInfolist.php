@@ -2,7 +2,9 @@
 
 namespace App\Filament\App\Resources\StockCycles\Schemas;
 
+use App\Domain\Purchasing\Enums\VatSituation;
 use App\Domain\Vehicles\Models\StockCycle;
+use App\Filament\App\Resources\Parties\PartyResource;
 use App\Support\Money;
 use App\Support\SwissFormat;
 use Filament\Infolists\Components\TextEntry;
@@ -38,6 +40,28 @@ final class StockCycleInfolist
                         TextEntry::make('mileage_out')->label(__('Mileage at handover'))->formatStateUsing(fn (?int $state): string => SwissFormat::mileage($state))->placeholder('–'),
                     ]),
                     TextEntry::make('notes')->label(__('Notes'))->placeholder('–')->columnSpanFull(),
+                ]),
+            Section::make(__('Purchase'))
+                ->visible(fn (StockCycle $record): bool => $record->purchase !== null)
+                ->schema([
+                    Grid::make(4)->schema([
+                        TextEntry::make('purchase.seller_party_id')
+                            ->label(__('Seller'))
+                            ->state(fn (StockCycle $record): ?string => $record->purchase?->seller?->displayName())
+                            ->url(fn (StockCycle $record): ?string => $record->purchase?->seller === null ? null : PartyResource::getUrl('edit', ['record' => $record->purchase->seller]))
+                            ->placeholder('–'),
+                        TextEntry::make('purchase.seller_kind')->label(__('Seller is')),
+                        TextEntry::make('purchase.purchase_type')->label(__('Purchase type')),
+                        TextEntry::make('purchase.contract_on')->label(__('Purchase date'))->date(),
+                        TextEntry::make('purchase.price_rp')->label(__('Purchase price'))->formatStateUsing(fn (?int $state): string => Money::format($state)),
+                        TextEntry::make('purchase.vat_situation')->label(__('VAT situation'))->badge()
+                            ->color(fn (VatSituation $state): string => $state === VatSituation::Unknown ? 'warning' : 'gray'),
+                        TextEntry::make('purchase.vat_shown_rp')->label(__('VAT shown on the invoice'))->formatStateUsing(fn (?int $state): string => Money::format($state))->placeholder('–'),
+                        TextEntry::make('purchase.payment_status')->label(__('Payment to seller'))->badge(),
+                        TextEntry::make('purchase.payoff_rp')->label(__('Payoff (e.g. leasing balance)'))->formatStateUsing(fn (?int $state): string => Money::format($state))->placeholder('–'),
+                        TextEntry::make('purchase.known_defects')->label(__('Known defects'))->placeholder('–')->columnSpan(2),
+                        TextEntry::make('purchase.agreed_deliverables')->label(__('Agreed with the seller'))->placeholder('–'),
+                    ]),
                 ]),
             Section::make(__('Vehicle'))
                 ->schema([

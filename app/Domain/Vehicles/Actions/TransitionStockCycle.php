@@ -28,7 +28,7 @@ class TransitionStockCycle
     ) {}
 
     /**
-     * @param  array{purchased_on?: string|Carbon|null, mileage_out?: int|null, on?: string|Carbon|null}  $data
+     * @param  array{mileage_out?: int|string|null, on?: string|Carbon|null, reason?: string|null}  $data
      */
     public function __invoke(StockCycle $cycle, StockCycleStatus $to, ?string $reason = null, array $data = []): StockCycle
     {
@@ -82,7 +82,7 @@ class TransitionStockCycle
         }
 
         $problems = [...$problems, ...match ($to) {
-            StockCycleStatus::Purchased => $this->purchaseProblems($cycle, $data),
+            StockCycleStatus::Purchased => $this->purchaseProblems($cycle),
             StockCycleStatus::Listed => $cycle->list_price_rp === null ? [__('Set a list price before listing the vehicle.')] : [],
             StockCycleStatus::Delivered => $this->deliveryProblems($cycle, $data),
             StockCycleStatus::Archived => $this->archiveProblems($cycle),
@@ -93,16 +93,19 @@ class TransitionStockCycle
     }
 
     /**
-     * @param  array<string, mixed>  $data
+     * A file becomes "purchased" only with a recorded purchase: seller, price and date.
+     *
      * @return list<string>
      */
-    private function purchaseProblems(StockCycle $cycle, array $data): array
+    private function purchaseProblems(StockCycle $cycle): array
     {
-        if (blank($data['purchased_on'] ?? null) && $cycle->purchased_on === null) {
-            return [__('Enter the purchase date.')];
+        $purchase = $cycle->purchase()->first();
+
+        if ($purchase === null) {
+            return [__('Record the purchase (seller, price and date) first.')];
         }
 
-        return [];
+        return $purchase->seller_party_id === null ? [__('Choose the seller.')] : [];
     }
 
     /**
@@ -119,6 +122,12 @@ class TransitionStockCycle
 
         if ($cycle->mileage_in !== null && (int) $mileageOut < $cycle->mileage_in) {
             return [__('The mileage at handover cannot be lower than the mileage at purchase.')];
+        }
+
+        $open = $cycle->commitments()->open()->where('blocks_handover', true)->count();
+
+        if ($open > 0) {
+            return [__('Promises to the customer still open: :count. Mark them as done first.', ['count' => $open])];
         }
 
         return [];
@@ -146,7 +155,7 @@ class TransitionStockCycle
         $on = isset($data['on']) && filled($data['on']) ? Carbon::parse($data['on']) : Carbon::today();
 
         match ($to) {
-            StockCycleStatus::Purchased => $this->markPurchased($cycle, $data),
+            StockCycleStatus::Purchased => $this->markPurchased($cycle),
             StockCycleStatus::ReadyForSale => $cycle->ready_on ??= $on,
             StockCycleStatus::Listed => $cycle->listed_on = $on,
             StockCycleStatus::Sold => $cycle->sold_on = $on,
@@ -164,17 +173,13 @@ class TransitionStockCycle
         }
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    private function markPurchased(StockCycle $cycle, array $data): void
+    private function markPurchased(StockCycle $cycle): void
     {
-        if (filled($data['purchased_on'] ?? null)) {
-            $cycle->purchased_on = Carbon::parse($data['purchased_on']);
-        }
+        $purchase = $cycle->purchase()->firstOrFail();
 
+        $cycle->purchased_on = $purchase->contract_on;
         // The file belongs to its purchase year, even when the car is sold the next year.
-        $cycle->file_year = (int) $cycle->purchased_on?->format('Y');
+        $cycle->file_year = (int) $purchase->contract_on->format('Y');
 
         if ($cycle->number === null) {
             $cycle->number = ($this->issueNumber)(NumberSequenceKey::StockCycle);

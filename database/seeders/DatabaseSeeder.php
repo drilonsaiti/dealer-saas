@@ -2,6 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Parties\Models\Party;
+use App\Domain\Purchasing\Actions\ConfirmCost;
+use App\Domain\Purchasing\Actions\RecordCost;
+use App\Domain\Purchasing\Models\Commitment;
+use App\Domain\Purchasing\Models\CostCategory;
 use App\Domain\Settings\Models\BankAccount;
 use App\Domain\Tenancy\Actions\CreateTenant;
 use App\Domain\Tenancy\Models\Tenant;
@@ -64,11 +69,20 @@ class DatabaseSeeder extends Seeder
         $record = app(RecordVehicle::class);
         $transition = app(TransitionStockCycle::class);
 
+        $reflex = Party::factory()->company('Reflex Automobiles Sàrl')->create(['street' => 'Avenue de Morges 12', 'email' => 'achat@reflex-auto.example.ch']);
+        $privateSeller = Party::create(['kind' => 'person', 'roles' => ['private_seller'], 'first_name' => 'Marco', 'last_name' => 'Keller', 'zip' => '3006', 'city' => 'Bern', 'mobile' => '079 555 12 34']);
+        $purchase = fn (Party $seller, string $sellerKind, int $price, int $daysAgo): array => [
+            'seller_party_id' => $seller->id,
+            'seller_kind' => $sellerKind,
+            'contract_on' => now()->subDays($daysAgo)->toDateString(),
+            'price_rp' => $price,
+            'vat_situation' => $sellerKind === 'private' ? 'private_no_vat' : 'company_no_vat_shown',
+        ];
+
         $corolla = $record(
             ['stammnummer' => '683737537', 'vin' => 'JTDKB20U403012345', 'make' => 'Toyota', 'model' => 'Corolla', 'variant' => '1.8 Hybrid', 'fuel' => 'hybrid', 'transmission' => 'automatic', 'body_type' => 'hatchback', 'first_registration_on' => '2020-06-19', 'power_kw' => 90, 'color_exterior' => 'Weiss'],
             ['mileage_in' => 79310, 'planned_price_rp' => 1_650_000, 'list_price_rp' => 1_890_000],
-            StockCycleStatus::Purchased,
-            now()->subDays(48)->toDateString(),
+            $purchase($reflex, 'company', 1_520_000, 48),
         );
         $transition($corolla, StockCycleStatus::Arrived, data: ['on' => now()->subDays(45)->toDateString()]);
         $transition($corolla, StockCycleStatus::ReadyForSale, data: ['on' => now()->subDays(30)->toDateString()]);
@@ -77,11 +91,18 @@ class DatabaseSeeder extends Seeder
         $x3 = $record(
             ['stammnummer' => '412558903', 'make' => 'BMW', 'model' => 'X3', 'variant' => 'xDrive30i', 'internal_label' => 'BMW X3 Blau Shema', 'fuel' => 'petrol', 'transmission' => 'automatic', 'drive' => 'all_wheel', 'body_type' => 'suv', 'first_registration_on' => '2019-03-12', 'power_kw' => 185, 'color_exterior' => 'Blau'],
             ['mileage_in' => 98200, 'planned_price_rp' => 2_690_000],
-            StockCycleStatus::Purchased,
-            now()->subDays(95)->toDateString(),
+            $purchase($reflex, 'company', 2_350_000, 95),
         );
         $transition($x3, StockCycleStatus::Arrived);
         $transition($x3, StockCycleStatus::InPreparation);
+
+        $category = fn (string $key): string => (string) CostCategory::query()->where('key', $key)->value('id');
+        $recordCost = app(RecordCost::class);
+        $transport = $recordCost(['stock_cycle_id' => $corolla->id, 'category_id' => $category('transport'), 'incurred_on' => now()->subDays(46)->toDateString(), 'description' => 'Transport Lausanne – Bern', 'gross_rp' => 35_000]);
+        app(ConfirmCost::class)($transport);
+        $recordCost(['stock_cycle_id' => $corolla->id, 'category_id' => $category('preparation'), 'incurred_on' => now()->subDays(32)->toDateString(), 'description' => 'Innen- und Aussenreinigung', 'gross_rp' => 28_000]);
+        $recordCost(['stock_cycle_id' => $x3->id, 'category_id' => $category('repair'), 'incurred_on' => now()->subDays(5)->toDateString(), 'description' => 'Bremsen vorne (Offerte)', 'gross_rp' => 120_000, 'is_estimate' => true]);
+        Commitment::create(['stock_cycle_id' => $corolla->id, 'description' => '4 neue Sommerreifen', 'estimated_cost_rp' => 64_000]);
 
         $record(
             ['stammnummer' => '653461306', 'make' => 'VW', 'model' => 'Golf', 'variant' => '2.0 TDI', 'fuel' => 'diesel', 'body_type' => 'hatchback'],
@@ -91,8 +112,7 @@ class DatabaseSeeder extends Seeder
         $tucson = $record(
             ['stammnummer' => '507112840', 'make' => 'Hyundai', 'model' => 'Tucson', 'variant' => '1.6 T-GDi', 'fuel' => 'hybrid', 'body_type' => 'suv'],
             ['mileage_in' => 42000, 'list_price_rp' => 2_450_000],
-            StockCycleStatus::Purchased,
-            now()->subDays(120)->toDateString(),
+            $purchase($privateSeller, 'private', 2_050_000, 120),
         );
         $transition($tucson, StockCycleStatus::ReadyForSale, data: ['on' => now()->subDays(100)->toDateString()]);
         $transition($tucson, StockCycleStatus::Listed, data: ['on' => now()->subDays(99)->toDateString()]);

@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Parties\Models\Party;
 use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Vehicles\Actions\FindVehicleDuplicates;
 use App\Domain\Vehicles\Actions\OpenStockCycle;
@@ -77,8 +78,12 @@ it('records a new vehicle with an open file', function () {
 it('records a purchased vehicle with a cycle number and file year', function () {
     $cycle = asTenant($this->tenant, fn () => app(RecordVehicle::class)(
         ['stammnummer' => '683737537', 'make' => 'Toyota'],
-        status: StockCycleStatus::Purchased,
-        purchasedOn: '2025-12-18',
+        purchase: [
+            'seller_party_id' => Party::factory()->create()->id,
+            'seller_kind' => 'private',
+            'contract_on' => '2025-12-18',
+            'price_rp' => 1_520_000,
+        ],
     ));
 
     expect($cycle->status)->toBe(StockCycleStatus::Purchased)

@@ -4,6 +4,11 @@ namespace App\Domain\Audit;
 
 use App\Domain\Audit\Models\AuditLog;
 use App\Domain\Audit\Models\StatusHistory;
+use App\Domain\Parties\Models\Party;
+use App\Domain\Purchasing\Models\Commitment;
+use App\Domain\Purchasing\Models\Cost;
+use App\Domain\Purchasing\Models\CostCategory;
+use App\Domain\Purchasing\Models\Purchase;
 use App\Domain\Settings\Models\BankAccount;
 use App\Domain\Settings\Models\NumberSequence;
 use App\Domain\Tenancy\Models\Tenant;
@@ -30,6 +35,11 @@ final class MorphMap
         'vehicle' => Vehicle::class,
         'stock_cycle' => StockCycle::class,
         'tyre_set' => TyreSet::class,
+        'party' => Party::class,
+        'purchase' => Purchase::class,
+        'cost_category' => CostCategory::class,
+        'cost' => Cost::class,
+        'commitment' => Commitment::class,
     ];
 
     public static function label(string $alias): string
@@ -43,6 +53,11 @@ final class MorphMap
             'vehicle' => __('Vehicle'),
             'stock_cycle' => __('Vehicle file'),
             'tyre_set' => __('Tyre set'),
+            'party' => __('Contact'),
+            'purchase' => __('Purchase'),
+            'cost_category' => __('Cost category'),
+            'cost' => __('Cost'),
+            'commitment' => __('Promise to customer'),
             default => $alias,
         };
     }

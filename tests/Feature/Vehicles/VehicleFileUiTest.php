@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Parties\Models\Party;
 use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
 use App\Domain\Vehicles\Models\StockCycle;
@@ -68,7 +69,13 @@ it('creates a purchased vehicle from the form', function () {
             'vehicle.model' => 'Corolla',
             'vehicle.vehicle_type' => 'passenger_car',
             'status' => 'purchased',
-            'purchased_on' => now()->toDateString(),
+            'purchase.seller_party_id' => Party::factory()->company()->create()->id,
+            'purchase.seller_kind' => 'company',
+            'purchase.purchase_type' => 'direct',
+            'purchase.contract_on' => now()->toDateString(),
+            'purchase.price_rp' => "15'200",
+            'purchase.vat_situation' => 'company_no_vat_shown',
+            'purchase.payment_status' => 'open',
             'mileage_in' => 79310,
             'list_price_rp' => "21'900",
         ])
@@ -80,6 +87,8 @@ it('creates a purchased vehicle from the form', function () {
     expect($cycle->status)->toBe(StockCycleStatus::Purchased)
         ->and($cycle->number)->not->toBeNull()
         ->and($cycle->list_price_rp)->toBe(2_190_000)
+        ->and($cycle->purchase->price_rp)->toBe(1_520_000)
+        ->and($cycle->purchase->mileage)->toBe(79310)
         ->and($cycle->vehicle->stammnummer)->toBe('683737537');
 });
 
@@ -154,4 +163,21 @@ it('lets read-only users look but not change anything', function () {
 
     Livewire::test(ViewStockCycle::class, ['record' => $cycle->getRouteKey()])
         ->assertActionHidden('status_ready_for_sale');
+});
+
+it('keeps dates unchanged when a form is saved without edits', function () {
+    useAppPanel($this->tenant, $this->user);
+
+    $cycle = StockCycle::factory()->status(StockCycleStatus::ReadyForSale)
+        ->for(Vehicle::factory()->state(['first_registration_on' => '2020-06-19', 'mfk_due_on' => '2027-01-31']))
+        ->create();
+
+    Livewire::test(EditStockCycle::class, ['record' => $cycle->getRouteKey()])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $vehicle = $cycle->vehicle->refresh();
+
+    expect($vehicle->first_registration_on->toDateString())->toBe('2020-06-19')
+        ->and($vehicle->mfk_due_on->toDateString())->toBe('2027-01-31');
 });

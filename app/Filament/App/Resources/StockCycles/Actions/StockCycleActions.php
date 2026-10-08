@@ -2,10 +2,13 @@
 
 namespace App\Filament\App\Resources\StockCycles\Actions;
 
+use App\Domain\Purchasing\Actions\RecordPurchase;
+use App\Domain\Purchasing\Models\Purchase;
 use App\Domain\Vehicles\Actions\OpenStockCycle;
 use App\Domain\Vehicles\Actions\TransitionStockCycle;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
 use App\Domain\Vehicles\Models\StockCycle;
+use App\Filament\App\Resources\StockCycles\Schemas\PurchaseForm;
 use App\Filament\App\Resources\StockCycles\StockCycleResource;
 use App\Support\BusinessRuleException;
 use Filament\Actions\Action;
@@ -30,7 +33,7 @@ final class StockCycleActions
         $actions = [];
 
         foreach (StockCycleStatus::cases() as $to) {
-            if ($to->isSetByAction() && $to !== StockCycleStatus::Purchased) {
+            if ($to->isSetByAction()) {
                 continue;
             }
 
@@ -56,9 +59,6 @@ final class StockCycleActions
             ->modalHeading(fn (StockCycle $record): string => __('Change status to ":status"', ['status' => $to->getLabel()]))
             ->modalSubmitActionLabel(__('Change status'))
             ->schema(fn (StockCycle $record): array => array_values(array_filter([
-                $to === StockCycleStatus::Purchased
-                    ? DatePicker::make('purchased_on')->label(__('Purchase date'))->default(now())->maxDate(now())->required()
-                    : null,
                 in_array($to, [StockCycleStatus::ReadyForSale, StockCycleStatus::Listed, StockCycleStatus::Delivered, StockCycleStatus::Archived], true)
                     ? DatePicker::make('on')->label(__('Date'))->default(now())->maxDate(now())->required()
                     : null,
@@ -79,6 +79,34 @@ final class StockCycleActions
                 }
 
                 Notification::make()->title(__('Status changed to ":status".', ['status' => $to->getLabel()]))->success()->send();
+            });
+    }
+
+    /**
+     * Record the purchase (a file in review becomes "purchased") or correct it later.
+     */
+    public static function recordPurchase(): Action
+    {
+        return Action::make('recordPurchase')
+            ->label(fn (StockCycle $record): string => $record->purchase === null ? __('Record purchase') : __('Edit purchase'))
+            ->icon(Heroicon::OutlinedBanknotes)
+            ->color(fn (StockCycle $record): string => $record->purchase === null ? 'primary' : 'gray')
+            ->visible(fn (StockCycle $record): bool => ! $record->isLocked()
+                && (auth()->user()?->can($record->purchase === null ? 'create' : 'update', $record->purchase ?? Purchase::class) ?? false))
+            ->modalHeading(fn (StockCycle $record): string => $record->purchase === null ? __('Record purchase') : __('Edit purchase'))
+            ->modalWidth('5xl')
+            ->fillForm(fn (StockCycle $record): array => $record->purchase?->attributesToArray() ?? ['mileage' => $record->mileage_in])
+            ->schema(PurchaseForm::components())
+            ->action(function (StockCycle $record, array $data, Action $action): void {
+                try {
+                    app(RecordPurchase::class)($record, $data);
+                } catch (BusinessRuleException $e) {
+                    Notification::make()->title($e->getMessage())->danger()->send();
+                    $action->halt();
+                }
+
+                $record->unsetRelation('purchase');
+                Notification::make()->title(__('Purchase saved.'))->success()->send();
             });
     }
 

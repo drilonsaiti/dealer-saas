@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Purchasing\Actions\InstallDefaultCostCategories;
 use App\Domain\Settings\Enums\NumberSequenceKey;
 use App\Domain\Settings\Models\NumberSequence;
 use App\Domain\Tenancy\Enums\Role;
@@ -30,7 +31,7 @@ function makeTenant(array $attributes = []): Tenant
 }
 
 /**
- * A dealer with the default number ranges, as CreateTenant sets them up.
+ * A dealer with the default number ranges and cost categories, as CreateTenant sets them up.
  */
 function makeDealer(array $attributes = []): Tenant
 {
@@ -44,6 +45,8 @@ function makeDealer(array $attributes = []): Tenant
                 'reset_yearly' => $key->resetsYearlyByDefault(),
             ]);
         }
+
+        app(InstallDefaultCostCategories::class)();
     });
 
     return $tenant;

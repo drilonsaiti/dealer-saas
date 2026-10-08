@@ -1,6 +1,8 @@
 <?php
 
 use App\Domain\Audit\Models\StatusHistory;
+use App\Domain\Purchasing\Actions\RecordPurchase;
+use App\Domain\Purchasing\Models\Purchase;
 use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Vehicles\Actions\ArchiveDeliveredCycles;
 use App\Domain\Vehicles\Actions\TransitionStockCycle;
@@ -28,7 +30,8 @@ it('walks the main flow and records every step', function () {
     asTenant($this->tenant, function () {
         $cycle = StockCycle::factory()->create(['mileage_in' => 79310]);
 
-        transition($cycle, StockCycleStatus::Purchased, data: ['purchased_on' => now()->toDateString()]);
+        Purchase::factory()->create(['stock_cycle_id' => $cycle->id, 'contract_on' => now()->toDateString()]);
+        transition($cycle, StockCycleStatus::Purchased);
         transition($cycle, StockCycleStatus::Arrived);
         transition($cycle, StockCycleStatus::InPreparation);
         transition($cycle, StockCycleStatus::ReadyForSale);
@@ -96,7 +99,7 @@ it('needs a reason to cancel a purchase', function () {
 it('checks the guards', function () {
     asTenant($this->tenant, function () {
         $review = StockCycle::factory()->create();
-        expect(fn () => transition($review, StockCycleStatus::Purchased))->toThrow(BusinessRuleException::class, 'purchase date');
+        expect(fn () => transition($review, StockCycleStatus::Purchased))->toThrow(BusinessRuleException::class, 'Record the purchase');
 
         $ready = StockCycle::factory()->status(StockCycleStatus::ReadyForSale)->create();
         expect(fn () => transition($ready, StockCycleStatus::Listed))->toThrow(BusinessRuleException::class, 'list price');
@@ -109,8 +112,12 @@ it('checks the guards', function () {
 
 it('gives cycle numbers in order and keeps the purchase year as file year', function () {
     asTenant($this->tenant, function () {
-        $a = transition(StockCycle::factory()->create(), StockCycleStatus::Purchased, data: ['purchased_on' => now()->toDateString()]);
-        $b = transition(StockCycle::factory()->create(), StockCycleStatus::Purchased, data: ['purchased_on' => now()->subYear()->toDateString()]);
+        $a = Purchase::factory()->create(['contract_on' => now()->toDateString()])->stockCycle;
+        $b = Purchase::factory()->create(['contract_on' => now()->subYear()->toDateString()])->stockCycle;
+        app(RecordPurchase::class)($a, $a->purchase->only(['seller_party_id', 'seller_kind', 'contract_on', 'price_rp']));
+        app(RecordPurchase::class)($b, $b->purchase->only(['seller_party_id', 'seller_kind', 'contract_on', 'price_rp']));
+        $a->refresh();
+        $b->refresh();
 
         $year = now()->format('Y');
 

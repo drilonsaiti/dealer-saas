@@ -134,12 +134,12 @@ class Vehicle extends Model
             'total_weight_kg' => 'integer',
             'keys_count' => 'integer',
             'service_last_km' => 'integer',
-            'first_registration_on' => 'date',
-            'last_registration_on' => 'date',
-            'mfk_last_on' => 'date',
-            'mfk_due_on' => 'date',
-            'service_last_on' => 'date',
-            'service_next_on' => 'date',
+            'first_registration_on' => 'date:Y-m-d',
+            'last_registration_on' => 'date:Y-m-d',
+            'mfk_last_on' => 'date:Y-m-d',
+            'mfk_due_on' => 'date:Y-m-d',
+            'service_last_on' => 'date:Y-m-d',
+            'service_next_on' => 'date:Y-m-d',
             'equipment' => 'array',
         ];
     }

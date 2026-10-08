@@ -15,4 +15,9 @@ enum Permission: string
     case AuditView = 'audit.view';
     case VehiclesView = 'vehicles.view';
     case VehiclesManage = 'vehicles.manage';
+    case PartiesView = 'parties.view';
+    case PartiesManage = 'parties.manage';
+    case PurchasesManage = 'purchases.manage';
+    case CostsManage = 'costs.manage';
+    case CataloguesManage = 'catalogues.manage';
 }

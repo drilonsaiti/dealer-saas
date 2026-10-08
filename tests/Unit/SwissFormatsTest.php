@@ -4,6 +4,7 @@ use App\Domain\Vehicles\Support\Stammnummer;
 use App\Domain\Vehicles\Support\Vin;
 use App\Support\Money;
 use App\Support\SwissFormat;
+use Illuminate\Support\Facades\File;
 
 it('normalises Stammnummer variants to nine digits', function (string $input, ?string $expected) {
     expect(Stammnummer::normalize($input))->toBe($expected);
@@ -58,4 +59,18 @@ it('rejects text that is not an amount', function () {
 it('formats mileage and dates', function () {
     expect(SwissFormat::mileage(79310))->toBe('79’310 km')
         ->and(SwissFormat::date(new DateTimeImmutable('2026-07-14')))->toBe('14.07.2026');
+});
+
+/*
+ * A plain 'date' cast serialises local midnight as UTC ("2020-06-18T22:00:00Z"); Filament fills
+ * its forms from that, so every save moved the date back a day. Date-only casts must say Y-m-d.
+ */
+it('serialises every date-only cast without a time zone shift', function () {
+    $offenders = collect(File::allFiles(app_path()))
+        ->filter(fn ($file) => preg_match("/=>\\s*'date'\\s*[,\\]]/", $file->getContents()) === 1)
+        ->map(fn ($file) => $file->getRelativePathname())
+        ->values()
+        ->all();
+
+    expect($offenders)->toBe([]);
 });
