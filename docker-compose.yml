@@ -7,7 +7,7 @@ services:
     build:
       context: .
       target: base
-    command: php artisan serve --host=0.0.0.0 --port=8000
+    command: php artisan serve --host=0.0.0.0 --port=8000 --no-reload
     working_dir: /app
     volumes:
       - .:/app
