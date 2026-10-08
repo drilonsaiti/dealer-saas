@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Domain\Audit\Models\AuditLog;
 use App\Domain\Audit\MorphMap;
 use App\Domain\Documents\Models\Document;
+use App\Domain\Import\Models\ImportRun;
 use App\Domain\Parties\Models\Party;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
@@ -25,6 +26,7 @@ use App\Policies\CommitmentPolicy;
 use App\Policies\CostCategoryPolicy;
 use App\Policies\CostPolicy;
 use App\Policies\DocumentPolicy;
+use App\Policies\ImportRunPolicy;
 use App\Policies\NumberSequencePolicy;
 use App\Policies\PartyPolicy;
 use App\Policies\PurchasePolicy;
@@ -113,6 +115,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Commitment::class, CommitmentPolicy::class);
         Gate::policy(Sale::class, SalePolicy::class);
         Gate::policy(Document::class, DocumentPolicy::class);
+        Gate::policy(ImportRun::class, ImportRunPolicy::class);
     }
 
     /**

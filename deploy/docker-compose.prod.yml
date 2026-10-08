@@ -33,6 +33,11 @@ services:
     <<: *app
     command: php artisan queue:work --tries=3 --max-time=3600
 
+  # Imports (IMPORT_QUEUE_CONNECTION=redis-long in .env): one at a time, up to an hour each.
+  queue-long:
+    <<: *app
+    command: php artisan queue:work redis-long --queue=long --tries=1 --timeout=3600
+
   scheduler:
     <<: *app
     command: php artisan schedule:work

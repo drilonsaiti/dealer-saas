@@ -73,6 +73,26 @@ return [
             'after_commit' => false,
         ],
 
+        // Long jobs (imports): retry_after above the job timeout, so a running import is never
+        // handed to a second worker. Worked by its own process (see deploy/docker-compose.prod.yml).
+        'redis-long' => [
+            'driver' => 'redis',
+            'connection' => env('REDIS_QUEUE_CONNECTION', 'default'),
+            'queue' => 'long',
+            'retry_after' => 3700,
+            'block_for' => null,
+            'after_commit' => false,
+        ],
+
+        'database-long' => [
+            'driver' => 'database',
+            'connection' => env('DB_QUEUE_CONNECTION'),
+            'table' => env('DB_QUEUE_TABLE', 'jobs'),
+            'queue' => 'long',
+            'retry_after' => 3700,
+            'after_commit' => false,
+        ],
+
         'deferred' => [
             'driver' => 'deferred',
         ],

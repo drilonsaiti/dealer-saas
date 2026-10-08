@@ -9,6 +9,10 @@ use App\Domain\Documents\Models\DocumentCategory;
 use App\Domain\Documents\Models\DocumentLink;
 use App\Domain\Documents\Models\DocumentVersion;
 use App\Domain\Documents\Models\RequiredDocument;
+use App\Domain\Import\Models\ImportPreset;
+use App\Domain\Import\Models\ImportRow;
+use App\Domain\Import\Models\ImportRun;
+use App\Domain\Operations\Models\RestoreDrill;
 use App\Domain\Parties\Models\Party;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
@@ -56,6 +60,10 @@ final class MorphMap
         'document_link' => DocumentLink::class,
         'document_category' => DocumentCategory::class,
         'required_document' => RequiredDocument::class,
+        'import_preset' => ImportPreset::class,
+        'import_run' => ImportRun::class,
+        'import_row' => ImportRow::class,
+        'restore_drill' => RestoreDrill::class,
     ];
 
     public static function label(string $alias): string
@@ -80,6 +88,7 @@ final class MorphMap
             'document' => __('Document'),
             'document_version' => __('Document version'),
             'document_category' => __('Document category'),
+            'import_run' => __('Import'),
             default => $alias,
         };
     }

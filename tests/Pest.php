@@ -85,6 +85,7 @@ function useAppPanel(Tenant $tenant, User $user): void
 {
     test()->actingAs($user);
     Filament::setCurrentPanel('app');
+    Filament::bootCurrentPanel(); // registers the panel's tenancy scopes, as a real request does
     Filament::setTenant($tenant);
     tenantContext()->set($tenant);
 }

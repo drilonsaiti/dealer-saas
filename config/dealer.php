@@ -38,4 +38,13 @@ return [
 
     'gotenberg_url' => env('GOTENBERG_URL'),
 
+    /*
+    | Imports can run for many minutes (a 1 GB document folder). In production they go to a
+    | queue connection whose retry_after is longer than the job (redis-long / database-long).
+    | Empty: the default connection.
+    */
+    'imports' => [
+        'queue_connection' => env('IMPORT_QUEUE_CONNECTION'),
+    ],
+
 ];

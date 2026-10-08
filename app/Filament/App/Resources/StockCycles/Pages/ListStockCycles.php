@@ -2,11 +2,16 @@
 
 namespace App\Filament\App\Resources\StockCycles\Pages;
 
+use App\Domain\Tenancy\Enums\Permission;
+use App\Domain\Vehicles\Actions\ExportVehicleList;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
 use App\Filament\App\Resources\StockCycles\StockCycleResource;
+use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListStockCycles extends ListRecords
@@ -16,6 +21,14 @@ class ListStockCycles extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('exportList')
+                ->label(__('Export list'))
+                ->icon(Heroicon::OutlinedArrowDownTray)
+                ->color('gray')
+                ->visible(fn (): bool => auth()->user() instanceof User && auth()->user()->hasPermission(Permission::ReportsView))
+                ->action(fn () => response()
+                    ->download(app(ExportVehicleList::class)($this->getFilteredTableQuery()), 'vehicles-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8'])
+                    ->deleteFileAfterSend()),
             CreateAction::make()->label(__('New vehicle')),
         ];
     }

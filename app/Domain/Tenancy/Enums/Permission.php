@@ -25,4 +25,5 @@ enum Permission: string
     case DocumentsView = 'documents.view';
     case DocumentsManage = 'documents.manage';
     case DocumentsViewSensitive = 'documents.view_sensitive';
+    case ImportsManage = 'imports.manage';
 }
