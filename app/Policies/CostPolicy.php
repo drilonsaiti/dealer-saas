@@ -32,7 +32,7 @@ class CostPolicy
     {
         return $this->allows($user, Permission::CostsManage)
             && ! $cost->isConfirmed()
-            && ! ($cost->stockCycle?->isLocked() ?? false);
+            && ! ($cost->loadMissing('stockCycle')->stockCycle?->isLocked() ?? false);
     }
 
     public function confirm(User $user, Cost $cost): bool

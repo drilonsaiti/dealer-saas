@@ -1,41 +1,59 @@
-# Local development. Start with: docker compose up -d
+# Local development. Start with: docker compose up -d   (first start installs composer packages, ~1–2 min)
+# After every git pull:          docker compose restart app   (installs new packages, runs migrations)
 # App:      http://localhost:8000/app      (dealer app)
 #           http://localhost:8000/platform (platform admin)
 # Mailpit:  http://localhost:8025          (catches all outgoing emails)
+#
+# Settings come from your .env (APP_ENV, APP_DEBUG, QUEUE_CONNECTION, ...); the hosts of the other
+# containers are set below. vendor/ lives in a Docker volume, not in your project folder: reading
+# thousands of small files through a Windows/macOS bind mount is what made every page slow.
+x-dev: &dev
+  build:
+    context: .
+    target: dev
+  working_dir: /app
+  volumes:
+    - .:/app
+    - vendor:/app/vendor
+    - composer-cache:/tmp/composer-cache
+  environment:
+    DB_HOST: postgres
+    REDIS_HOST: redis
+    MAIL_HOST: mailpit
+    GOTENBERG_URL: http://gotenberg:3000
+    COMPOSER_CACHE_DIR: /tmp/composer-cache
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_started
+
 services:
   app:
-    build:
-      context: .
-      target: base
-    command: php artisan serve --host=0.0.0.0 --port=8000
-    working_dir: /app
-    volumes:
-      - .:/app
+    <<: *dev
+    # FrankenPHP serves several requests at once and static files directly (php artisan serve
+    # handles one request at a time, and in Docker it drops the DB_HOST etc. set above unless
+    # started with --no-reload).
+    command: >
+      sh -c "composer install --no-interaction --prefer-dist
+      && php artisan migrate --force
+      && php artisan filament:optimize
+      && exec frankenphp php-server --listen :8000 --root public/"
     ports:
       - "8000:8000"
-    environment:
-      DB_HOST: postgres
-      REDIS_HOST: redis
-      MAIL_HOST: mailpit
-      GOTENBERG_URL: http://gotenberg:3000
-    depends_on:
-      - postgres
-      - redis
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://localhost:8000/up') === false ? 1 : 0);"]
+      interval: 10s
+      start_period: 180s
 
+  # Only needed with QUEUE_CONNECTION=database or redis in .env:  docker compose --profile queue up -d
   queue:
-    build:
-      context: .
-      target: base
+    <<: *dev
+    profiles: [queue]
     command: php artisan queue:work --tries=3
-    working_dir: /app
-    volumes:
-      - .:/app
-    environment:
-      DB_HOST: postgres
-      REDIS_HOST: redis
-      MAIL_HOST: mailpit
     depends_on:
-      - postgres
+      app:
+        condition: service_healthy
 
   postgres:
     image: postgres:17
@@ -50,6 +68,11 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
       - ./docker/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Over TCP: during first-time setup (creating the dealer role) PostgreSQL only listens on its socket.
+      test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
+      interval: 3s
+      retries: 20
 
   redis:
     image: redis:7-alpine
@@ -67,3 +90,5 @@ services:
 
 volumes:
   postgres:
+  vendor:
+  composer-cache:

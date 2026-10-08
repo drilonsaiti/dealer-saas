@@ -13,6 +13,7 @@ use App\Domain\Sales\Models\Sale;
 use App\Domain\Sales\Models\TradeIn;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
+use App\Support\SearchTerms;
 use Database\Factories\StockCycleFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -198,6 +199,32 @@ class StockCycle extends Model
     public function scopeInStock(Builder $query): void
     {
         $query->whereIn('status', StockCycleStatus::inStockValues());
+    }
+
+    /**
+     * One search word: file number, make, model, variant, label, VIN, plate or Stammnummer
+     * (with or without dots). Call once per word; all words must match.
+     *
+     * @param  Builder<StockCycle>  $query
+     */
+    public function scopeMatchingWord(Builder $query, string $word): void
+    {
+        $like = SearchTerms::like($word);
+        $digits = SearchTerms::digits($word);
+
+        $query->where(fn (Builder $where) => $where
+            ->whereRaw('lower(stock_cycles.number) like ?', [$like])
+            ->orWhereHas('vehicle', function (Builder $vehicle) use ($like, $digits): void {
+                $vehicle->where(function (Builder $columns) use ($like, $digits): void {
+                    foreach (['make', 'model', 'variant', 'internal_label', 'vin', 'plate'] as $column) {
+                        $columns->orWhereRaw("lower(vehicles.{$column}) like ?", [$like]);
+                    }
+
+                    if (strlen($digits) >= 3) {
+                        $columns->orWhere('vehicles.stammnummer', 'like', "%{$digits}%");
+                    }
+                });
+            }));
     }
 
     public function isLocked(): bool

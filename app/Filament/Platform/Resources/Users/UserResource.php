@@ -42,7 +42,7 @@ class UserResource extends Resource
             Grid::make(2)->schema([
                 TextInput::make('name')->label(__('Name'))->required()->maxLength(255),
                 TextInput::make('email')->label(__('Email'))->email()->required()->unique(ignoreRecord: true),
-                Select::make('locale')->label(__('Language'))->options(config('dealer.locale_names'))->required(),
+                Select::make('locale')->label(__('Language'))->options(config('dealer.locale_names'))->placeholder(__('Automatic (language of the dealer)')),
                 Toggle::make('is_platform_admin')->label(__('Platform administrator')),
             ]),
         ]);

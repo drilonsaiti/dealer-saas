@@ -6,6 +6,7 @@ use App\Domain\Documents\Enums\FolderGroup;
 use App\Domain\Documents\Enums\OcrStatus;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Vehicles\Models\StockCycle;
+use App\Support\SearchTerms;
 use Filament\Actions\ActionGroup;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
@@ -24,7 +25,7 @@ final class DocumentTable
             ->modifyQueryUsing(fn (Builder $query) => $query
                 ->when(! DocumentActions::canSeeSensitive(), fn (Builder $hidden) => $hidden
                     ->whereHas('category', fn (Builder $category) => $category->where('sensitive', false)))
-                ->with(['category', 'currentVersion', 'possibleDuplicateOf', 'links'])
+                ->with(['category', 'currentVersion', 'possibleDuplicateOf', 'links', 'stockCycles.vehicle'])
                 ->withCount('versions'))
             ->columns([
                 TextColumn::make('title')
@@ -49,10 +50,7 @@ final class DocumentTable
                 TextColumn::make('linked_files')
                     ->label(__('Vehicle file'))
                     ->visible(! $groupByFolder)
-                    ->state(fn (Document $record): array => StockCycle::query()
-                        ->with('vehicle')
-                        ->whereIn('id', $record->links->where('linkable_type', 'stock_cycle')->pluck('linkable_id'))
-                        ->get()
+                    ->state(fn (Document $record): array => $record->stockCycles
                         ->map(fn (StockCycle $cycle): string => $cycle->title())
                         ->all())
                     ->placeholder(__('Not assigned'))
@@ -74,6 +72,7 @@ final class DocumentTable
                 DocumentActions::open(),
                 ActionGroup::make([
                     DocumentActions::download(),
+                    DocumentActions::recognizeText(),
                     DocumentActions::newVersion(),
                     DocumentActions::edit(),
                     DocumentActions::delete(),
@@ -82,21 +81,18 @@ final class DocumentTable
     }
 
     /**
-     * Title, file name, and the recognised text (full-text search).
+     * Title, file name, recognised text and the vehicle or contact it belongs to; every word must match.
      *
      * @param  Builder<Document>  $query
      * @return Builder<Document>
      */
     public static function search(Builder $query, string $search): Builder
     {
-        $term = '%'.mb_strtolower(trim($search)).'%';
+        foreach (SearchTerms::words($search) as $word) {
+            $query->matchingWord($word);
+        }
 
-        return $query->where(function (Builder $where) use ($term, $search): void {
-            $where->whereRaw('lower(documents.title) like ?', [$term])
-                ->orWhereHas('versions', fn (Builder $versions) => $versions
-                    ->whereRaw('lower(original_name) like ?', [$term])
-                    ->orWhereRaw("search_vector @@ plainto_tsquery('simple', ?)", [$search]));
-        });
+        return $query;
     }
 
     /**

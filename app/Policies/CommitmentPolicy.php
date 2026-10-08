@@ -27,7 +27,7 @@ class CommitmentPolicy
 
     public function update(User $user, Commitment $commitment): bool
     {
-        return $this->allows($user, Permission::VehiclesManage) && ! $commitment->stockCycle->isLocked();
+        return $this->allows($user, Permission::VehiclesManage) && ! $commitment->loadMissing('stockCycle')->stockCycle->isLocked();
     }
 
     public function delete(User $user, Commitment $commitment): bool

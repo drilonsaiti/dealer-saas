@@ -33,7 +33,7 @@ use Illuminate\Support\Collection;
  * @property string $id
  * @property string $name
  * @property string $email
- * @property string $locale
+ * @property string|null $locale
  * @property bool $is_platform_admin
  * @property string|null $last_tenant_id
  */
@@ -54,7 +54,6 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     private array $roleCache = [];
 
     protected $attributes = [
-        'locale' => 'de',
         'is_platform_admin' => false,
         'last_tenant_id' => null,
         'has_email_authentication' => false,

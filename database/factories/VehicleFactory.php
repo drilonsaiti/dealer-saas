@@ -29,7 +29,7 @@ class VehicleFactory extends Factory
 
         return [
             'stammnummer' => (string) $this->faker->unique()->numberBetween(100000000, 999999999),
-            'vin' => strtoupper($this->faker->bothify('WBA#######?######')),
+            'vin' => $this->faker->regexify('WBA[A-HJ-NPR-Z0-9]{14}'), // valid VIN alphabet: no I, O or Q
             'make' => $make,
             'model' => $model,
             'variant' => $variant,

@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\EditProfile;
 use App\Filament\Support\InitialsAvatarProvider;
 use App\Http\Middleware\EnablePlatformBypass;
 use App\Http\Middleware\SetLocale;
@@ -34,7 +35,7 @@ class PlatformPanelProvider extends PanelProvider
             ->brandName(fn (): string => config('app.name').' · Platform')
             ->login()
             ->defaultAvatarProvider(InitialsAvatarProvider::class)
-            ->profile(isSimple: false)
+            ->profile(EditProfile::class, isSimple: false)
             ->colors([
                 'primary' => Color::Slate,
                 'gray' => Color::Zinc,
