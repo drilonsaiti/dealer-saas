@@ -9,6 +9,9 @@ use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\CostCategory;
 use App\Domain\Purchasing\Models\Purchase;
+use App\Domain\Sales\Models\Sale;
+use App\Domain\Sales\Models\SaleItem;
+use App\Domain\Sales\Models\TradeIn;
 use App\Domain\Settings\Models\BankAccount;
 use App\Domain\Settings\Models\NumberSequence;
 use App\Domain\Tenancy\Models\Tenant;
@@ -40,6 +43,9 @@ final class MorphMap
         'cost_category' => CostCategory::class,
         'cost' => Cost::class,
         'commitment' => Commitment::class,
+        'sale' => Sale::class,
+        'sale_item' => SaleItem::class,
+        'trade_in' => TradeIn::class,
     ];
 
     public static function label(string $alias): string
@@ -58,6 +64,9 @@ final class MorphMap
             'cost_category' => __('Cost category'),
             'cost' => __('Cost'),
             'commitment' => __('Promise to customer'),
+            'sale' => __('Sale'),
+            'sale_item' => __('Sale item'),
+            'trade_in' => __('Trade-in'),
             default => $alias,
         };
     }

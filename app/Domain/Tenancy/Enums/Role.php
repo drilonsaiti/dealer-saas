@@ -47,6 +47,7 @@ enum Role: string implements HasLabel
                 Permission::PurchasesManage,
                 Permission::CostsManage,
                 Permission::CataloguesManage,
+                Permission::ReportsView,
             ],
             self::Sales => [
                 Permission::SettingsView,
@@ -56,10 +57,12 @@ enum Role: string implements HasLabel
                 Permission::PartiesManage,
                 Permission::PurchasesManage,
                 Permission::CostsManage,
+                Permission::SalesManage,
             ],
             self::ReadOnly => [
                 Permission::VehiclesView,
                 Permission::PartiesView,
+                Permission::ReportsView,
             ],
         };
     }

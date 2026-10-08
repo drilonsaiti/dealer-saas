@@ -3,6 +3,8 @@
 namespace App\Domain\Vehicles\Actions;
 
 use App\Domain\Audit\Models\StatusHistory;
+use App\Domain\Sales\Enums\SaleStatus;
+use App\Domain\Sales\Models\Sale;
 use App\Domain\Settings\Actions\IssueNumber;
 use App\Domain\Settings\Enums\NumberSequenceKey;
 use App\Domain\Tenancy\TenantContext;
@@ -81,8 +83,14 @@ class TransitionStockCycle
             $problems[] = __('Please give a reason for this status change.');
         }
 
+        if ($from->isBackStepTo($to) && in_array($from, [StockCycleStatus::Reserved, StockCycleStatus::Sold], true) && $this->activeSale($cycle) !== null) {
+            $problems[] = __('Cancel the reservation or sale first.');
+        }
+
         $problems = [...$problems, ...match ($to) {
             StockCycleStatus::Purchased => $this->purchaseProblems($cycle),
+            StockCycleStatus::Reserved => $this->activeSale($cycle)?->status === SaleStatus::Reserved ? [] : [__('Reserve the vehicle for a customer first.')],
+            StockCycleStatus::Sold => $this->activeSale($cycle)?->status === SaleStatus::Contracted ? [] : [__('Record the sale contract first.')],
             StockCycleStatus::Listed => $cycle->list_price_rp === null ? [__('Set a list price before listing the vehicle.')] : [],
             StockCycleStatus::Delivered => $this->deliveryProblems($cycle, $data),
             StockCycleStatus::Archived => $this->archiveProblems($cycle),
@@ -114,6 +122,10 @@ class TransitionStockCycle
      */
     private function deliveryProblems(StockCycle $cycle, array $data): array
     {
+        if (! in_array($this->activeSale($cycle)?->status, [SaleStatus::Contracted, SaleStatus::Invoiced], true)) {
+            return [__('Record the sale contract first.')];
+        }
+
         $mileageOut = $data['mileage_out'] ?? null;
 
         if ($mileageOut === null || $mileageOut === '') {
@@ -184,6 +196,11 @@ class TransitionStockCycle
         if ($cycle->number === null) {
             $cycle->number = ($this->issueNumber)(NumberSequenceKey::StockCycle);
         }
+    }
+
+    private function activeSale(StockCycle $cycle): ?Sale
+    {
+        return Sale::query()->active()->where('stock_cycle_id', $cycle->getKey())->first();
     }
 
     private function archiveAfterDays(): int

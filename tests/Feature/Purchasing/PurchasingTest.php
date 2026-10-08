@@ -11,6 +11,7 @@ use App\Domain\Purchasing\Actions\SplitCost;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\CostCategory;
+use App\Domain\Sales\Models\Sale;
 use App\Domain\Tenancy\Actions\CreateTenant;
 use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Vehicles\Actions\TransitionStockCycle;
@@ -142,6 +143,7 @@ it('splits one invoice across several cars to the Rappen', function () {
 it('blocks the handover until every promise is kept', function () {
     asTenant($this->tenant, function () {
         $cycle = StockCycle::factory()->status(StockCycleStatus::Sold)->create(['mileage_in' => 10_000]);
+        Sale::factory()->create(['stock_cycle_id' => $cycle->id]);
         $promise = Commitment::factory()->create(['stock_cycle_id' => $cycle->id]);
 
         expect(fn () => app(TransitionStockCycle::class)($cycle, StockCycleStatus::Delivered, data: ['mileage_out' => 10_100]))

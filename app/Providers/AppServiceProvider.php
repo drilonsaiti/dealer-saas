@@ -9,6 +9,7 @@ use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\CostCategory;
 use App\Domain\Purchasing\Models\Purchase;
+use App\Domain\Sales\Models\Sale;
 use App\Domain\Settings\Models\BankAccount;
 use App\Domain\Settings\Models\NumberSequence;
 use App\Domain\Tenancy\Models\Tenant;
@@ -25,6 +26,7 @@ use App\Policies\CostPolicy;
 use App\Policies\NumberSequencePolicy;
 use App\Policies\PartyPolicy;
 use App\Policies\PurchasePolicy;
+use App\Policies\SalePolicy;
 use App\Policies\StockCyclePolicy;
 use App\Policies\TenantMembershipPolicy;
 use App\Policies\TenantPolicy;
@@ -107,6 +109,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Cost::class, CostPolicy::class);
         Gate::policy(CostCategory::class, CostCategoryPolicy::class);
         Gate::policy(Commitment::class, CommitmentPolicy::class);
+        Gate::policy(Sale::class, SalePolicy::class);
     }
 
     /**

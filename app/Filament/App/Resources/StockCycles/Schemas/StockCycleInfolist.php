@@ -3,20 +3,51 @@
 namespace App\Filament\App\Resources\StockCycles\Schemas;
 
 use App\Domain\Purchasing\Enums\VatSituation;
+use App\Domain\Reporting\CalculateMargin;
+use App\Domain\Reporting\Margin;
+use App\Domain\Sales\Enums\SaleStatus;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Filament\App\Resources\Parties\PartyResource;
+use App\Filament\App\Resources\StockCycles\StockCycleResource;
 use App\Support\Money;
 use App\Support\SwissFormat;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use WeakMap;
 
 /**
  * The vehicle file's overview: where the car stands, what it cost, and what it is.
  */
 final class StockCycleInfolist
 {
+    /**
+     * Keyed by the record object, so it lives only as long as that object (one request),
+     * also under a long-running worker (FrankenPHP).
+     *
+     * @var WeakMap<StockCycle, Margin>|null
+     */
+    private static ?WeakMap $margins = null;
+
+    /**
+     * After an action changed the file in this request, compute the margin again.
+     */
+    public static function forget(StockCycle $record): void
+    {
+        self::$margins?->offsetUnset($record);
+    }
+
+    /**
+     * Computed once per record object; every margin entry reads from it.
+     */
+    private static function margin(StockCycle $record): Margin
+    {
+        self::$margins ??= new WeakMap;
+
+        return self::$margins[$record] ??= app(CalculateMargin::class)($record);
+    }
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
@@ -40,6 +71,76 @@ final class StockCycleInfolist
                         TextEntry::make('mileage_out')->label(__('Mileage at handover'))->formatStateUsing(fn (?int $state): string => SwissFormat::mileage($state))->placeholder('–'),
                     ]),
                     TextEntry::make('notes')->label(__('Notes'))->placeholder('–')->columnSpanFull(),
+                    TextEntry::make('trade_in_source')
+                        ->label(__('Came in as trade-in'))
+                        ->visible(fn (StockCycle $record): bool => $record->tradeInSource !== null)
+                        ->state(fn (StockCycle $record): ?string => $record->tradeInSource?->sale->stockCycle->title())
+                        ->url(fn (StockCycle $record): ?string => $record->tradeInSource === null ? null : StockCycleResource::getUrl('view', ['record' => $record->tradeInSource->sale->stockCycle]))
+                        ->columnSpanFull(),
+                ]),
+            Section::make(fn (StockCycle $record): string => $record->activeSale?->status === SaleStatus::Reserved ? __('Reservation') : __('Sale'))
+                ->visible(fn (StockCycle $record): bool => $record->activeSale !== null)
+                ->schema([
+                    Grid::make(4)->schema([
+                        TextEntry::make('activeSale.buyer_party_id')
+                            ->label(__('Buyer'))
+                            ->state(fn (StockCycle $record): ?string => $record->activeSale?->buyer->displayName())
+                            ->url(fn (StockCycle $record): ?string => $record->activeSale === null ? null : PartyResource::getUrl('edit', ['record' => $record->activeSale->buyer])),
+                        TextEntry::make('activeSale.status')->label(__('Status'))->badge(),
+                        TextEntry::make('activeSale.sale_on')->label(__('Contract date'))->date()->placeholder('–'),
+                        TextEntry::make('activeSale.reserved_until')->label(__('Reserved until'))->date()->placeholder('–'),
+                        TextEntry::make('activeSale.price_rp')->label(__('Sale price'))->formatStateUsing(fn (?int $state): string => Money::format($state)),
+                        TextEntry::make('activeSale.discount_rp')->label(__('Discount'))->formatStateUsing(fn (?int $state): string => Money::format($state)),
+                        TextEntry::make('sale_total')->label(__('Total incl. extras'))->state(fn (StockCycle $record): string => Money::format($record->activeSale?->totalRp())),
+                        TextEntry::make('activeSale.payment_type')->label(__('Payment')),
+                        TextEntry::make('activeSale.deposit_rp')->label(__('Deposit'))->formatStateUsing(fn (?int $state): string => Money::format($state)),
+                        TextEntry::make('trade_in_credit')
+                            ->label(__('Trade-in credit'))
+                            ->state(fn (StockCycle $record): string => $record->activeSale?->tradeIn === null ? '–' : Money::format($record->activeSale->tradeIn->credited_rp).' · '.$record->activeSale->tradeIn->vehicleName())
+                            ->url(fn (StockCycle $record): ?string => $record->activeSale?->tradeIn?->purchaseCycle === null ? null : StockCycleResource::getUrl('view', ['record' => $record->activeSale->tradeIn->purchaseCycle])),
+                        TextEntry::make('sale_balance')->label(__('Balance to pay'))->state(fn (StockCycle $record): string => Money::format($record->activeSale?->balanceRp()))->weight('bold'),
+                        TextEntry::make('activeSale.planned_handover_on')->label(__('Planned handover'))->date()->placeholder('–'),
+                    ]),
+                    TextEntry::make('activeSale.remarks')->label(__('Remarks'))->placeholder('–'),
+                ]),
+            Section::make(__('Margin'))
+                ->description(fn (StockCycle $record): string => self::margin($record)->isProvisional
+                    ? __('Provisional: not every cost is confirmed yet, or the car is not sold.')
+                    : __('Confirmed: all costs are confirmed.'))
+                ->visible(fn (StockCycle $record): bool => $record->purchase !== null)
+                ->schema([
+                    Grid::make(4)->schema([
+                        TextEntry::make('margin_revenue')
+                            ->label(fn (StockCycle $record): string => match (self::margin($record)->revenueBasis) {
+                                Margin::BASIS_SALE => __('Revenue'),
+                                Margin::BASIS_LIST_PRICE => __('Expected revenue (list price)'),
+                                Margin::BASIS_PLANNED_PRICE => __('Expected revenue (planned price)'),
+                                default => __('Revenue'),
+                            })
+                            ->state(fn (StockCycle $record): string => self::margin($record)->revenueBasis === Margin::BASIS_NONE ? '–' : Money::format(self::margin($record)->revenueRp)),
+                        TextEntry::make('margin_purchase')->label(__('Purchase price'))->state(fn (StockCycle $record): string => Money::format(self::margin($record)->purchaseRp)),
+                        TextEntry::make('margin_costs')
+                            ->label(__('Costs'))
+                            ->state(fn (StockCycle $record): string => Money::format(self::margin($record)->costsRp()))
+                            ->helperText(fn (StockCycle $record): string => __('confirmed :confirmed, open :open, promises :promises', [
+                                'confirmed' => Money::format(self::margin($record)->confirmedCostsRp, false),
+                                'open' => Money::format(self::margin($record)->openCostsRp, false),
+                                'promises' => Money::format(self::margin($record)->openPromisesRp, false),
+                            ])),
+                        TextEntry::make('margin_value')
+                            ->label(__('Margin'))
+                            ->state(function (StockCycle $record): string {
+                                $margin = self::margin($record);
+
+                                if ($margin->marginRp() === null) {
+                                    return '–';
+                                }
+
+                                return Money::format($margin->marginRp()).($margin->marginPercent() === null ? '' : " ({$margin->marginPercent()} %)");
+                            })
+                            ->weight('bold')
+                            ->color(fn (StockCycle $record): string => (self::margin($record)->marginRp() ?? 0) < 0 ? 'danger' : 'success'),
+                    ]),
                 ]),
             Section::make(__('Purchase'))
                 ->visible(fn (StockCycle $record): bool => $record->purchase !== null)

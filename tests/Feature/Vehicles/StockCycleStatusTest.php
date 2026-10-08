@@ -1,8 +1,12 @@
 <?php
 
 use App\Domain\Audit\Models\StatusHistory;
+use App\Domain\Parties\Models\Party;
 use App\Domain\Purchasing\Actions\RecordPurchase;
 use App\Domain\Purchasing\Models\Purchase;
+use App\Domain\Sales\Actions\ContractSale;
+use App\Domain\Sales\Actions\HandOverVehicle;
+use App\Domain\Sales\Models\Sale;
 use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Vehicles\Actions\ArchiveDeliveredCycles;
 use App\Domain\Vehicles\Actions\TransitionStockCycle;
@@ -37,8 +41,8 @@ it('walks the main flow and records every step', function () {
         transition($cycle, StockCycleStatus::ReadyForSale);
         $cycle->update(['list_price_rp' => 2_190_000]);
         transition($cycle, StockCycleStatus::Listed);
-        transition($cycle, StockCycleStatus::Sold);
-        transition($cycle, StockCycleStatus::Delivered, data: ['mileage_out' => 79400]);
+        $sale = app(ContractSale::class)($cycle, ['buyer_party_id' => Party::factory()->create()->id, 'price_rp' => 2_190_000]);
+        app(HandOverVehicle::class)($sale, 79400);
 
         $cycle->refresh();
 
@@ -105,6 +109,8 @@ it('checks the guards', function () {
         expect(fn () => transition($ready, StockCycleStatus::Listed))->toThrow(BusinessRuleException::class, 'list price');
 
         $sold = StockCycle::factory()->status(StockCycleStatus::Sold)->create(['mileage_in' => 80000]);
+        expect(fn () => transition($sold, StockCycleStatus::Delivered))->toThrow(BusinessRuleException::class, 'sale contract');
+        Sale::factory()->create(['stock_cycle_id' => $sold->id]);
         expect(fn () => transition($sold, StockCycleStatus::Delivered))->toThrow(BusinessRuleException::class, 'mileage')
             ->and(fn () => transition($sold, StockCycleStatus::Delivered, data: ['mileage_out' => 1000]))->toThrow(BusinessRuleException::class, 'lower');
     });

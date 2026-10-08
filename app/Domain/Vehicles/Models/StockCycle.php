@@ -8,6 +8,8 @@ use App\Domain\Audit\Models\StatusHistory;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\Purchase;
+use App\Domain\Sales\Models\Sale;
+use App\Domain\Sales\Models\TradeIn;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
 use Database\Factories\StockCycleFactory;
@@ -49,6 +51,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $legacy_ref
  * @property-read Vehicle $vehicle
  * @property-read Purchase|null $purchase
+ * @property-read Sale|null $activeSale
+ * @property-read TradeIn|null $tradeInSource
  */
 #[UseFactory(StockCycleFactory::class)]
 class StockCycle extends Model
@@ -114,6 +118,34 @@ class StockCycle extends Model
     public function purchase(): HasOne
     {
         return $this->hasOne(Purchase::class);
+    }
+
+    /**
+     * The current (not cancelled) sale; the database allows only one.
+     *
+     * @return HasOne<Sale, $this>
+     */
+    public function activeSale(): HasOne
+    {
+        return $this->hasOne(Sale::class)->where('status', '<>', 'cancelled');
+    }
+
+    /**
+     * @return HasMany<Sale, $this>
+     */
+    public function sales(): HasMany
+    {
+        return $this->hasMany(Sale::class);
+    }
+
+    /**
+     * When this car came in as a trade-in: the trade-in record on the other car's sale.
+     *
+     * @return HasOne<TradeIn, $this>
+     */
+    public function tradeInSource(): HasOne
+    {
+        return $this->hasOne(TradeIn::class, 'purchase_cycle_id');
     }
 
     /**

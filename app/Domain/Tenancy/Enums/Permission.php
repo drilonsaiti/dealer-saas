@@ -20,4 +20,6 @@ enum Permission: string
     case PurchasesManage = 'purchases.manage';
     case CostsManage = 'costs.manage';
     case CataloguesManage = 'catalogues.manage';
+    case SalesManage = 'sales.manage';
+    case ReportsView = 'reports.view';
 }

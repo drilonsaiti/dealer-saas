@@ -27,6 +27,10 @@ class ViewStockCycle extends ViewRecord
     {
         return [
             StockCycleActions::recordPurchase(),
+            StockCycleActions::reserve(),
+            StockCycleActions::sell(),
+            StockCycleActions::handOver(),
+            StockCycleActions::cancelSale(),
             StockCycleActions::changeStatus(),
             StockCycleActions::openNewCycle(),
             EditAction::make(),

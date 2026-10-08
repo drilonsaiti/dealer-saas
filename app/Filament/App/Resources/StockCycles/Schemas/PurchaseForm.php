@@ -25,6 +25,23 @@ use Filament\Schemas\Components\Utilities\Set;
 final class PurchaseForm
 {
     /**
+     * Form state for a new purchase; fillForm() replaces field defaults, so they live here.
+     *
+     * @return array<string, mixed>
+     */
+    public static function defaults(?int $mileage = null): array
+    {
+        return [
+            'seller_kind' => SellerKind::Private->value,
+            'purchase_type' => PurchaseType::Direct->value,
+            'contract_on' => now()->toDateString(),
+            'vat_situation' => VatSituation::PrivateNoVat->value,
+            'payment_status' => PaymentStatus::Open->value,
+            'mileage' => $mileage,
+        ];
+    }
+
+    /**
      * @param  bool  $withMileage  false on "New vehicle", where the file's mileage field is used
      * @return list<mixed>
      */

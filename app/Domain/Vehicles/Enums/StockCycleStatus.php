@@ -98,11 +98,11 @@ enum StockCycleStatus: string implements HasColor, HasLabel
 
     /**
      * Statuses reached only through their own business action (recording a purchase,
-     * reserving, contracting a sale), never through a plain status button.
+     * reserving, contracting a sale, handing over), never through a plain status button.
      */
     public function isSetByAction(): bool
     {
-        return in_array($this, [self::Purchased, self::Reserved, self::Sold], true);
+        return in_array($this, [self::Purchased, self::Reserved, self::Sold, self::Delivered], true);
     }
 
     /**

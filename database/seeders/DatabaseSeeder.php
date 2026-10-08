@@ -7,6 +7,9 @@ use App\Domain\Purchasing\Actions\ConfirmCost;
 use App\Domain\Purchasing\Actions\RecordCost;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\CostCategory;
+use App\Domain\Sales\Actions\ContractSale;
+use App\Domain\Sales\Actions\HandOverVehicle;
+use App\Domain\Sales\Actions\ReserveVehicle;
 use App\Domain\Settings\Models\BankAccount;
 use App\Domain\Tenancy\Actions\CreateTenant;
 use App\Domain\Tenancy\Models\Tenant;
@@ -116,7 +119,30 @@ class DatabaseSeeder extends Seeder
         );
         $transition($tucson, StockCycleStatus::ReadyForSale, data: ['on' => now()->subDays(100)->toDateString()]);
         $transition($tucson, StockCycleStatus::Listed, data: ['on' => now()->subDays(99)->toDateString()]);
-        $transition($tucson, StockCycleStatus::Sold, data: ['on' => now()->subDays(50)->toDateString()]);
-        $transition($tucson, StockCycleStatus::Delivered, data: ['on' => now()->subDays(45)->toDateString(), 'mileage_out' => 42150]);
+        $buyer = Party::create(['kind' => 'person', 'roles' => ['customer'], 'salutation' => 'ms', 'first_name' => 'Anna', 'last_name' => 'Meier', 'street' => 'Länggassstrasse 20', 'zip' => '3012', 'city' => 'Bern', 'email' => 'anna.meier@example.ch', 'mobile' => '079 222 33 44']);
+        $sale = app(ContractSale::class)($tucson, [
+            'buyer_party_id' => $buyer->id,
+            'price_rp' => 2_450_000,
+            'discount_rp' => 50_000,
+            'payment_type' => 'bank',
+            'sale_on' => now()->subDays(50)->toDateString(),
+            'items' => [['kind' => 'warranty', 'description' => 'Garantie 12 Monate', 'qty' => 1, 'unit_price_rp' => 49_000]],
+            'trade_in' => [
+                'vehicle' => ['stammnummer' => '311908112', 'make' => 'VW', 'model' => 'Polo', 'variant' => '1.0 TSI'],
+                'mileage' => 112_000,
+                'value_rp' => 450_000,
+            ],
+        ]);
+        app(HandOverVehicle::class)($sale, 42_150, now()->subDays(45)->toDateString());
+
+        $octavia = $record(
+            ['stammnummer' => '228461775', 'make' => 'Skoda', 'model' => 'Octavia', 'variant' => 'Combi 2.0 TDI 4x4', 'fuel' => 'diesel', 'drive' => 'all_wheel', 'body_type' => 'estate'],
+            ['mileage_in' => 64_500, 'list_price_rp' => 2_290_000],
+            $purchase($reflex, 'company', 1_880_000, 20),
+        );
+        $transition($octavia, StockCycleStatus::ReadyForSale, data: ['on' => now()->subDays(12)->toDateString()]);
+        $transition($octavia, StockCycleStatus::Listed, data: ['on' => now()->subDays(12)->toDateString()]);
+        $customer = Party::create(['kind' => 'person', 'roles' => ['customer'], 'salutation' => 'mr', 'first_name' => 'Luca', 'last_name' => 'Rossi', 'zip' => '6900', 'city' => 'Lugano', 'locale' => 'it', 'mobile' => '076 111 22 33']);
+        app(ReserveVehicle::class)($octavia, ['buyer_party_id' => $customer->id, 'price_rp' => 2_290_000, 'locale' => 'it', 'reserved_until' => now()->addDay()->toDateString()]);
     }
 }
