@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Documents\Actions\InstallDefaultDocumentCategories;
+use App\Domain\Documents\Actions\InstallDefaultTemplates;
 use App\Domain\Documents\Actions\StoreDocument;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Documents\Models\DocumentCategory;
@@ -53,6 +54,7 @@ function makeDealer(array $attributes = []): Tenant
 
         app(InstallDefaultCostCategories::class)();
         app(InstallDefaultDocumentCategories::class)();
+        app(InstallDefaultTemplates::class)();
     });
 
     return $tenant;

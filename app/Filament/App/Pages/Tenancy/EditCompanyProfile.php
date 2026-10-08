@@ -4,6 +4,7 @@ namespace App\Filament\App\Pages\Tenancy;
 
 use App\Domain\Tenancy\Models\Tenant;
 use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -62,6 +63,16 @@ class EditCompanyProfile extends EditTenantProfile
                             ->options(config('dealer.locale_names'))
                             ->required(),
                         ColorPicker::make('brand_color')->label(__('Brand colour')),
+                        FileUpload::make('logo_path')
+                            ->label(__('Logo'))
+                            ->helperText(__('Printed at the top of contracts and invoices. PNG, JPG or SVG, up to 2 MB.'))
+                            ->image()
+                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/svg+xml'])
+                            ->maxSize(2048)
+                            ->disk(fn (): string => (string) config('dealer.documents.disk'))
+                            ->directory(fn (): string => 'tenants/'.$this->tenant->getKey().'/branding')
+                            ->visibility('private')
+                            ->columnSpanFull(),
                     ]),
                 ]),
             Section::make(__('Security'))

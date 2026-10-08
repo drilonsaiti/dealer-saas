@@ -7,6 +7,7 @@ use App\Domain\Audit\Models\StatusHistory;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Documents\Models\DocumentCategory;
 use App\Domain\Documents\Models\DocumentLink;
+use App\Domain\Documents\Models\DocumentTemplate;
 use App\Domain\Documents\Models\DocumentVersion;
 use App\Domain\Documents\Models\RequiredDocument;
 use App\Domain\Import\Models\ImportPreset;
@@ -60,6 +61,7 @@ final class MorphMap
         'document_link' => DocumentLink::class,
         'document_category' => DocumentCategory::class,
         'required_document' => RequiredDocument::class,
+        'document_template' => DocumentTemplate::class,
         'import_preset' => ImportPreset::class,
         'import_run' => ImportRun::class,
         'import_row' => ImportRow::class,
@@ -88,6 +90,7 @@ final class MorphMap
             'document' => __('Document'),
             'document_version' => __('Document version'),
             'document_category' => __('Document category'),
+            'document_template' => __('Document template'),
             'import_run' => __('Import'),
             default => $alias,
         };

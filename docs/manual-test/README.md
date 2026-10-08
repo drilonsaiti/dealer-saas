@@ -92,3 +92,23 @@ Vehicles list → Export. Re-import that file with the vehicles importer: nothin
 
 - Platform → Restore drills: record a drill; after 35 days without one a warning shows.
 - Isolation: log in as Vevey; none of Bern's vehicles, parties, documents or search results appear. The automated version is `tests/Feature/Tenancy/IsolationSuiteTest.php`.
+
+## 12. Contracts (Phase 2, step 1)
+
+Needs Gotenberg (`docker compose up -d` starts it; `GOTENBERG_URL` points to it).
+
+1. Settings → Company: upload a logo, set street and postcode. Settings → Bank accounts: one account.
+2. Open a reserved or sold vehicle (e.g. the Skoda Octavia of the demo data) → **More → Kaufvertrag**.
+3. Step "Vorbereiten": the warnings list what the contract misses (address, VIN, first registration).
+   The language is proposed from the customer (Luca Rossi → Italiano). Add a remark.
+4. Step "Prüfen": the preview shows the contract in that language, with the logo, the 9 clauses
+   on page 2 and open promises (Zusagen) printed under remarks.
+5. **Vertrag abschliessen**. Expected: notification "Vertrag KV-00001 abgeschlossen"; the
+   document is in the vehicle file, folder 04 Verkauf, named `228461775_<date>_Contratto-di-vendita_IT.pdf`.
+6. Change the remark and finalise again: same number KV-00001, version 2; version 1 stays.
+   Finalise without changes: nothing new.
+7. Change the customer's name: the finalised PDF stays as it was.
+8. **More → Kaufvertrag Ankauf** on any vehicle with a purchase: purchase contract with seller and payoff.
+9. Settings → Vorlagen: **Neue Version**, change a clause, save (draft v2). Delete all clauses of one
+   language and activate: refused. Fill them in again, **Aktivieren**: v1 becomes "Abgelöst".
+   A new contract uses v2; the old one still shows v1's clauses.

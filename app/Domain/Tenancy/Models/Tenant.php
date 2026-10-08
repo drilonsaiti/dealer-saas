@@ -35,6 +35,7 @@ use Illuminate\Support\Arr;
  * @property string|null $website
  * @property string $default_locale
  * @property string|null $brand_color
+ * @property string|null $logo_path
  * @property array<string, mixed>|null $settings
  * @property string $status
  */
@@ -67,6 +68,7 @@ class Tenant extends Model
         'phone',
         'email',
         'website',
+        'logo_path',
         'default_locale',
         'brand_color',
         'settings',

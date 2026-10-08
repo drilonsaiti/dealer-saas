@@ -3,6 +3,7 @@
 namespace App\Filament\App\Resources\StockCycles\Pages;
 
 use App\Domain\Vehicles\Models\StockCycle;
+use App\Filament\App\Resources\StockCycles\Actions\ContractActions;
 use App\Filament\App\Resources\StockCycles\Actions\StockCycleActions;
 use App\Filament\App\Resources\StockCycles\StockCycleResource;
 use Filament\Actions\ActionGroup;
@@ -34,6 +35,8 @@ class ViewStockCycle extends ViewRecord
             StockCycleActions::cancelSale(),
             StockCycleActions::changeStatus(),
             ActionGroup::make([
+                ContractActions::salesContract(),
+                ContractActions::purchaseContract(),
                 EditAction::make(),
                 StockCycleActions::documentChecklist(),
                 StockCycleActions::export(),

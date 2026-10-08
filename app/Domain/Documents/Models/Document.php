@@ -27,7 +27,9 @@ use Illuminate\Support\Carbon;
  * @property string $id
  * @property string $tenant_id
  * @property string $category_id
+ * @property string|null $type_key
  * @property string $title
+ * @property string|null $number
  * @property Carbon|null $document_on
  * @property string|null $locale
  * @property DocumentSource $source

@@ -6,7 +6,7 @@ isolated by the application **and** by PostgreSQL Row-Level Security.
 
 Technical concept: see the "Dealer Management SaaS – Technical Concept" document.
 
-## Status: Phase 1 (vehicles, purchase, sale, documents, import)
+## Status: Phase 1 done, Phase 2 in progress (contracts, signatures, invoices, VAT, leasing)
 
 | Area | What exists |
 | --- | --- |
@@ -21,6 +21,7 @@ Technical concept: see the "Dealer Management SaaS – Technical Concept" docume
 | Audit | Append-only change log (DB trigger), status history, change log screen |
 | Languages | UI in DE / FR / IT / EN (`lang/*.json`), language per user, CI test fails on missing translations |
 | Settings | Company profile, bank accounts with IBAN / QR-IBAN validation, numbering (prefix, pattern, start number, yearly reset, gap-free issuing) |
+| Contracts | Sales and purchase contracts in DE/FR/IT/EN from the vehicle file (wizard: prepare → check → finalise); numbered, data snapshot + SHA-256, locked versions; versioned clause templates per dealer (Settings → Templates); logo on documents |
 | Ops | Docker (local + single-VPS production), CI (Pint, Larastan level 6, Pest), backup and restore-drill scripts; drill results under Platform → Restore drills, with a warning when none succeeded in 35 days |
 
 ## Local setup
