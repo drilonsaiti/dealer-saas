@@ -12,6 +12,7 @@ use App\Domain\Operations\Models\RestoreDrill;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
 use App\Domain\Vehicles\Actions\ArchiveDeliveredCycles;
+use App\Support\ManualTestPack;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
@@ -56,6 +57,15 @@ Artisan::command('documents:ocr', function (TenantContext $context): void {
         }
     }
 })->purpose('Read the text of all documents that are still waiting for it');
+
+/*
+ * Sample files for the manual test workflow (docs/manual-test/README.md).
+ */
+Artisan::command('dealer:manual-test-files {directory=docs/manual-test/files}', function (): void {
+    foreach ((new ManualTestPack)->build((string) $this->argument('directory')) as $file) {
+        $this->line($file);
+    }
+})->purpose('Write the sample files for the manual test workflow');
 
 /*
  * Large imports (e.g. a 1 GB document folder) from the server's disk instead of a browser upload.
