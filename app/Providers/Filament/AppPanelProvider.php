@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Domain\Tenancy\Models\Tenant;
 use App\Filament\App\Pages\Tenancy\EditCompanyProfile;
+use App\Filament\Pages\EditProfile;
 use App\Filament\Support\InitialsAvatarProvider;
 use App\Http\Middleware\ApplyTenantContext;
 use App\Http\Middleware\EnforceIdleTimeout;
@@ -43,7 +44,7 @@ class AppPanelProvider extends PanelProvider
             ->passwordReset()
             // The user profile (/app/profile) lives outside any dealer, so it cannot use the full
             // layout: the sidebar and dealer menu need a tenant and crash without one.
-            ->profile(isSimple: true)
+            ->profile(EditProfile::class, isSimple: true)
             ->colors([
                 'primary' => Color::Red,
                 'gray' => Color::Zinc,
