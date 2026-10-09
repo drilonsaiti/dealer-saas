@@ -9,6 +9,7 @@ use App\Domain\Sales\Models\Sale;
 use App\Domain\Settings\Actions\IssueNumber;
 use App\Domain\Settings\Enums\NumberSequenceKey;
 use App\Domain\Tenancy\TenantContext;
+use App\Domain\Vehicles\Enums\Code178Status;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
 use App\Domain\Vehicles\Events\StockCycleStatusChanged;
 use App\Domain\Vehicles\Models\StockCycle;
@@ -90,9 +91,9 @@ class TransitionStockCycle
 
         $problems = [...$problems, ...match ($to) {
             StockCycleStatus::Purchased => $this->purchaseProblems($cycle),
-            StockCycleStatus::Reserved => $this->activeSale($cycle)?->status === SaleStatus::Reserved ? [] : [__('Reserve the vehicle for a customer first.')],
+            StockCycleStatus::Reserved => [...$this->code178Problems($cycle), ...($this->activeSale($cycle)?->status === SaleStatus::Reserved ? [] : [__('Reserve the vehicle for a customer first.')])],
             StockCycleStatus::Sold => $this->activeSale($cycle)?->status === SaleStatus::Contracted ? [] : [__('Record the sale contract first.')],
-            StockCycleStatus::Listed => $this->listingProblems($cycle),
+            StockCycleStatus::Listed => [...$this->code178Problems($cycle), ...$this->listingProblems($cycle)],
             StockCycleStatus::Delivered => $this->deliveryProblems($cycle, $data),
             StockCycleStatus::Archived => $this->archiveProblems($cycle),
             default => [],
@@ -144,6 +145,18 @@ class TransitionStockCycle
         }
 
         return [];
+    }
+
+    /**
+     * A car with the leasing bank's code 178 still in the registration cannot be resold.
+     *
+     * @return list<string>
+     */
+    private function code178Problems(StockCycle $cycle): array
+    {
+        return $cycle->vehicle->code178_status === Code178Status::Entered
+            ? [__('Code 178 is still entered in the registration document. Have the bank clear it first.')]
+            : [];
     }
 
     /**

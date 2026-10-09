@@ -2,13 +2,17 @@
 
 namespace App\Filament\App\Resources\StockCycles\Schemas;
 
+use App\Domain\Checklists\Actions\SyncChecklist;
+use App\Domain\Checklists\Models\ChecklistItem;
 use App\Domain\Documents\Actions\RequiredDocumentsChecklist;
 use App\Domain\Documents\Enums\RequiredDocumentStatus;
 use App\Domain\Purchasing\Enums\VatSituation;
 use App\Domain\Reporting\CalculateMargin;
 use App\Domain\Reporting\Margin;
 use App\Domain\Sales\Enums\SaleStatus;
+use App\Domain\Vehicles\Enums\Code178Status;
 use App\Domain\Vehicles\Models\StockCycle;
+use App\Filament\App\Resources\Financings\FinancingResource;
 use App\Filament\App\Resources\Parties\PartyResource;
 use App\Filament\App\Resources\StockCycles\StockCycleResource;
 use App\Support\Money;
@@ -170,6 +174,36 @@ final class StockCycleInfolist
                             ->state(fn (StockCycle $record): string => Money::format(self::margin($record)->marginAfterVatRp()))
                             ->weight('bold')
                             ->color(fn (StockCycle $record): string => (self::margin($record)->marginAfterVatRp() ?? 0) < 0 ? 'danger' : 'success'),
+                    ]),
+                ]),
+            Section::make(__('Leasing and handover'))
+                ->visible(fn (StockCycle $record): bool => $record->activeSale !== null && in_array($record->activeSale->status, [SaleStatus::Contracted, SaleStatus::Invoiced, SaleStatus::Delivered], true)
+                    || $record->vehicle->code178_status !== Code178Status::None)
+                ->collapsible()
+                ->schema([
+                    Grid::make(4)->schema([
+                        TextEntry::make('financing')->label(__('Leasing / credit'))
+                            ->state(fn (StockCycle $record): ?string => ($f = $record->activeSale?->financing) === null ? null : $f->partner->displayName().' · '.$f->status->getLabel())
+                            ->url(fn (StockCycle $record): ?string => ($f = $record->activeSale?->financing) === null ? null : FinancingResource::getUrl('view', ['record' => $f]))
+                            ->placeholder(__('none')),
+                        TextEntry::make('payout')->label(__('Expected payout'))
+                            ->state(fn (StockCycle $record): ?string => ($f = $record->activeSale?->financing) === null ? null : Money::format($f->payout_expected_rp))
+                            ->placeholder('–'),
+                        TextEntry::make('vehicle.code178_status')->label(__('Code 178'))->badge(),
+                        TextEntry::make('handover_open')->label(__('Handover'))
+                            ->state(function (StockCycle $record): string {
+                                $sale = $record->activeSale;
+
+                                if ($sale === null || $sale->status === SaleStatus::Delivered) {
+                                    return $record->delivered_on === null ? '–' : __('handed over on :date', ['date' => $record->delivered_on->format('d.m.Y')]);
+                                }
+
+                                $open = app(SyncChecklist::class)->handover($sale)->openRequired();
+
+                                return $open->isEmpty() ? __('ready') : __('still open: :items', ['items' => $open->map(fn (ChecklistItem $i): string => $i->label)->implode(', ')]);
+                            })
+                            ->color(fn (string $state): string => $state === __('ready') ? 'success' : 'warning')
+                            ->columnSpan(4),
                     ]),
                 ]),
             Section::make(__('Purchase'))

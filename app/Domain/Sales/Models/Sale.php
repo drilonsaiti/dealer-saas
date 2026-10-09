@@ -4,11 +4,15 @@ namespace App\Domain\Sales\Models;
 
 use App\Domain\Audit\Concerns\Auditable;
 use App\Domain\Audit\Concerns\TracksAuthors;
+use App\Domain\Checklists\Models\Checklist;
+use App\Domain\Financing\Enums\FinancingStatus;
+use App\Domain\Financing\Models\Financing;
 use App\Domain\Parties\Models\Party;
 use App\Domain\Sales\Enums\PaymentType;
 use App\Domain\Sales\Enums\SaleStatus;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Domain\Vehicles\Models\StockCycle;
+use App\Domain\Warranty\Models\Warranty;
 use Database\Factories\SaleFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -48,6 +52,7 @@ use Illuminate\Support\Carbon;
  * @property-read StockCycle $stockCycle
  * @property-read Party $buyer
  * @property-read TradeIn|null $tradeIn
+ * @property-read Financing|null $financing
  */
 #[UseFactory(SaleFactory::class)]
 class Sale extends Model
@@ -177,5 +182,31 @@ class Sale extends Model
         $credited = $this->tradeIn === null ? 0 : $this->tradeIn->credited_rp;
 
         return $this->totalRp() - $this->deposit_rp - $credited;
+    }
+
+    /**
+     * The leasing or credit of this sale (not rejected or cancelled).
+     *
+     * @return HasOne<Financing, $this>
+     */
+    public function financing(): HasOne
+    {
+        return $this->hasOne(Financing::class)->whereNotIn('status', [FinancingStatus::Rejected->value, FinancingStatus::Cancelled->value]);
+    }
+
+    /**
+     * @return HasMany<Warranty, $this>
+     */
+    public function warranties(): HasMany
+    {
+        return $this->hasMany(Warranty::class);
+    }
+
+    /**
+     * @return HasMany<Checklist, $this>
+     */
+    public function checklists(): HasMany
+    {
+        return $this->hasMany(Checklist::class);
     }
 }

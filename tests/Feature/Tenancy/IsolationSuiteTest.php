@@ -1,9 +1,12 @@
 <?php
 
 use App\Domain\Audit\MorphMap;
+use App\Domain\Checklists\Actions\SyncChecklist;
 use App\Domain\Documents\Actions\GenerateContract;
 use App\Domain\Documents\Actions\SetRequiredDocumentStatus;
 use App\Domain\Documents\Enums\RequiredDocumentStatus;
+use App\Domain\Financing\Models\BuybackObligation;
+use App\Domain\Financing\Models\Financing;
 use App\Domain\Import\Actions\CreateImportRun;
 use App\Domain\Import\Actions\RunImport;
 use App\Domain\Import\Enums\ImporterType;
@@ -28,6 +31,9 @@ use App\Domain\Vat\Actions\SaveVatProfile;
 use App\Domain\Vat\Models\VatCode;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Domain\Vehicles\Models\TyreSet;
+use App\Domain\Warranty\Models\Warranty;
+use App\Domain\Warranty\Models\WarrantyClaim;
+use App\Domain\Warranty\Models\WarrantyProduct;
 use Filament\Facades\Filament;
 use Filament\Livewire\GlobalSearch;
 use Filament\Resources\Resource;
@@ -108,6 +114,15 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
         ], [['description' => "Service {$marker}", 'unit_price_rp' => 50_000, 'vat_code_id' => VatCode::byKey('taxable_normal')->id]]));
         app(RecordPayment::class)(['direction' => 'in', 'paid_on' => '2026-03-15', 'amount_rp' => 10_000, 'method' => 'cash'], [[$invoice, 10_000]]);
         BankTransaction::create(['bank_account_id' => $bank->id, 'entry_key' => hash('sha256', $marker), 'booked_on' => '2026-03-16', 'amount_rp' => 500, 'counterparty' => "Bank {$marker}"]);
+
+        // Leasing with buy-back, a warranty with a claim, and both checklists.
+        $financing = Financing::create(['sale_id' => $sale->id, 'partner_party_id' => Party::factory()->create(['last_name' => "Bank {$marker}"])->id, 'applied_on' => '2026-02-01', 'cash_price_rp' => 18_000_000]);
+        BuybackObligation::create(['financing_id' => $financing->id, 'vehicle_id' => $sale->stockCycle->vehicle_id, 'amount_rp' => 9_000_000, 'due_on' => '2030-02-01', 'remind_on' => '2029-11-01']);
+        $product = WarrantyProduct::create(['name' => ['de' => "Garantie {$marker}"], 'duration_months' => 12]);
+        $warranty = Warranty::create(['stock_cycle_id' => $sale->stock_cycle_id, 'sale_id' => $sale->id, 'product_id' => $product->id, 'duration_months' => 12, 'policy_number' => "P-{$marker}"]);
+        WarrantyClaim::create(['warranty_id' => $warranty->id, 'occurred_on' => '2026-05-01', 'mileage' => 1000, 'description' => "Schaden {$marker}"]);
+        app(SyncChecklist::class)->handover($sale);
+        app(SyncChecklist::class)->partner($financing);
 
         // A purchase contract out for signature (templates, signature requests, signers).
         $contract = app(GenerateContract::class)($panda->purchase, 'de', "Vertrag {$marker}");

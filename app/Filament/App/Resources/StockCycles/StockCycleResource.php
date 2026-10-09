@@ -15,6 +15,7 @@ use App\Filament\App\Resources\StockCycles\RelationManagers\DocumentsRelationMan
 use App\Filament\App\Resources\StockCycles\RelationManagers\InvoicesRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\StatusHistoryRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\TyreSetsRelationManager;
+use App\Filament\App\Resources\StockCycles\RelationManagers\WarrantiesRelationManager;
 use App\Filament\App\Resources\StockCycles\Schemas\StockCycleInfolist;
 use App\Support\Money;
 use App\Support\SearchTerms;
@@ -158,6 +159,7 @@ class StockCycleResource extends Resource
             DocumentsRelationManager::class,
             CostsRelationManager::class,
             InvoicesRelationManager::class,
+            WarrantiesRelationManager::class,
             CommitmentsRelationManager::class,
             StatusHistoryRelationManager::class,
             TyreSetsRelationManager::class,

@@ -2,10 +2,17 @@
 
 namespace App\Filament\App\Widgets;
 
+use App\Domain\Financing\Enums\BuybackStatus;
+use App\Domain\Financing\Models\BuybackObligation;
+use App\Domain\Financing\Models\Financing;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Reporting\StockReport;
 use App\Domain\Tenancy\Enums\Permission;
+use App\Domain\Warranty\Models\Warranty;
+use App\Filament\App\Resources\BuybackObligations\BuybackObligationResource;
+use App\Filament\App\Resources\Financings\FinancingResource;
 use App\Filament\App\Resources\Invoices\InvoiceResource;
+use App\Filament\App\Resources\Warranties\WarrantyResource;
 use App\Models\User;
 use App\Support\Money;
 use Filament\Support\Icons\Heroicon;
@@ -70,6 +77,7 @@ class StockOverview extends StatsOverviewWidget
                 ->color($open['files_missing_documents'] > 0 ? 'warning' : 'gray')
                 ->icon(Heroicon::OutlinedDocumentMagnifyingGlass),
             ...$this->invoiceStats(),
+            ...$this->leasingWarrantyStats(),
         ];
     }
 
@@ -92,6 +100,44 @@ class StockOverview extends StatsOverviewWidget
                 ->color($overdue->isNotEmpty() ? 'danger' : 'gray')
                 ->icon(Heroicon::OutlinedBanknotes)
                 ->url(InvoiceResource::getUrl('index')),
+        ];
+    }
+
+    /**
+     * Open leasing payouts (with the oldest age), open buy-back obligations (contingent
+     * liability) and warranties ending within 30 days.
+     *
+     * @return list<Stat>
+     */
+    private function leasingWarrantyStats(): array
+    {
+        if (! (auth()->user()?->can('viewAny', Financing::class) ?? false)) {
+            return [];
+        }
+
+        $payouts = Financing::query()->awaitingPayout()->get();
+        $oldest = $payouts->map(fn (Financing $f): ?int => FinancingResource::payoutAge($f))->filter()->max();
+        $buybacks = BuybackObligation::query()->where('status', BuybackStatus::Open->value);
+        $buybackSum = (int) (clone $buybacks)->sum('amount_rp');
+        $buybackSoon = (clone $buybacks)->whereDate('remind_on', '<=', today())->count();
+        $expiring = Warranty::query()->expiringWithin(30)->count();
+
+        return [
+            Stat::make(__('Open leasing payouts'), Money::format((int) $payouts->sum('payout_expected_rp')))
+                ->description(trans_choice(':count financing|:count financings', $payouts->count()).($oldest !== null ? ' · '.__('oldest :days days', ['days' => $oldest]) : ''))
+                ->color($oldest !== null && $oldest > 10 ? 'warning' : 'gray')
+                ->icon(Heroicon::OutlinedBuildingLibrary)
+                ->url(FinancingResource::getUrl('index')),
+            Stat::make(__('Buy-back obligations'), Money::format($buybackSum))
+                ->description($buybackSoon > 0 ? __('due within 3 months: :count', ['count' => $buybackSoon]) : __('contingent liability'))
+                ->color($buybackSoon > 0 ? 'warning' : 'gray')
+                ->icon(Heroicon::OutlinedArrowUturnLeft)
+                ->url(BuybackObligationResource::getUrl('index')),
+            Stat::make(__('Warranties ending soon'), (string) $expiring)
+                ->description(__('within 30 days'))
+                ->color($expiring > 0 ? 'warning' : 'gray')
+                ->icon(Heroicon::OutlinedShieldCheck)
+                ->url(WarrantyResource::getUrl('index')),
         ];
     }
 }

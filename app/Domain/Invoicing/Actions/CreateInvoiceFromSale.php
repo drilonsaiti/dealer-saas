@@ -121,6 +121,19 @@ class CreateInvoiceFromSale
             }
         }
 
+        // Leasing: the dealer already collected the first instalment from the customer; the bank
+        // pays the rest. A payment record, not a price reduction, so no VAT code (the VAT is on the full price).
+        $financing = $sale->financing;
+
+        if ($financing !== null && $financing->collection_rp > 0) {
+            $lines[] = [
+                'kind' => InvoiceLineKind::CollectionCredit->value,
+                'description' => __('First instalment collected from :name', ['name' => $sale->buyer->displayName()], $locale),
+                'unit_price_rp' => -$financing->collection_rp,
+                'vat_code_id' => null,
+            ];
+        }
+
         return $lines;
     }
 

@@ -14,6 +14,7 @@ use App\Domain\Sales\Models\Sale;
 use App\Domain\Sales\Models\TradeIn;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
+use App\Domain\Warranty\Models\Warranty;
 use App\Support\SearchTerms;
 use Database\Factories\StockCycleFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
@@ -260,5 +261,13 @@ class StockCycle extends Model
         $name = $this->vehicle->displayName();
 
         return $this->number === null ? $name : "{$this->number} · {$name}";
+    }
+
+    /**
+     * @return HasMany<Warranty, $this>
+     */
+    public function warranties(): HasMany
+    {
+        return $this->hasMany(Warranty::class);
     }
 }

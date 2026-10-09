@@ -6,7 +6,7 @@ isolated by the application **and** by PostgreSQL Row-Level Security.
 
 Technical concept: see the "Dealer Management SaaS – Technical Concept" document.
 
-## Status: Phase 1 done, Phase 2 in progress (contracts, signatures, invoices, VAT, leasing)
+## Status: Phase 1 and Phase 2 done (contracts, signatures, invoices, VAT, leasing, warranty, handover)
 
 | Area | What exists |
 | --- | --- |
@@ -26,6 +26,9 @@ Technical concept: see the "Dealer Management SaaS – Technical Concept" docume
 | Invoicing | Deposit, final and standard invoices, credit notes; gap-free numbers on issue; prices incl. VAT with dated rates (8.1 % since 2024); Swiss QR bill (QR reference with QR-IBAN, RF creditor reference otherwise) built in, validated against the SIX guidelines; locked PDF in the vehicle file; send by email on click |
 | Payments | Payments in/out with allocations to invoices and purchases (trade-in offsets and financing payouts as methods); camt.053/054 import with automatic matching by reference, proposals by amount, assign/ignore/undo |
 | VAT (MWST) | Dated VAT settings (method, agreed/received, period, approved net tax rates); tax entries from issued invoices and payments by versioned rules (auto / confirm / blocked, with explanation); half-year preview with ESTV form fields and net tax per rate; close (`vat.close`) freezes the figures, files report PDF + CSV; eCH-0217 v2 XML export (structure checked against the official eCH example; schema check when `resources/schemas/eCH-0217-2-0-0.xsd` is present); submitted and paid steps; corrections for closed periods; margin after net tax |
+| Leasing | Leasing / credit per sale (bank = invoice recipient, collected first instalment credited, expected payout), status flow with 14-day revocation period, partner checklist per bank, payout from the bank import, buy-back obligations with reminder and exercise into a new vehicle file, code 178 blocks resale |
+| Warranty | Warranty products per dealer (own or provider), sold with the car (price on the sale, premium as cost), policy with versioned certificate, active from handover, claims with dealer share booked on the original file, expiry |
+| Handover | Checklist from versioned templates with automatic rules (promises, paid or paid out, warranty registered, documents); required items block the handover |
 | Ops | Docker (local + single-VPS production), CI (Pint, Larastan level 6, Pest), backup and restore-drill scripts; drill results under Platform → Restore drills, with a warning when none succeeded in 35 days |
 
 ## Local setup

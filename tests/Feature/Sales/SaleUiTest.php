@@ -76,6 +76,8 @@ it('reserves, sells with a trade-in and hands over from the vehicle file', funct
         ->and($sale->balanceRp())->toBe(2_199_000 - 100_000 - 450_000)
         ->and($sale->tradeIn->purchaseCycle->status)->toBe(StockCycleStatus::Purchased);
 
+    readyForHandover($sale);
+
     Livewire::test(ViewStockCycle::class, ['record' => $cycle->getRouteKey()])
         ->callAction('handOver', ['on' => now()->toDateString(), 'mileage_out' => 50_120])
         ->assertHasNoActionErrors();

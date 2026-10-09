@@ -2,6 +2,7 @@
 
 namespace App\Domain\Payments\Actions;
 
+use App\Domain\Financing\Actions\SyncFinancingPayout;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Payments\Enums\PaymentDirection;
 use App\Domain\Payments\Models\Payment;
@@ -22,7 +23,10 @@ use Illuminate\Support\Facades\DB;
  */
 class RecordPayment
 {
-    public function __construct(private readonly RecordTaxEvents $taxEvents) {}
+    public function __construct(
+        private readonly RecordTaxEvents $taxEvents,
+        private readonly SyncFinancingPayout $payouts,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data  direction, paid_on, amount_rp, method, party_id, bank_account_id, reference, notes, bank_transaction_id
@@ -90,6 +94,10 @@ class RecordPayment
         Balances::refresh($record);
         $this->taxEvents->paymentAllocated($allocation->setRelation('payment', $payment));
 
+        if ($record instanceof Invoice) {
+            ($this->payouts)($record);
+        }
+
         return $allocation;
     }
 
@@ -104,7 +112,13 @@ class RecordPayment
             $records = $allocations->map->allocatable->filter();
             $payment->allocations()->delete();
             $payment->delete();
-            $records->each(fn (Model $record) => Balances::refresh($record->refresh()));
+            $records->each(function (Model $record): void {
+                Balances::refresh($record->refresh());
+
+                if ($record instanceof Invoice) {
+                    ($this->payouts)($record);
+                }
+            });
         });
     }
 }

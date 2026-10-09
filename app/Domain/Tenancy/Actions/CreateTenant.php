@@ -2,6 +2,7 @@
 
 namespace App\Domain\Tenancy\Actions;
 
+use App\Domain\Checklists\Actions\InstallDefaultChecklists;
 use App\Domain\Documents\Actions\InstallDefaultDocumentCategories;
 use App\Domain\Documents\Actions\InstallDefaultTemplates;
 use App\Domain\Purchasing\Actions\InstallDefaultCostCategories;
@@ -27,6 +28,7 @@ class CreateTenant
         private readonly InstallDefaultDocumentCategories $installDocumentCategories,
         private readonly InstallDefaultTemplates $installTemplates,
         private readonly InstallDefaultVatCodes $installVatCodes,
+        private readonly InstallDefaultChecklists $installChecklists,
     ) {}
 
     /**
@@ -52,6 +54,7 @@ class CreateTenant
                 ($this->installDocumentCategories)();
                 ($this->installTemplates)();
                 ($this->installVatCodes)();
+                ($this->installChecklists)();
 
                 ($this->inviteMember)($tenant, $adminEmail, $adminName, Role::Administrator, $sendInvitation);
             });

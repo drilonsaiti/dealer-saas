@@ -2,6 +2,7 @@
 
 namespace App\Domain\Vat\Rules;
 
+use App\Domain\Invoicing\Enums\InvoiceLineKind;
 use App\Domain\Invoicing\Enums\InvoiceType;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Invoicing\Models\InvoiceLine;
@@ -33,7 +34,9 @@ class InvoiceLineRule
      */
     public function apply(InvoiceLine $line, Invoice $invoice, int $amountRp, VatProfile $profile): ?array
     {
-        if (! $profile->liable || $amountRp === 0) {
+        // The leasing collection credit is money already received, not a price reduction: the
+        // full price is taxable on the vehicle line.
+        if (! $profile->liable || $amountRp === 0 || $line->kind === InvoiceLineKind::CollectionCredit) {
             return null;
         }
 

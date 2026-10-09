@@ -43,6 +43,7 @@ it('walks the main flow and records every step', function () {
         attachPhoto($cycle);
         transition($cycle, StockCycleStatus::Listed);
         $sale = app(ContractSale::class)($cycle, ['buyer_party_id' => Party::factory()->create()->id, 'price_rp' => 2_190_000]);
+        readyForHandover($sale);
         app(HandOverVehicle::class)($sale, 79400);
 
         $cycle->refresh();

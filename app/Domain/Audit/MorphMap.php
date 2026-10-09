@@ -4,12 +4,18 @@ namespace App\Domain\Audit;
 
 use App\Domain\Audit\Models\AuditLog;
 use App\Domain\Audit\Models\StatusHistory;
+use App\Domain\Checklists\Models\Checklist;
+use App\Domain\Checklists\Models\ChecklistItem;
+use App\Domain\Checklists\Models\ChecklistTemplate;
+use App\Domain\Checklists\Models\ChecklistTemplateItem;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Documents\Models\DocumentCategory;
 use App\Domain\Documents\Models\DocumentLink;
 use App\Domain\Documents\Models\DocumentTemplate;
 use App\Domain\Documents\Models\DocumentVersion;
 use App\Domain\Documents\Models\RequiredDocument;
+use App\Domain\Financing\Models\BuybackObligation;
+use App\Domain\Financing\Models\Financing;
 use App\Domain\Import\Models\ImportPreset;
 use App\Domain\Import\Models\ImportRow;
 use App\Domain\Import\Models\ImportRun;
@@ -42,6 +48,9 @@ use App\Domain\Vat\Models\VatRate;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Domain\Vehicles\Models\TyreSet;
 use App\Domain\Vehicles\Models\Vehicle;
+use App\Domain\Warranty\Models\Warranty;
+use App\Domain\Warranty\Models\WarrantyClaim;
+use App\Domain\Warranty\Models\WarrantyProduct;
 use App\Models\User;
 
 /**
@@ -92,6 +101,15 @@ final class MorphMap
         'import_run' => ImportRun::class,
         'import_row' => ImportRow::class,
         'restore_drill' => RestoreDrill::class,
+        'financing' => Financing::class,
+        'buyback_obligation' => BuybackObligation::class,
+        'warranty_product' => WarrantyProduct::class,
+        'warranty' => Warranty::class,
+        'warranty_claim' => WarrantyClaim::class,
+        'checklist_template' => ChecklistTemplate::class,
+        'checklist_template_item' => ChecklistTemplateItem::class,
+        'checklist' => Checklist::class,
+        'checklist_item' => ChecklistItem::class,
     ];
 
     public static function label(string $alias): string
@@ -127,6 +145,13 @@ final class MorphMap
             'payment' => __('Payment'),
             'bank_transaction' => __('Bank booking'),
             'import_run' => __('Import'),
+            'financing' => __('Financing'),
+            'buyback_obligation' => __('Buy-back obligation'),
+            'warranty_product' => __('Warranty product'),
+            'warranty' => __('Warranty'),
+            'warranty_claim' => __('Warranty claim'),
+            'checklist_template' => __('Checklist template'),
+            'checklist' => __('Checklist'),
             default => $alias,
         };
     }

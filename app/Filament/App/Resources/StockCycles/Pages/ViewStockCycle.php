@@ -6,6 +6,7 @@ use App\Domain\Invoicing\Enums\InvoiceType;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Filament\App\Resources\Invoices\InvoiceActions;
 use App\Filament\App\Resources\StockCycles\Actions\ContractActions;
+use App\Filament\App\Resources\StockCycles\Actions\LeasingWarrantyActions;
 use App\Filament\App\Resources\StockCycles\Actions\StockCycleActions;
 use App\Filament\App\Resources\StockCycles\StockCycleResource;
 use Filament\Actions\ActionGroup;
@@ -41,6 +42,9 @@ class ViewStockCycle extends ViewRecord
                 ContractActions::purchaseContract(),
                 InvoiceActions::fromSale(InvoiceType::Deposit),
                 InvoiceActions::fromSale(InvoiceType::Final),
+                LeasingWarrantyActions::financing(),
+                LeasingWarrantyActions::addWarranty(),
+                LeasingWarrantyActions::code178(),
                 EditAction::make(),
                 StockCycleActions::documentChecklist(),
                 StockCycleActions::export(),

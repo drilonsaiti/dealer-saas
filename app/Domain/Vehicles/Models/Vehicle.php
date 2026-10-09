@@ -6,6 +6,7 @@ use App\Domain\Audit\Concerns\Auditable;
 use App\Domain\Audit\Concerns\TracksAuthors;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use App\Domain\Vehicles\Enums\BodyType;
+use App\Domain\Vehicles\Enums\Code178Status;
 use App\Domain\Vehicles\Enums\DriveType;
 use App\Domain\Vehicles\Enums\FuelType;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
@@ -28,6 +29,9 @@ use Spatie\Translatable\HasTranslations;
  * The physical car. Unique per dealer by Stammnummer (when known); can pass through
  * the dealership several times, each time as its own StockCycle.
  *
+ * @property Code178Status $code178_status
+ * @property Carbon|null $code178_changed_on
+ * @property string|null $code178_note
  * @property string $id
  * @property string $tenant_id
  * @property string|null $stammnummer
@@ -80,6 +84,9 @@ class Vehicle extends Model
 
     protected $fillable = [
         'tenant_id',
+        'code178_status',
+        'code178_changed_on',
+        'code178_note',
         'stammnummer',
         'vin',
         'make',
@@ -116,11 +123,14 @@ class Vehicle extends Model
 
     protected $attributes = [
         'vehicle_type' => 'passenger_car',
+        'code178_status' => 'none',
     ];
 
     protected function casts(): array
     {
         return [
+            'code178_status' => Code178Status::class,
+            'code178_changed_on' => 'date:Y-m-d',
             'body_type' => BodyType::class,
             'vehicle_type' => VehicleType::class,
             'fuel' => FuelType::class,

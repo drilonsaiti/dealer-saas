@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Checklists\Actions\SyncChecklist;
+use App\Domain\Checklists\Models\ChecklistItem;
 use App\Domain\Documents\Actions\StoreDocument;
 use App\Domain\Documents\Models\DocumentCategory;
 use App\Domain\Parties\Models\Party;
@@ -21,6 +23,7 @@ use App\Domain\Vehicles\Actions\RecordVehicle;
 use App\Domain\Vehicles\Actions\TransitionStockCycle;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
 use App\Domain\Vehicles\Models\StockCycle;
+use App\Domain\Warranty\Models\WarrantyProduct;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -146,6 +149,8 @@ class DatabaseSeeder extends Seeder
                 'value_rp' => 450_000,
             ],
         ]);
+        // Historical demo sale: its handover checklist is taken as done.
+        app(SyncChecklist::class)->handover($sale)->items->each(fn (ChecklistItem $item) => $item->forceFill(['done_at' => now()->subDays(45), 'auto' => false])->save());
         app(HandOverVehicle::class)($sale, 42_150, now()->subDays(45)->toDateString());
 
         $octavia = $record(
@@ -158,6 +163,12 @@ class DatabaseSeeder extends Seeder
         $transition($octavia, StockCycleStatus::Listed, data: ['on' => now()->subDays(12)->toDateString()]);
         $customer = Party::create(['kind' => 'person', 'roles' => ['customer'], 'salutation' => 'mr', 'first_name' => 'Luca', 'last_name' => 'Rossi', 'zip' => '6900', 'city' => 'Lugano', 'locale' => 'it', 'mobile' => '076 111 22 33']);
         app(ReserveVehicle::class)($octavia, ['buyer_party_id' => $customer->id, 'price_rp' => 2_290_000, 'locale' => 'it', 'reserved_until' => now()->addDay()->toDateString()]);
+
+        // Leasing bank and warranty products for the Phase 2 leasing / warranty workflow.
+        Party::create(['kind' => 'company', 'roles' => ['financing_partner'], 'company_name' => 'Demo Leasing Bank AG', 'street' => 'Bahnhofstrasse 1', 'zip' => '8001', 'city' => 'Zürich', 'email' => 'leasing@example.ch']);
+        $provider = Party::create(['kind' => 'company', 'roles' => ['warranty_provider'], 'company_name' => 'Demo Garantie AG', 'zip' => '6300', 'city' => 'Zug']);
+        WarrantyProduct::create(['provider_party_id' => $provider->id, 'name' => ['de' => 'Garantie Plus 12 Monate', 'fr' => 'Garantie Plus 12 mois', 'it' => 'Garanzia Plus 12 mesi', 'en' => 'Warranty Plus 12 months'], 'duration_months' => 12, 'km_limit' => 20_000, 'coverage_limit_rp' => 1_000_000, 'deductible_rp' => 20_000, 'cost_rp' => 39_000, 'price_rp' => 69_000]);
+        WarrantyProduct::create(['name' => ['de' => 'Eigene Garantie 6 Monate', 'fr' => 'Garantie maison 6 mois', 'it' => 'Garanzia propria 6 mesi', 'en' => 'Own warranty 6 months'], 'duration_months' => 6, 'km_limit' => 10_000, 'price_rp' => 0]);
     }
 
     /**

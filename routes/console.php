@@ -14,6 +14,7 @@ use App\Domain\Signatures\Models\SignatureRequest;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
 use App\Domain\Vehicles\Actions\ArchiveDeliveredCycles;
+use App\Domain\Warranty\Actions\ActivateWarranties;
 use App\Support\ManualTestPack;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -78,6 +79,23 @@ Artisan::command('signatures:expire', function (TenantContext $context): void {
 })->purpose('Close signing links that have expired');
 
 Schedule::command('signatures:expire')->hourly();
+
+/*
+ * Warranties past their end date are marked expired (the dashboard lists those ending soon).
+ */
+Artisan::command('warranties:expire', function (TenantContext $context): void {
+    $tenants = $context->bypass(fn () => Tenant::query()->where('status', Tenant::STATUS_ACTIVE)->get());
+
+    foreach ($tenants as $tenant) {
+        $expired = $context->run($tenant, fn (): int => app(ActivateWarranties::class)->expire());
+
+        if ($expired > 0) {
+            $this->info("{$tenant->name}: {$expired} warranty/ies expired");
+        }
+    }
+})->purpose('Mark warranties past their end date as expired');
+
+Schedule::command('warranties:expire')->dailyAt('02:10');
 
 /*
  * Sample files for the manual test workflow (docs/manual-test/README.md).

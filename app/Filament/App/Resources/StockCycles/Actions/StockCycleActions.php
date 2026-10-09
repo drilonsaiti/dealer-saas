@@ -2,6 +2,8 @@
 
 namespace App\Filament\App\Resources\StockCycles\Actions;
 
+use App\Domain\Checklists\Actions\SyncChecklist;
+use App\Domain\Checklists\Models\ChecklistItem;
 use App\Domain\Documents\Actions\ExportVehicleFile;
 use App\Domain\Documents\Actions\RequiredDocumentsChecklist;
 use App\Domain\Documents\Actions\SetRequiredDocumentStatus;
@@ -28,12 +30,15 @@ use App\Support\BusinessRuleException;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Callout;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\HtmlString;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
@@ -186,13 +191,29 @@ final class StockCycleActions
             ->color('success')
             ->visible(fn (StockCycle $record): bool => $record->activeSale !== null && (auth()->user()?->can('handOver', $record->activeSale) ?? false))
             ->modalHeading(__('Hand over to the customer'))
-            ->schema(fn (StockCycle $record): array => [
-                DatePicker::make('on')->label(__('Date'))->default(now())->maxDate(now())->required(),
-                TextInput::make('mileage_out')->label(__('Mileage at handover'))->integer()->minValue($record->mileage_in ?? 0)->suffix('km')->required(),
-            ])
+            ->schema(function (StockCycle $record): array {
+                $sale = $record->activeSale;
+                $checklist = app(SyncChecklist::class)->handover($sale);
+                $items = $checklist->items->filter(fn (ChecklistItem $item): bool => $item->applicable);
+                $manual = $items->filter(fn (ChecklistItem $item): bool => ! $item->isDone() && ($item->auto_rule === null || str_starts_with($item->auto_rule, 'document:')));
+                $blocking = $items->filter(fn (ChecklistItem $item): bool => ! $item->isDone() && $item->required && ! $manual->contains($item));
+                $warnings = app(HandOverVehicle::class)->warnings($sale);
+                $list = fn ($items, bool $done): HtmlString => new HtmlString('<ul style="list-style:none;padding:0;margin:0">'.$items->map(fn (ChecklistItem $i): string => '<li>'.($done ? '✓ ' : '✗ ').e($i->label).'</li>')->implode('').'</ul>');
+
+                return array_values(array_filter([
+                    $warnings === [] ? null : Callout::make(__('Please note'))->description(implode(' ', $warnings))->warning(),
+                    $blocking->isEmpty() ? null : Callout::make(__('Not ready for handover'))->description($list($blocking, false))->danger(),
+                    Callout::make(__('Done'))->description($list($items->filter(fn (ChecklistItem $i): bool => $i->isDone()), true))->success()
+                        ->visible($items->contains(fn (ChecklistItem $i): bool => $i->isDone())),
+                    $manual->isEmpty() ? null : CheckboxList::make('confirm')->label(__('Confirm now'))
+                        ->options($manual->mapWithKeys(fn (ChecklistItem $i): array => [$i->getKey() => $i->label.($i->required ? '' : ' ('.__('optional').')')])->all()),
+                    DatePicker::make('on')->label(__('Date'))->default(now())->maxDate(now())->required(),
+                    TextInput::make('mileage_out')->label(__('Mileage at handover'))->integer()->minValue($record->mileage_in ?? 0)->suffix('km')->required(),
+                ]));
+            })
             ->action(fn (StockCycle $record, array $data, Action $action) => self::run(
                 $action,
-                fn () => app(HandOverVehicle::class)($record->activeSale, (int) $data['mileage_out'], (string) $data['on']),
+                fn () => app(HandOverVehicle::class)($record->activeSale, (int) $data['mileage_out'], (string) $data['on'], array_values($data['confirm'] ?? [])),
                 __('Vehicle handed over.'),
             ));
     }

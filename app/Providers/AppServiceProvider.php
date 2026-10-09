@@ -4,8 +4,11 @@ namespace App\Providers;
 
 use App\Domain\Audit\Models\AuditLog;
 use App\Domain\Audit\MorphMap;
+use App\Domain\Checklists\Models\ChecklistTemplate;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Documents\Models\DocumentTemplate;
+use App\Domain\Financing\Models\BuybackObligation;
+use App\Domain\Financing\Models\Financing;
 use App\Domain\Import\Models\ImportRun;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Parties\Models\Party;
@@ -30,14 +33,20 @@ use App\Domain\Vat\Models\VatProfile;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Domain\Vehicles\Models\TyreSet;
 use App\Domain\Vehicles\Models\Vehicle;
+use App\Domain\Warranty\Models\Warranty;
+use App\Domain\Warranty\Models\WarrantyClaim;
+use App\Domain\Warranty\Models\WarrantyProduct;
 use App\Policies\AuditLogPolicy;
 use App\Policies\BankAccountPolicy;
 use App\Policies\BankTransactionPolicy;
+use App\Policies\BuybackObligationPolicy;
+use App\Policies\ChecklistTemplatePolicy;
 use App\Policies\CommitmentPolicy;
 use App\Policies\CostCategoryPolicy;
 use App\Policies\CostPolicy;
 use App\Policies\DocumentPolicy;
 use App\Policies\DocumentTemplatePolicy;
+use App\Policies\FinancingPolicy;
 use App\Policies\ImportRunPolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\NumberSequencePolicy;
@@ -52,6 +61,9 @@ use App\Policies\TyreSetPolicy;
 use App\Policies\VatPeriodPolicy;
 use App\Policies\VatProfilePolicy;
 use App\Policies\VehiclePolicy;
+use App\Policies\WarrantyClaimPolicy;
+use App\Policies\WarrantyPolicy;
+use App\Policies\WarrantyProductPolicy;
 use App\Support\SwissFormat;
 use Filament\Forms\Components\DatePicker;
 use Filament\Schemas\Components\Grid;
@@ -142,6 +154,12 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(BankTransaction::class, BankTransactionPolicy::class);
         Gate::policy(VatProfile::class, VatProfilePolicy::class);
         Gate::policy(VatPeriod::class, VatPeriodPolicy::class);
+        Gate::policy(Financing::class, FinancingPolicy::class);
+        Gate::policy(BuybackObligation::class, BuybackObligationPolicy::class);
+        Gate::policy(Warranty::class, WarrantyPolicy::class);
+        Gate::policy(WarrantyClaim::class, WarrantyClaimPolicy::class);
+        Gate::policy(WarrantyProduct::class, WarrantyProductPolicy::class);
+        Gate::policy(ChecklistTemplate::class, ChecklistTemplatePolicy::class);
     }
 
     /**

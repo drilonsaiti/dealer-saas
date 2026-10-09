@@ -198,3 +198,38 @@ closing, export, submission and payment need accounting or administrator (`vat.c
    With received consideration, a payment dated in a closed period creates a correction period
    ("Korrektur") whose XML replaces the original return.
 9. Vehicle file → Margin: "Saldosteuer auf dem Verkauf" and "Marge nach MWST".
+
+## 16. Leasing, buy-back, warranty, handover (Phase 2, step 5)
+
+Demo data: leasing bank "Demo Leasing Bank AG", warranty products "Garantie Plus 12 Monate" (Demo Garantie AG)
+and "Eigene Garantie 6 Monate". Settings → Garantieprodukte and Settings → Checklisten can be edited
+(saving a checklist makes a new version).
+
+**Leasing (acceptance test 7)**
+1. Skoda Octavia (reserved for Luca Rossi) → **Mehr → Leasing / Kredit**: bank, first instalment collected
+   CHF 4’500, term 48, residual CHF 11’000, "Rückkaufverpflichtung" on. Expected: "Erwartete Auszahlung CHF 18’400",
+   payment type Leasing; the bank is now the invoice recipient.
+2. **Kaufvertrag erfassen**. Finance → Leasing / Kredit → open it → **Bewilligt** → **Vertrag erhalten**
+   (contract number). Expected: revocation until +14 days, "Unterlagen für die Bank" (8 items),
+   Finance → Rückkaufverpflichtungen shows CHF 11’000 due at lease end.
+3. **Unterlagen an die Bank gesendet** is refused until every required item is ticked. Items with a rule tick
+   themselves (leasing contract / budget calculation uploaded to the vehicle file, sales contract signed, invoice issued).
+4. Vehicle file → **Schlussrechnung** → issue: recipient is the bank, line "Erste Rate, einkassiert von Luca Rossi"
+   −4’500 without VAT, VAT on the full price, open CHF 18’400.
+5. **Übergeben**: refused ("Bezahlt bzw. Leasing ausbezahlt" missing) and warns about the revocation period.
+6. Import the bank's payment (camt with the invoice reference) or **Zahlung erfassen** CHF 18’400: the financing
+   is "Ausbezahlt", the dashboard's open payouts go down, the handover item ticks itself.
+7. **Übergeben** again, tick "Schlüssel …": delivered. **Mehr → Code 178** → "Code 178 eingetragen".
+8. Finance → Rückkaufverpflichtungen → **Zurückkaufen**: a new vehicle file on the same car (purchase type buy-back,
+   seller = bank). Reserving it is refused while code 178 is entered; set "Code 178 gelöscht", then it works.
+
+**Warranty (acceptance test 8)**
+1. A reserved sale → **Mehr → Garantie hinzufügen** → product: price on the sale (contract, invoice), premium as
+   cost (margin), tab "Garantien" shows a draft.
+2. **Police registrieren**: policy number and certificate PDF; doing it again with another PDF adds version 2 of
+   the same certificate. The handover item "Garantie registriert" ticks itself.
+3. Hand over: the warranty becomes active from that date and km (Garantien → "Bis km").
+4. Open the warranty → **Garantiefall melden** → **Entscheiden** (amount = deductible + provider + dealer) →
+   **Abrechnen**: the dealer share is a confirmed cost on the original vehicle file, even if it is archived.
+   A claim after the end date or above the km limit is flagged "Ausserhalb der Deckung".
+5. Garantien → "Läuft innert 30 Tagen ab"; `php artisan warranties:expire` (daily) marks ended ones expired.

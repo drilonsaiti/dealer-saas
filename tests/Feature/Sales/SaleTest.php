@@ -61,6 +61,7 @@ it('reserves, contracts and hands over a car', function () {
             ->and($cycle->refresh()->status)->toBe(StockCycleStatus::Sold)
             ->and($contracted->balanceRp())->toBe(2_190_000 - 40_000 - 200_000);
 
+        readyForHandover($contracted);
         app(HandOverVehicle::class)($contracted, 79_400);
 
         expect($cycle->refresh()->status)->toBe(StockCycleStatus::Delivered)

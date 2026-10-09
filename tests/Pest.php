@@ -1,5 +1,8 @@
 <?php
 
+use App\Domain\Checklists\Actions\InstallDefaultChecklists;
+use App\Domain\Checklists\Actions\SyncChecklist;
+use App\Domain\Checklists\Models\ChecklistItem;
 use App\Domain\Documents\Actions\InstallDefaultDocumentCategories;
 use App\Domain\Documents\Actions\InstallDefaultTemplates;
 use App\Domain\Documents\Actions\StoreDocument;
@@ -64,6 +67,7 @@ function makeDealer(array $attributes = []): Tenant
         app(InstallDefaultDocumentCategories::class)();
         app(InstallDefaultTemplates::class)();
         app(InstallDefaultVatCodes::class)();
+        app(InstallDefaultChecklists::class)();
     });
 
     return $tenant;
@@ -163,4 +167,14 @@ function fakeGotenberg(): void
 
         return Http::response('%PDF-1.7 fake '.md5(str_replace($boundary, '', $request->body())));
     }]);
+}
+
+/**
+ * Marks the open handover items of a sale as done (payment etc.), for tests about other things.
+ */
+function readyForHandover(Sale $sale): void
+{
+    app(SyncChecklist::class)->handover($sale)->items
+        ->filter(fn (ChecklistItem $item): bool => $item->done_at === null)
+        ->each(fn (ChecklistItem $item) => $item->forceFill(['done_at' => now(), 'auto' => false])->save());
 }
