@@ -25,6 +25,7 @@ use Livewire\Livewire;
 beforeEach(function () {
     app()->setLocale('en');
     fakeGotenberg();
+    config(['dealer.vat.ech0217_xsd' => null]); // the real schema is checked in Ech0217StructureTest
     Carbon::setTestNow('2026-03-16 10:00');
     $this->tenant = makeDealer(['slug' => 'aziri', 'street' => 'Industriestrasse 5', 'zip' => '3052', 'city' => 'Zollikofen', 'uid' => 'CHE-404.944.758', 'vat_number' => 'CHE-404.944.758 MWST']);
     $this->accounting = makeMember($this->tenant, Role::Accounting);

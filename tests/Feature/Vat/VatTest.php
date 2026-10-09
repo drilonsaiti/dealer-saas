@@ -47,6 +47,7 @@ use Illuminate\Support\Carbon;
 beforeEach(function () {
     app()->setLocale('en');
     fakeGotenberg();
+    config(['dealer.vat.ech0217_xsd' => null]); // the real schema is checked in Ech0217StructureTest
     Carbon::setTestNow('2026-03-16 10:00');
 
     $this->tenant = makeDealer(['name' => 'Aziri Automobile GmbH', 'legal_name' => 'Aziri Automobile GmbH', 'slug' => 'aziri', 'street' => 'Industriestrasse 5', 'zip' => '3052', 'city' => 'Zollikofen', 'uid' => 'CHE-404.944.758', 'vat_number' => 'CHE-404.944.758 MWST']);
@@ -364,7 +365,7 @@ it('exports a complete eCH-0217 XML, then records submission and payment (accept
         $doc = new DOMDocument;
         $doc->loadXML($xml);
         $x = new DOMXPath($doc);
-        $x->registerNamespace('v', 'http://www.ech.ch/xmlns/ech-0217/2');
+        $x->registerNamespace('v', 'http://www.ech.ch/xmlns/eCH-0217/2');
         $value = fn (string $path): string => (string) $x->evaluate("string({$path})");
 
         expect($result['validated'])->toBeFalse() // no XSD configured in tests
@@ -379,7 +380,7 @@ it('exports a complete eCH-0217 XML, then records submission and payment (accept
             ->and($value('/v:VATDeclaration/v:turnoverComputation/v:totalConsideration'))->toBe('530000.00')
             ->and($value('/v:VATDeclaration/v:turnoverComputation/v:suppliesExemptFromTax'))->toBe('10000.00')
             ->and($value('/v:VATDeclaration/v:turnoverComputation/v:reductionOfConsideration'))->toBe('5000.00')
-            ->and($value('/v:VATDeclaration/v:simpleTaxRateMethod/v:suppliesPerTaxRate/v:activityId'))->toBe('11111')
+            ->and($value('/v:VATDeclaration/v:simpleTaxRateMethod/v:suppliesPerTaxRate/v:activityID'))->toBe('11111')
             ->and($value('/v:VATDeclaration/v:simpleTaxRateMethod/v:suppliesPerTaxRate/v:taxRate'))->toBe('0.60')
             ->and($value('/v:VATDeclaration/v:simpleTaxRateMethod/v:suppliesPerTaxRate/v:turnover'))->toBe('515000.00')
             ->and($value('/v:VATDeclaration/v:payableTax'))->toBe('3090.00')

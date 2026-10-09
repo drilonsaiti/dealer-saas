@@ -15,11 +15,14 @@ use Illuminate\Support\Carbon;
  * gross turnover per approved rate), netTaxRateMethod before. A correction (typeOfSubmission 2)
  * carries the full amounts and replaces the original return.
  *
- * Source: eCH-0217 V2.0.0, https://www.ech.ch/de/ech/ech-0217/2.0.0
+ * Source: eCH-0217 V2.0.0, https://www.ech.ch/fr/ech/ech-0217/2.0.0 (structure checked against the
+ * official example files in tests/Fixtures/ech0217; full schema check with VAT_ECH0217_XSD)
  */
 class Ech0217Exporter
 {
-    public const NAMESPACE = 'http://www.ech.ch/xmlns/ech-0217/2';
+    public const NAMESPACE = 'http://www.ech.ch/xmlns/eCH-0217/2';
+
+    public const NAMESPACE_0058 = 'http://www.ech.ch/xmlns/eCH-0058/5';
 
     public const SIMPLE_METHOD_FROM = '2025-01-01';
 
@@ -59,10 +62,11 @@ class Ech0217Exporter
     {
         $doc = new DOMDocument('1.0', 'UTF-8');
         $doc->formatOutput = true;
-        $root = $doc->createElementNS(self::NAMESPACE, 'VATDeclaration');
+        $root = $doc->createElementNS(self::NAMESPACE, 'eCH-0217:VATDeclaration');
+        $root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:eCH-0058', self::NAMESPACE_0058);
         $doc->appendChild($root);
         $add = function (DOMElement $parent, string $name, ?string $value = null) use ($doc): DOMElement {
-            $element = $doc->createElementNS(self::NAMESPACE, $name);
+            $element = $doc->createElementNS(self::NAMESPACE, 'eCH-0217:'.$name);
 
             if ($value !== null) {
                 $element->appendChild($doc->createTextNode($value));
@@ -76,17 +80,16 @@ class Ech0217Exporter
         $general = $add($root, 'generalInformation');
         $add($general, 'uid', (string) self::uid($tenant));
         $add($general, 'organisationName', mb_substr((string) ($tenant->legal_name ?: $tenant->name), 0, 255));
-        $add($general, 'generationTime', ($generatedAt ?? now())->format('Y-m-d\TH:i:s'));
+        $add($general, 'generationTime', ($generatedAt ?? now())->copy()->utc()->format('Y-m-d\TH:i:s\Z'));
         $add($general, 'reportingPeriodFrom', $period->starts_on->format('Y-m-d'));
         $add($general, 'reportingPeriodTill', $period->ends_on->format('Y-m-d'));
         $add($general, 'typeOfSubmission', $period->isCorrection() ? '2' : '1');
         $add($general, 'formOfReporting', (string) $period->profile->basis->formOfReporting());
         $add($general, 'businessReferenceId', $this->businessReference($period));
         $application = $add($general, 'sendingApplication');
-        $ns58 = (string) config('dealer.vat.ech0058_namespace');
 
-        foreach (['manufacturer' => 'Dealer SaaS', 'product' => (string) config('app.name'), 'productVersion' => '2.4'] as $name => $value) {
-            $application->appendChild($doc->createElementNS($ns58, 'eCH-0058:'.$name, $value));
+        foreach (['manufacturer' => 'Dealer SaaS', 'product' => (string) config('app.name'), 'productVersion' => (string) config('dealer.version', '1.0')] as $name => $value) {
+            $application->appendChild($doc->createElementNS(self::NAMESPACE_0058, 'eCH-0058:'.$name, $value));
         }
 
         $fields = $figures['fields'];
@@ -111,7 +114,7 @@ class Ech0217Exporter
             $supplies = $add($method, 'suppliesPerTaxRate');
 
             if ($this->simple($period)) {
-                $add($supplies, 'activityId', (string) $rate['activity_code']);
+                $add($supplies, 'activityID', (string) $rate['activity_code']);
             }
 
             $add($supplies, 'taxRate', self::percent((string) $rate['rate']));

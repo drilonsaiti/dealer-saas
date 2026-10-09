@@ -190,7 +190,7 @@ closing, export, submission and payment need accounting or administrator (`vat.c
    with the proof in the file). An invoice issued with no VAT settings at all is "Blockiert".
 5. After the end of the period, with no open checks: **Periode abschliessen**. Expected: status
    "Abgeschlossen", report PDF and CSV detail under **Dateien** (also Documents, folder "Firma / Steuern").
-6. **ESTV-Export (XML)** downloads the eCH-0217 file (`MWST_…_eCH-0217.xml`). Without `VAT_ECH0217_XSD`
+6. **ESTV-Export (XML)** downloads the eCH-0217 file (`MWST_…_eCH-0217.xml`). Without `resources/schemas/eCH-0217-2-0-0.xsd`
    the notification says it is not validated against the schema. Upload it in "MWST-Abrechnung pro".
 7. **Als eingereicht markieren** (date, ESTV reference, the portal's confirmation PDF), then
    **Als bezahlt markieren**. Each is its own status.

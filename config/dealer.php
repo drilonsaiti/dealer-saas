@@ -57,13 +57,13 @@ return [
     ],
 
     /*
-    | VAT export (eCH-0217 v2, ESTV "MWST-Abrechnung pro"). The schema is not shipped: download
-    | eCH-0217-2-0-0.xsd (with its imports) from ech.ch and point ech0217_xsd to it; every export is
-    | then validated and refused if invalid. Without it the export is marked "not validated".
+    | VAT export (eCH-0217 v2, ESTV "MWST-Abrechnung pro"). Put eCH-0217-2-0-0.xsd from
+    | https://www.ech.ch/fr/ech/ech-0217/2.0.0 (Beilagen) into resources/schemas/ (or point
+    | VAT_ECH0217_XSD elsewhere): every export is then validated and refused if invalid. Without the
+    | file the export is marked "not validated". The schema imports eCH-0058 and eCH-0108 by URL.
     */
     'vat' => [
-        'ech0217_xsd' => env('VAT_ECH0217_XSD'),
-        'ech0058_namespace' => env('VAT_ECH0058_NAMESPACE', 'http://www.ech.ch/xmlns/eCH-0058/5'),
+        'ech0217_xsd' => env('VAT_ECH0217_XSD') ?: base_path('resources/schemas/eCH-0217-2-0-0.xsd'),
     ],
 
     /*
