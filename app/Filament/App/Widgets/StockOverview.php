@@ -2,8 +2,10 @@
 
 namespace App\Filament\App\Widgets;
 
+use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Reporting\StockReport;
 use App\Domain\Tenancy\Enums\Permission;
+use App\Filament\App\Resources\Invoices\InvoiceResource;
 use App\Models\User;
 use App\Support\Money;
 use Filament\Support\Icons\Heroicon;
@@ -67,6 +69,29 @@ class StockOverview extends StatsOverviewWidget
             Stat::make(__('Files with missing documents'), (string) $open['files_missing_documents'])
                 ->color($open['files_missing_documents'] > 0 ? 'warning' : 'gray')
                 ->icon(Heroicon::OutlinedDocumentMagnifyingGlass),
+            ...$this->invoiceStats(),
+        ];
+    }
+
+    /**
+     * @return list<Stat>
+     */
+    private function invoiceStats(): array
+    {
+        if (! (auth()->user()?->can('viewAny', Invoice::class) ?? false)) {
+            return [];
+        }
+
+        $open = Invoice::query()->open()->get();
+        $overdue = $open->filter(fn (Invoice $invoice): bool => $invoice->isOverdue());
+
+        return [
+            Stat::make(__('Open invoices'), Money::format((int) $open->sum(fn (Invoice $invoice): int => $invoice->openRp())))
+                ->description(trans_choice(':count invoice|:count invoices', $open->count()).($overdue->isNotEmpty() ? ' · '.__(':count overdue', ['count' => $overdue->count()]) : ''))
+                ->descriptionIcon($overdue->isNotEmpty() ? Heroicon::OutlinedExclamationTriangle : null)
+                ->color($overdue->isNotEmpty() ? 'danger' : 'gray')
+                ->icon(Heroicon::OutlinedBanknotes)
+                ->url(InvoiceResource::getUrl('index')),
         ];
     }
 }

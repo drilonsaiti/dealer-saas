@@ -13,8 +13,13 @@ use App\Domain\Documents\Models\RequiredDocument;
 use App\Domain\Import\Models\ImportPreset;
 use App\Domain\Import\Models\ImportRow;
 use App\Domain\Import\Models\ImportRun;
+use App\Domain\Invoicing\Models\Invoice;
+use App\Domain\Invoicing\Models\InvoiceLine;
 use App\Domain\Operations\Models\RestoreDrill;
 use App\Domain\Parties\Models\Party;
+use App\Domain\Payments\Models\BankTransaction;
+use App\Domain\Payments\Models\Payment;
+use App\Domain\Payments\Models\PaymentAllocation;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\CostCategory;
@@ -28,6 +33,8 @@ use App\Domain\Signatures\Models\SignatureRequest;
 use App\Domain\Signatures\Models\Signer;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\Models\TenantMembership;
+use App\Domain\Vat\Models\VatCode;
+use App\Domain\Vat\Models\VatRate;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Domain\Vehicles\Models\TyreSet;
 use App\Domain\Vehicles\Models\Vehicle;
@@ -66,6 +73,13 @@ final class MorphMap
         'document_template' => DocumentTemplate::class,
         'signature_request' => SignatureRequest::class,
         'signer' => Signer::class,
+        'vat_rate' => VatRate::class,
+        'vat_code' => VatCode::class,
+        'invoice' => Invoice::class,
+        'invoice_line' => InvoiceLine::class,
+        'payment' => Payment::class,
+        'payment_allocation' => PaymentAllocation::class,
+        'bank_transaction' => BankTransaction::class,
         'import_preset' => ImportPreset::class,
         'import_run' => ImportRun::class,
         'import_row' => ImportRow::class,
@@ -97,6 +111,10 @@ final class MorphMap
             'document_template' => __('Document template'),
             'signature_request' => __('Signature'),
             'signer' => __('Signer'),
+            'vat_code' => __('VAT code'),
+            'invoice' => __('Invoice'),
+            'payment' => __('Payment'),
+            'bank_transaction' => __('Bank booking'),
             'import_run' => __('Import'),
             default => $alias,
         };

@@ -10,6 +10,7 @@ use App\Domain\Settings\Models\NumberSequence;
 use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
+use App\Domain\Vat\Actions\InstallDefaultVatCodes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -25,6 +26,7 @@ class CreateTenant
         private readonly InstallDefaultCostCategories $installCostCategories,
         private readonly InstallDefaultDocumentCategories $installDocumentCategories,
         private readonly InstallDefaultTemplates $installTemplates,
+        private readonly InstallDefaultVatCodes $installVatCodes,
     ) {}
 
     /**
@@ -49,6 +51,7 @@ class CreateTenant
                 ($this->installCostCategories)();
                 ($this->installDocumentCategories)();
                 ($this->installTemplates)();
+                ($this->installVatCodes)();
 
                 ($this->inviteMember)($tenant, $adminEmail, $adminName, Role::Administrator, $sendInvitation);
             });

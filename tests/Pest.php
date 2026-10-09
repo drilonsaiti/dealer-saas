@@ -14,6 +14,7 @@ use App\Domain\Settings\Models\NumberSequence;
 use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
+use App\Domain\Vat\Actions\InstallDefaultVatCodes;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Domain\Vehicles\Models\Vehicle;
@@ -62,6 +63,7 @@ function makeDealer(array $attributes = []): Tenant
         app(InstallDefaultCostCategories::class)();
         app(InstallDefaultDocumentCategories::class)();
         app(InstallDefaultTemplates::class)();
+        app(InstallDefaultVatCodes::class)();
     });
 
     return $tenant;

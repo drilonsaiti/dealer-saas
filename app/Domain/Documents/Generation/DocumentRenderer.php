@@ -26,7 +26,7 @@ class DocumentRenderer
         app()->setLocale((string) $snapshot['locale']);
 
         try {
-            return view($type->view(), ['d' => $snapshot, 'logo' => $this->logo($snapshot)])->render();
+            return view($type->view(), ['d' => $snapshot, 'logo' => self::logoDataUri($snapshot['company']['logo_path'] ?? null)])->render();
         } finally {
             app()->setLocale($previous);
         }
@@ -52,12 +52,9 @@ class DocumentRenderer
 
     /**
      * The dealer's logo as a data URI, so the PDF service needs no access to our storage.
-     *
-     * @param  array<string, mixed>  $snapshot
      */
-    private function logo(array $snapshot): ?string
+    public static function logoDataUri(mixed $path): ?string
     {
-        $path = $snapshot['company']['logo_path'] ?? null;
         $disk = Storage::disk((string) config('dealer.documents.disk'));
 
         if (! is_string($path) || $path === '' || ! $disk->exists($path)) {

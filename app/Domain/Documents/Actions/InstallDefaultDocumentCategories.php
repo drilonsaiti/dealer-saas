@@ -32,6 +32,7 @@ class InstallDefaultDocumentCategories
         'offer' => [FolderGroup::SalePayments, 10, false, 'Offerte', 'Offre', 'Offerta', 'Offer'],
         'sales_contract' => [FolderGroup::SalePayments, 20, false, 'Kaufvertrag Verkauf', 'Contrat de vente', 'Contratto di vendita', 'Sales contract'],
         'invoice' => [FolderGroup::SalePayments, 30, false, 'Rechnung', 'Facture', 'Fattura', 'Invoice'],
+        'credit_note' => [FolderGroup::SalePayments, 35, false, 'Gutschrift', 'Note de crédit', 'Nota di credito', 'Credit note'],
         'receipt' => [FolderGroup::SalePayments, 40, false, 'Quittung', 'Quittance', 'Ricevuta', 'Receipt'],
         'handover_protocol' => [FolderGroup::SalePayments, 50, false, 'Übergabeprotokoll', 'Procès-verbal de livraison', 'Verbale di consegna', 'Handover protocol'],
         'buyer_identity' => [FolderGroup::SalePayments, 60, true, 'Ausweis Käufer', 'Pièce d’identité de l’acheteur', 'Documento d’identità dell’acquirente', 'Buyer ID'],

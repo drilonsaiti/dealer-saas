@@ -15,7 +15,10 @@ class PdfRenderer
         return filled(config('dealer.gotenberg_url'));
     }
 
-    public function fromHtml(string $html): string
+    /**
+     * @param  bool  $cssPages  page size and margins come from the document's @page rules (invoices with a QR bill need a page without margins)
+     */
+    public function fromHtml(string $html, bool $cssPages = false): string
     {
         if (! $this->isAvailable()) {
             throw new RuntimeException('GOTENBERG_URL is not configured.');
@@ -23,7 +26,16 @@ class PdfRenderer
 
         $response = Http::timeout(60)
             ->attach('files', $html, 'index.html')
-            ->post(rtrim((string) config('dealer.gotenberg_url'), '/').'/forms/chromium/convert/html', [
+            ->post(rtrim((string) config('dealer.gotenberg_url'), '/').'/forms/chromium/convert/html', $cssPages ? [
+                'paperWidth' => '8.27',
+                'paperHeight' => '11.7',
+                'marginTop' => '0',
+                'marginBottom' => '0',
+                'marginLeft' => '0',
+                'marginRight' => '0',
+                'preferCssPageSize' => 'true',
+                'printBackground' => 'true',
+            ] : [
                 'paperWidth' => '8.27',
                 'paperHeight' => '11.7',
                 'marginTop' => '0.6',

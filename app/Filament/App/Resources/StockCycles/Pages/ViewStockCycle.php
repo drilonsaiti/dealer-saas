@@ -2,7 +2,9 @@
 
 namespace App\Filament\App\Resources\StockCycles\Pages;
 
+use App\Domain\Invoicing\Enums\InvoiceType;
 use App\Domain\Vehicles\Models\StockCycle;
+use App\Filament\App\Resources\Invoices\InvoiceActions;
 use App\Filament\App\Resources\StockCycles\Actions\ContractActions;
 use App\Filament\App\Resources\StockCycles\Actions\StockCycleActions;
 use App\Filament\App\Resources\StockCycles\StockCycleResource;
@@ -37,6 +39,8 @@ class ViewStockCycle extends ViewRecord
             ActionGroup::make([
                 ContractActions::salesContract(),
                 ContractActions::purchaseContract(),
+                InvoiceActions::fromSale(InvoiceType::Deposit),
+                InvoiceActions::fromSale(InvoiceType::Final),
                 EditAction::make(),
                 StockCycleActions::documentChecklist(),
                 StockCycleActions::export(),

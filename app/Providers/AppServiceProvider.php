@@ -7,7 +7,10 @@ use App\Domain\Audit\MorphMap;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Documents\Models\DocumentTemplate;
 use App\Domain\Import\Models\ImportRun;
+use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Parties\Models\Party;
+use App\Domain\Payments\Models\BankTransaction;
+use App\Domain\Payments\Models\Payment;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\CostCategory;
@@ -27,14 +30,17 @@ use App\Domain\Vehicles\Models\TyreSet;
 use App\Domain\Vehicles\Models\Vehicle;
 use App\Policies\AuditLogPolicy;
 use App\Policies\BankAccountPolicy;
+use App\Policies\BankTransactionPolicy;
 use App\Policies\CommitmentPolicy;
 use App\Policies\CostCategoryPolicy;
 use App\Policies\CostPolicy;
 use App\Policies\DocumentPolicy;
 use App\Policies\DocumentTemplatePolicy;
 use App\Policies\ImportRunPolicy;
+use App\Policies\InvoicePolicy;
 use App\Policies\NumberSequencePolicy;
 use App\Policies\PartyPolicy;
+use App\Policies\PaymentPolicy;
 use App\Policies\PurchasePolicy;
 use App\Policies\SalePolicy;
 use App\Policies\StockCyclePolicy;
@@ -127,6 +133,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Document::class, DocumentPolicy::class);
         Gate::policy(ImportRun::class, ImportRunPolicy::class);
         Gate::policy(DocumentTemplate::class, DocumentTemplatePolicy::class);
+        Gate::policy(Invoice::class, InvoicePolicy::class);
+        Gate::policy(Payment::class, PaymentPolicy::class);
+        Gate::policy(BankTransaction::class, BankTransactionPolicy::class);
     }
 
     /**

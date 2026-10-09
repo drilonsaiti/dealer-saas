@@ -27,4 +27,8 @@ enum Permission: string
     case DocumentsViewSensitive = 'documents.view_sensitive';
     case ImportsManage = 'imports.manage';
     case TemplatesManage = 'templates.manage';
+    case InvoicesView = 'invoices.view';
+    case InvoicesManage = 'invoices.manage';
+    case InvoicesCancel = 'invoices.cancel';
+    case PaymentsManage = 'payments.manage';
 }

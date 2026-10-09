@@ -2,6 +2,9 @@
 
 namespace App\Domain\Sales\Actions;
 
+use App\Domain\Invoicing\Enums\InvoiceStatus;
+use App\Domain\Invoicing\Enums\InvoiceType;
+use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Sales\Enums\SaleStatus;
 use App\Domain\Sales\Models\Sale;
 use App\Domain\Vehicles\Actions\TransitionStockCycle;
@@ -25,6 +28,15 @@ class CancelSale
 
         if (! in_array($sale->status, [SaleStatus::Reserved, SaleStatus::Contracted], true)) {
             throw new BusinessRuleException(__('Only reserved or contracted sales can be cancelled here.'));
+        }
+
+        $uncredited = Invoice::query()->where('sale_id', $sale->getKey())
+            ->where('type', '!=', InvoiceType::CreditNote->value)
+            ->whereIn('status', [InvoiceStatus::Issued->value, InvoiceStatus::PartiallyPaid->value, InvoiceStatus::Paid->value])
+            ->pluck('number');
+
+        if ($uncredited->isNotEmpty()) {
+            throw new BusinessRuleException(__('Issue a credit note for :numbers first.', ['numbers' => $uncredited->implode(', ')]));
         }
 
         return DB::transaction(function () use ($sale, $reason): Sale {

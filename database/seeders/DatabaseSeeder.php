@@ -38,8 +38,8 @@ class DatabaseSeeder extends Seeder
         );
 
         $demo = [
-            ['name' => 'Demo Garage Bern', 'city' => 'Bern', 'default_locale' => 'de', 'admin' => 'admin@demo-bern.example.ch'],
-            ['name' => 'Garage Démo Vevey', 'city' => 'Vevey', 'default_locale' => 'fr', 'admin' => 'admin@demo-vevey.example.ch'],
+            ['name' => 'Demo Garage Bern', 'street' => 'Freiburgstrasse 251', 'zip' => '3018', 'city' => 'Bern', 'vat_number' => 'CHE-123.456.788 MWST', 'default_locale' => 'de', 'admin' => 'admin@demo-bern.example.ch'],
+            ['name' => 'Garage Démo Vevey', 'street' => 'Avenue de Gilamont 40', 'zip' => '1800', 'city' => 'Vevey', 'vat_number' => null, 'default_locale' => 'fr', 'admin' => 'admin@demo-vevey.example.ch'],
         ];
 
         foreach ($demo as $row) {
@@ -48,7 +48,7 @@ class DatabaseSeeder extends Seeder
             }
 
             $tenant = $createTenant(
-                ['name' => $row['name'], 'city' => $row['city'], 'default_locale' => $row['default_locale']],
+                ['name' => $row['name'], 'street' => $row['street'], 'zip' => $row['zip'], 'city' => $row['city'], 'vat_number' => $row['vat_number'], 'default_locale' => $row['default_locale']],
                 $row['admin'],
                 'Admin '.$row['city'],
                 sendInvitation: false,

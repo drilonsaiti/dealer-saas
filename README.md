@@ -23,6 +23,8 @@ Technical concept: see the "Dealer Management SaaS – Technical Concept" docume
 | Settings | Company profile, bank accounts with IBAN / QR-IBAN validation, numbering (prefix, pattern, start number, yearly reset, gap-free issuing) |
 | Contracts | Sales and purchase contracts in DE/FR/IT/EN from the vehicle file (wizard: prepare → check → finalise); numbered, data snapshot + SHA-256, locked versions; versioned clause templates per dealer (Settings → Templates); logo on documents |
 | Signatures | Own simple e-signature: on the iPad (with ID check) or by customer link with one-time code; signers in order (customer, then dealer); evidence page in the document language; signed PDF sealed (PAdES via pyHanko) and locked; withdraw, resend, expiry, signed on paper |
+| Invoicing | Deposit, final and standard invoices, credit notes; gap-free numbers on issue; prices incl. VAT with dated rates (8.1 % since 2024); Swiss QR bill (QR reference with QR-IBAN, RF creditor reference otherwise) built in, validated against the SIX guidelines; locked PDF in the vehicle file; send by email on click |
+| Payments | Payments in/out with allocations to invoices and purchases (trade-in offsets and financing payouts as methods); camt.053/054 import with automatic matching by reference, proposals by amount, assign/ignore/undo |
 | Ops | Docker (local + single-VPS production), CI (Pint, Larastan level 6, Pest), backup and restore-drill scripts; drill results under Platform → Restore drills, with a warning when none succeeded in 35 days |
 
 ## Local setup

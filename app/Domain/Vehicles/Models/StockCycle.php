@@ -6,6 +6,7 @@ use App\Domain\Audit\Concerns\Auditable;
 use App\Domain\Audit\Concerns\TracksAuthors;
 use App\Domain\Audit\Models\StatusHistory;
 use App\Domain\Documents\Models\Document;
+use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\Purchase;
@@ -175,6 +176,14 @@ class StockCycle extends Model
     public function documents(): MorphToMany
     {
         return $this->morphToMany(Document::class, 'linkable', 'document_links');
+    }
+
+    /**
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
     }
 
     /**

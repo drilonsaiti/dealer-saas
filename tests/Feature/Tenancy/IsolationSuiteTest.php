@@ -8,6 +8,12 @@ use App\Domain\Import\Actions\CreateImportRun;
 use App\Domain\Import\Actions\RunImport;
 use App\Domain\Import\Enums\ImporterType;
 use App\Domain\Import\Support\SpreadsheetReader;
+use App\Domain\Invoicing\Actions\IssueInvoice;
+use App\Domain\Invoicing\Actions\SaveInvoiceDraft;
+use App\Domain\Invoicing\Enums\InvoiceType;
+use App\Domain\Parties\Models\Party;
+use App\Domain\Payments\Actions\RecordPayment;
+use App\Domain\Payments\Models\BankTransaction;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Sales\Enums\SaleItemKind;
 use App\Domain\Sales\Models\Sale;
@@ -18,6 +24,7 @@ use App\Domain\Signatures\Actions\StartSigning;
 use App\Domain\Signatures\Enums\SigningMethod;
 use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Tenancy\Models\Tenant;
+use App\Domain\Vat\Models\VatCode;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Domain\Vehicles\Models\TyreSet;
 use Filament\Facades\Filament;
@@ -86,8 +93,17 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
         TyreSet::factory()->create(['vehicle_id' => $panda->vehicle_id]);
         SaleItem::create(['sale_id' => $sale->id, 'kind' => SaleItemKind::Accessory, 'description' => "Matten {$marker}", 'qty' => 1, 'unit_price_rp' => 10000]);
         TradeIn::create(['sale_id' => $sale->id, 'vehicle_data' => ['make' => 'Lada', 'model' => $marker], 'value_rp' => 100000]);
-        BankAccount::factory()->create(['label' => "Konto {$marker}"]);
+        $bank = BankAccount::factory()->create(['label' => "Konto {$marker}"]);
         app(SetRequiredDocumentStatus::class)($panda, 'coc', RequiredDocumentStatus::Requested, "Note {$marker}");
+
+        // An issued invoice, partly paid, and a bank booking.
+        $invoice = app(IssueInvoice::class)(app(SaveInvoiceDraft::class)(null, [
+            'type' => InvoiceType::Standard,
+            'recipient_party_id' => Party::factory()->create(['last_name' => "Kunde {$marker}"])->id,
+            'stock_cycle_id' => $panda->id,
+        ], [['description' => "Service {$marker}", 'unit_price_rp' => 50_000, 'vat_code_id' => VatCode::byKey('taxable_normal')->id]]));
+        app(RecordPayment::class)(['direction' => 'in', 'paid_on' => '2026-03-15', 'amount_rp' => 10_000, 'method' => 'cash'], [[$invoice, 10_000]]);
+        BankTransaction::create(['bank_account_id' => $bank->id, 'entry_key' => hash('sha256', $marker), 'booked_on' => '2026-03-16', 'amount_rp' => 500, 'counterparty' => "Bank {$marker}"]);
 
         // A purchase contract out for signature (templates, signature requests, signers).
         $contract = app(GenerateContract::class)($panda->purchase, 'de', "Vertrag {$marker}");

@@ -143,3 +143,31 @@ Emails land in Mailpit (http://localhost:8025). The Docker image has pyHanko, so
 - "Auf Papier unterschrieben": upload the scan; it becomes the signed version.
 - A signed contract cannot be finalised again, replaced or deleted.
 - Links expire after 14 days (`php artisan signatures:expire` runs hourly).
+
+## 14. Invoices, QR bill, payments, bank import (Phase 2, step 3)
+
+Settings → Company needs postcode and town, Settings → Bank accounts one account (with QR-IBAN the
+reference is a 27-digit QR reference, without it an RF creditor reference).
+
+1. Vehicle file with a sale → **More → Anzahlungsrechnung** (if the sale has a deposit) or **Schlussrechnung**.
+   A draft opens: check the lines (vehicle with Stammnummer/VIN, items, discount, minus deposit invoices).
+   **Entwurf bearbeiten** changes lines, VAT code, due date.
+2. **Rechnung ausstellen**: the confirmation shows the number it will get (RE-00001…). Expected:
+   number, status "Offen", PDF in the vehicle file (folder 04), last page with the Swiss QR bill.
+   Scan the QR code with a banking app: account, amount, reference and "Fattura finale RE-…" appear.
+3. Dealer with VAT number: "MWST 8.1 % auf CHF 27’700.00: CHF 2’075.58" (VAT of each rate on its total).
+   Without VAT number: "Nicht MWST-pflichtig".
+4. With a confirmed trade-in, the final invoice is partly paid by the trade-in (payment "Verrechnung Eintausch");
+   the QR bill shows only the rest.
+5. **Zahlung erfassen** (accounting): part payment → "Teilweise bezahlt", rest → "Bezahlt".
+6. **Mehr → Gutschrift** (accounting): reason, empty amount = whole invoice → GS-00001, invoice "Durch Gutschrift
+   storniert", the sale is back to "contracted" and can be cancelled. With an amount: partial credit.
+   Cancelling a sale with an open invoice is refused until the credit note exists.
+7. **Mehr → Per E-Mail senden**: PDF as attachment (Mailpit). Nothing is ever sent automatically.
+8. Finance → Bankbuchungen → **Kontoauszug importieren**: a camt.054 / camt.053 file from e-banking.
+   Payments with the invoice's QR/RF reference are booked at once (invoice "Bezahlt"); a credit with the exact
+   open amount of one invoice is proposed ("Bitte bestätigen" → **Bestätigen**); others: **Rechnung zuordnen**
+   or **Ignorieren**; **Zuordnung aufheben** undoes it. Importing the same file again: "… bereits importiert".
+9. Finance → Rechnungen: tabs Offen / Überfällig / Entwürfe; the dashboard shows "Offene Rechnungen".
+10. Finance → Zahlungen → **Zahlung erfassen** "Ausgang" for a purchase: the seller payment status updates
+    (CHF 22’800 bank + CHF 5’000 cash for one purchase = two payments).
