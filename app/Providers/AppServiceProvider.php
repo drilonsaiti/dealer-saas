@@ -25,6 +25,8 @@ use App\Domain\Signatures\Support\SmsSender;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\Models\TenantMembership;
 use App\Domain\Tenancy\TenantContext;
+use App\Domain\Vat\Models\VatPeriod;
+use App\Domain\Vat\Models\VatProfile;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Domain\Vehicles\Models\TyreSet;
 use App\Domain\Vehicles\Models\Vehicle;
@@ -47,6 +49,8 @@ use App\Policies\StockCyclePolicy;
 use App\Policies\TenantMembershipPolicy;
 use App\Policies\TenantPolicy;
 use App\Policies\TyreSetPolicy;
+use App\Policies\VatPeriodPolicy;
+use App\Policies\VatProfilePolicy;
 use App\Policies\VehiclePolicy;
 use App\Support\SwissFormat;
 use Filament\Forms\Components\DatePicker;
@@ -136,6 +140,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Invoice::class, InvoicePolicy::class);
         Gate::policy(Payment::class, PaymentPolicy::class);
         Gate::policy(BankTransaction::class, BankTransactionPolicy::class);
+        Gate::policy(VatProfile::class, VatProfilePolicy::class);
+        Gate::policy(VatPeriod::class, VatPeriodPolicy::class);
     }
 
     /**

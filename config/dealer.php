@@ -57,6 +57,16 @@ return [
     ],
 
     /*
+    | VAT export (eCH-0217 v2, ESTV "MWST-Abrechnung pro"). The schema is not shipped: download
+    | eCH-0217-2-0-0.xsd (with its imports) from ech.ch and point ech0217_xsd to it; every export is
+    | then validated and refused if invalid. Without it the export is marked "not validated".
+    */
+    'vat' => [
+        'ech0217_xsd' => env('VAT_ECH0217_XSD'),
+        'ech0058_namespace' => env('VAT_ECH0058_NAMESPACE', 'http://www.ech.ch/xmlns/eCH-0058/5'),
+    ],
+
+    /*
     | Imports can run for many minutes (a 1 GB document folder). In production they go to a
     | queue connection whose retry_after is longer than the job (redis-long / database-long).
     | Empty: the default connection.

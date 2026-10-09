@@ -16,6 +16,9 @@ enum FolderGroup: string implements HasLabel
     case Warranty = '05_warranty';
     case Financing = '06_financing';
 
+    /** Company records outside any vehicle file (VAT returns and their receipts). */
+    case Company = '90_company';
+
     public function getLabel(): string
     {
         return match ($this) {
@@ -25,7 +28,16 @@ enum FolderGroup: string implements HasLabel
             self::SalePayments => __('Sale / payments'),
             self::Warranty => __('Warranty'),
             self::Financing => __('Leasing / financing'),
+            self::Company => __('Company / tax'),
         };
+    }
+
+    /**
+     * @return list<self> the six folders of a vehicle file
+     */
+    public static function vehicleFolders(): array
+    {
+        return [self::Purchase, self::VehicleDocuments, self::CostsWorkshop, self::SalePayments, self::Warranty, self::Financing];
     }
 
     public function labelIn(string $locale): string
@@ -57,6 +69,7 @@ enum FolderGroup: string implements HasLabel
             self::SalePayments => 'Sale / payments',
             self::Warranty => 'Warranty',
             self::Financing => 'Leasing / financing',
+            self::Company => 'Company / tax',
         };
     }
 }

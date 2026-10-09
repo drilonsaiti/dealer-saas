@@ -159,6 +159,17 @@ final class StockCycleInfolist
                             })
                             ->weight('bold')
                             ->color(fn (StockCycle $record): string => (self::margin($record)->marginRp() ?? 0) < 0 ? 'danger' : 'success'),
+                        TextEntry::make('margin_net_tax')
+                            ->label(__('Net tax on the sale'))
+                            ->visible(fn (StockCycle $record): bool => self::margin($record)->netTaxRp !== null)
+                            ->state(fn (StockCycle $record): string => Money::format(self::margin($record)->netTaxRp))
+                            ->helperText(fn (StockCycle $record): string => __(':rate % of the revenue (net tax rate method)', ['rate' => rtrim(rtrim((string) self::margin($record)->netTaxRate, '0'), '.')])),
+                        TextEntry::make('margin_after_vat')
+                            ->label(__('Margin after VAT'))
+                            ->visible(fn (StockCycle $record): bool => self::margin($record)->marginAfterVatRp() !== null)
+                            ->state(fn (StockCycle $record): string => Money::format(self::margin($record)->marginAfterVatRp()))
+                            ->weight('bold')
+                            ->color(fn (StockCycle $record): string => (self::margin($record)->marginAfterVatRp() ?? 0) < 0 ? 'danger' : 'success'),
                     ]),
                 ]),
             Section::make(__('Purchase'))

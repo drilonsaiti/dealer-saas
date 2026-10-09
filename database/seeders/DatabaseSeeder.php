@@ -16,6 +16,7 @@ use App\Domain\Settings\Models\BankAccount;
 use App\Domain\Tenancy\Actions\CreateTenant;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\TenantContext;
+use App\Domain\Vat\Actions\SaveVatProfile;
 use App\Domain\Vehicles\Actions\RecordVehicle;
 use App\Domain\Vehicles\Actions\TransitionStockCycle;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
@@ -48,7 +49,7 @@ class DatabaseSeeder extends Seeder
             }
 
             $tenant = $createTenant(
-                ['name' => $row['name'], 'street' => $row['street'], 'zip' => $row['zip'], 'city' => $row['city'], 'vat_number' => $row['vat_number'], 'default_locale' => $row['default_locale']],
+                ['name' => $row['name'], 'street' => $row['street'], 'zip' => $row['zip'], 'city' => $row['city'], 'uid' => $row['vat_number'] === null ? null : substr($row['vat_number'], 0, 15), 'vat_number' => $row['vat_number'], 'default_locale' => $row['default_locale']],
                 $row['admin'],
                 'Admin '.$row['city'],
                 sendInvitation: false,
@@ -62,6 +63,12 @@ class DatabaseSeeder extends Seeder
             $context->run($tenant, fn () => BankAccount::factory()->create(['label' => 'Hauptkonto']));
 
             if ($row['city'] === 'Bern') {
+                // Like Aziri: net tax rate method, 0.6 % for car trade, agreed consideration,
+                // half-yearly. The ESTV activity code stays empty (it comes from the approval).
+                $context->run($tenant, fn () => app(SaveVatProfile::class)(null, [
+                    'valid_from' => now()->startOfYear()->toDateString(), 'vat_number' => $row['vat_number'],
+                    'method' => 'net_tax_rate', 'basis' => 'agreed', 'period' => 'half_year',
+                ], [['activity' => 'Autohandel', 'rate' => '0.6']]));
                 $context->run($tenant, fn () => $this->demoVehicles());
             }
         }

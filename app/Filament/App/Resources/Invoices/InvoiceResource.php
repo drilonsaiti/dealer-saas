@@ -202,9 +202,7 @@ class InvoiceResource extends Resource
 
     public static function defaultVatCodeId(): ?string
     {
-        $key = filled(Filament::getTenant()?->getAttribute('vat_number')) ? InstallDefaultVatCodes::TAXABLE_NORMAL : InstallDefaultVatCodes::NO_TAX_SHOWN;
-
-        return VatCode::byKey($key)->getKey();
+        return VatCode::defaultForSales()->getKey();
     }
 
     /**

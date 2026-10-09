@@ -9,8 +9,6 @@ use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Sales\Enums\SaleStatus;
 use App\Domain\Sales\Models\Sale;
 use App\Domain\Sales\Models\SaleItem;
-use App\Domain\Tenancy\TenantContext;
-use App\Domain\Vat\Actions\InstallDefaultVatCodes;
 use App\Domain\Vat\Models\VatCode;
 use App\Support\BusinessRuleException;
 
@@ -23,7 +21,6 @@ class CreateInvoiceFromSale
 {
     public function __construct(
         private readonly SaveInvoiceDraft $save,
-        private readonly TenantContext $context,
     ) {}
 
     public function __invoke(Sale $sale, InvoiceType $type): Invoice
@@ -127,12 +124,8 @@ class CreateInvoiceFromSale
         return $lines;
     }
 
-    /**
-     * Taxable at the normal rate for a dealer with a VAT number, otherwise no VAT shown.
-     * (The full VAT profile with methods and periods follows in the VAT module.)
-     */
     private function defaultVatCode(): VatCode
     {
-        return VatCode::byKey(filled($this->context->tenant()?->vat_number) ? InstallDefaultVatCodes::TAXABLE_NORMAL : InstallDefaultVatCodes::NO_TAX_SHOWN);
+        return VatCode::defaultForSales();
     }
 }

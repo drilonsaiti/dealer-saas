@@ -24,6 +24,7 @@ use App\Domain\Signatures\Actions\StartSigning;
 use App\Domain\Signatures\Enums\SigningMethod;
 use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Tenancy\Models\Tenant;
+use App\Domain\Vat\Actions\SaveVatProfile;
 use App\Domain\Vat\Models\VatCode;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Domain\Vehicles\Models\TyreSet;
@@ -95,6 +96,9 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
         TradeIn::create(['sale_id' => $sale->id, 'vehicle_data' => ['make' => 'Lada', 'model' => $marker], 'value_rp' => 100000]);
         $bank = BankAccount::factory()->create(['label' => "Konto {$marker}"]);
         app(SetRequiredDocumentStatus::class)($panda, 'coc', RequiredDocumentStatus::Requested, "Note {$marker}");
+
+        // VAT settings: the invoice below creates tax entries and a VAT period.
+        app(SaveVatProfile::class)(null, ['valid_from' => '2026-01-01', 'method' => 'net_tax_rate', 'basis' => 'agreed', 'period' => 'half_year'], [['activity' => "Handel {$marker}", 'rate' => '0.6']]);
 
         // An issued invoice, partly paid, and a bank booking.
         $invoice = app(IssueInvoice::class)(app(SaveInvoiceDraft::class)(null, [

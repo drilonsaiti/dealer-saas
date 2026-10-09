@@ -6,7 +6,8 @@ namespace App\Domain\Reporting;
  * Contribution margin of one vehicle file (spec 9.7, net tax rate method): gross sale
  * revenue − gross purchase price − gross costs (incl. open promises at their estimate).
  * It is not company profit, and "provisional" until every cost is confirmed and the car is sold.
- * The VAT-adjusted margin is added by the VAT module (Phase 2).
+ * With the net tax rate method the net tax on the revenue is shown separately and deducted for
+ * the margin after VAT.
  */
 final readonly class Margin
 {
@@ -26,6 +27,8 @@ final readonly class Margin
         public int $openCostsRp,
         public int $openPromisesRp,
         public bool $isProvisional,
+        public ?int $netTaxRp = null,
+        public ?string $netTaxRate = null,
     ) {}
 
     public function costsRp(): int
@@ -44,6 +47,16 @@ final readonly class Margin
     public function marginRp(): ?int
     {
         return $this->revenueBasis === self::BASIS_NONE ? null : $this->revenueRp - $this->landedCostRp();
+    }
+
+    /**
+     * Contribution after the net tax owed on the sale (net tax rate method); null without it.
+     */
+    public function marginAfterVatRp(): ?int
+    {
+        $margin = $this->marginRp();
+
+        return $margin === null || $this->netTaxRp === null ? null : $margin - $this->netTaxRp;
     }
 
     /**

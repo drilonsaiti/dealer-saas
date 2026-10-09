@@ -23,16 +23,18 @@ use App\Domain\Settings\Models\BankAccount;
 use App\Domain\Settings\Models\NumberSequence;
 use App\Domain\Settings\Support\Iban;
 use App\Domain\Tenancy\TenantContext;
+use App\Domain\Vat\Actions\RecordTaxEvents;
 use App\Support\BusinessRuleException;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 /**
  * Issues a draft: the number (gap-free, only now), amounts with today's VAT rates, the QR
  * reference, the recipient as of today, and the locked PDF in the vehicle file. From now on
  * the invoice never changes. A final invoice also books the trade-in as payment and marks
- * the sale as invoiced.
+ * the sale as invoiced. The tax events are recorded with it (agreed basis).
  */
 class IssueInvoice
 {
@@ -42,6 +44,7 @@ class IssueInvoice
         private readonly InvoiceRenderer $renderer,
         private readonly StoreDocument $store,
         private readonly RecordPayment $payments,
+        private readonly RecordTaxEvents $taxEvents,
     ) {}
 
     public function __invoke(Invoice $invoice): Invoice
@@ -94,6 +97,7 @@ class IssueInvoice
             }
 
             $this->file($invoice, $snapshot);
+            $this->taxEvents->invoiceIssued($invoice);
 
             return $invoice->refresh();
         });

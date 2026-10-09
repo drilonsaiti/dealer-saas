@@ -31,4 +31,7 @@ enum Permission: string
     case InvoicesManage = 'invoices.manage';
     case InvoicesCancel = 'invoices.cancel';
     case PaymentsManage = 'payments.manage';
+    case VatView = 'vat.view';
+    case VatManage = 'vat.manage';
+    case VatClose = 'vat.close';
 }

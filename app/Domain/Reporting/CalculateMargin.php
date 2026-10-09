@@ -6,7 +6,10 @@ use App\Domain\Purchasing\Enums\CostStatus;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Sales\Models\Sale;
+use App\Domain\Vat\Enums\VatMethod;
+use App\Domain\Vat\Models\VatProfile;
 use App\Domain\Vehicles\Models\StockCycle;
+use Illuminate\Support\Carbon;
 
 /**
  * Builds the margin of a vehicle file from its purchase, costs, promises and sale.
@@ -40,6 +43,7 @@ class CalculateMargin
         };
 
         $purchase = $cycle->purchase()->value('price_rp');
+        $netRate = $this->netTaxRate($sale === null ? Carbon::today() : ($sale->sale_on ?? Carbon::today()));
 
         return new Margin(
             revenueRp: $revenue,
@@ -49,6 +53,22 @@ class CalculateMargin
             openCostsRp: $open,
             openPromisesRp: $promises,
             isProvisional: $basis !== Margin::BASIS_SALE || $open > 0 || $promises > 0 || $purchase === null,
+            netTaxRp: $netRate === null || $basis === Margin::BASIS_NONE ? null : (int) round($revenue * (float) $netRate / 100),
+            netTaxRate: $netRate,
         );
+    }
+
+    /**
+     * The approved net tax rate of a VAT-liable dealer using the net tax rate method.
+     */
+    private function netTaxRate(Carbon $on): ?string
+    {
+        $profile = VatProfile::validOn($on);
+
+        if ($profile === null || ! $profile->liable || $profile->method !== VatMethod::NetTaxRate) {
+            return null;
+        }
+
+        return $profile->netTaxRates->first()?->rate;
     }
 }

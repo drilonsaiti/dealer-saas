@@ -4,11 +4,13 @@ namespace App\Domain\Vat\Models;
 
 use App\Domain\Audit\Concerns\Auditable;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
+use App\Domain\Tenancy\TenantContext;
 use App\Domain\Vat\Actions\InstallDefaultVatCodes;
 use App\Domain\Vat\Enums\VatCodeKind;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Spatie\Translatable\HasTranslations;
 
 /**
@@ -48,6 +50,18 @@ class VatCode extends Model
     public function percentOn(DateTimeInterface $on): float
     {
         return $this->kind->hasRate() && $this->vat_rate_code !== null ? VatRate::percentFor($this->vat_rate_code, $on) : 0.0;
+    }
+
+    /**
+     * The code a new sale line gets: taxable at the normal rate for a VAT-liable dealer (VAT
+     * settings of today, or a VAT number while there are none), otherwise "no VAT shown".
+     */
+    public static function defaultForSales(): self
+    {
+        $profile = VatProfile::validOn(Carbon::today());
+        $liable = $profile !== null ? $profile->liable : filled(app(TenantContext::class)->tenant()?->vat_number);
+
+        return self::byKey($liable ? InstallDefaultVatCodes::TAXABLE_NORMAL : InstallDefaultVatCodes::NO_TAX_SHOWN);
     }
 
     public static function byKey(string $key): self

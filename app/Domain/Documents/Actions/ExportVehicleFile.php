@@ -71,7 +71,7 @@ class ExportVehicleFile
         $prefix = $cycle->vehicle->stammnummer ?? Str::slug($cycle->number ?? 'akte');
         $used = [];
 
-        foreach (FolderGroup::cases() as $folder) {
+        foreach (FolderGroup::vehicleFolders() as $folder) {
             $zip->addEmptyDir($folder->folderName($locale));
         }
 

@@ -9,6 +9,7 @@ use App\Domain\Payments\Models\PaymentAllocation;
 use App\Domain\Payments\Support\Balances;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\Purchase;
+use App\Domain\Vat\Actions\RecordTaxEvents;
 use App\Support\BusinessRuleException;
 use App\Support\Money;
 use Illuminate\Database\Eloquent\Model;
@@ -16,10 +17,13 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Books one payment and allocates it: incoming money to invoices, outgoing money to
- * purchases or costs. An allocation can never exceed what is still open.
+ * purchases or costs. An allocation can never exceed what is still open. With the received
+ * basis, money received on an invoice creates its tax events.
  */
 class RecordPayment
 {
+    public function __construct(private readonly RecordTaxEvents $taxEvents) {}
+
     /**
      * @param  array<string, mixed>  $data  direction, paid_on, amount_rp, method, party_id, bank_account_id, reference, notes, bank_transaction_id
      * @param  list<array{0: Model, 1: int}>  $allocations  [record, amount]
@@ -84,6 +88,7 @@ class RecordPayment
         ]);
 
         Balances::refresh($record);
+        $this->taxEvents->paymentAllocated($allocation->setRelation('payment', $payment));
 
         return $allocation;
     }
@@ -94,7 +99,9 @@ class RecordPayment
     public function delete(Payment $payment): void
     {
         DB::transaction(function () use ($payment): void {
-            $records = $payment->allocations()->with('allocatable')->get()->map->allocatable->filter();
+            $allocations = $payment->allocations()->with('allocatable')->get();
+            $allocations->each(fn (PaymentAllocation $allocation) => $this->taxEvents->paymentRemoved($allocation));
+            $records = $allocations->map->allocatable->filter();
             $payment->allocations()->delete();
             $payment->delete();
             $records->each(fn (Model $record) => Balances::refresh($record->refresh()));

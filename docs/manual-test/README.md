@@ -171,3 +171,30 @@ reference is a 27-digit QR reference, without it an RF creditor reference).
 9. Finance → Rechnungen: tabs Offen / Überfällig / Entwürfe; the dashboard shows "Offene Rechnungen".
 10. Finance → Zahlungen → **Zahlung erfassen** "Ausgang" for a purchase: the seller payment status updates
     (CHF 22’800 bank + CHF 5’000 cash for one purchase = two payments).
+
+## 15. VAT / MWST (Phase 2, step 4)
+
+The demo dealer Bern has VAT settings like Aziri: net tax rate method, 0.6 % "Autohandel", agreed
+consideration, half-yearly (Settings → MWST). Read-only users can look; sales users do not see VAT;
+closing, export, submission and payment need accounting or administrator (`vat.close`).
+
+1. Settings → MWST → **Bearbeiten**: enter the five-digit ESTV activity code from the approval letter
+   (needed for the XML). A change of method or rate is **Neue MWST-Einstellungen** with a later start date;
+   settings used by a closed period cannot be edited.
+2. Issue invoices (section 14). Finance → MWST: the half-year appears with the first issued invoice.
+   **Aktualisieren** picks up invoices issued before the settings existed.
+3. Open the period: "Vorschau, nicht vollständig" lists what is open. Fields 200 / 220 / 230 / 235 / 289 / 299,
+   turnover and tax per net tax rate, amount payable (500). Example: CHF 500’000 taxable → CHF 3’000.
+   Under **Buchungen** every entry shows the rule (invoice_line 2026.1) and why.
+4. Invoice with code "Ohne MWST-Ausweis" or "Export": entry "Bitte bestätigen" → **Bestätigen** (export only
+   with the proof in the file). An invoice issued with no VAT settings at all is "Blockiert".
+5. After the end of the period, with no open checks: **Periode abschliessen**. Expected: status
+   "Abgeschlossen", report PDF and CSV detail under **Dateien** (also Documents, folder "Firma / Steuern").
+6. **ESTV-Export (XML)** downloads the eCH-0217 file (`MWST_…_eCH-0217.xml`). Without `VAT_ECH0217_XSD`
+   the notification says it is not validated against the schema. Upload it in "MWST-Abrechnung pro".
+7. **Als eingereicht markieren** (date, ESTV reference, the portal's confirmation PDF), then
+   **Als bezahlt markieren**. Each is its own status.
+8. A credit note after closing lands in the new period (field 235); the closed period never changes.
+   With received consideration, a payment dated in a closed period creates a correction period
+   ("Korrektur") whose XML replaces the original return.
+9. Vehicle file → Margin: "Saldosteuer auf dem Verkauf" and "Marge nach MWST".

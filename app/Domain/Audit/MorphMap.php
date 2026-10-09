@@ -33,7 +33,11 @@ use App\Domain\Signatures\Models\SignatureRequest;
 use App\Domain\Signatures\Models\Signer;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Tenancy\Models\TenantMembership;
+use App\Domain\Vat\Models\TaxEvent;
 use App\Domain\Vat\Models\VatCode;
+use App\Domain\Vat\Models\VatNetTaxRate;
+use App\Domain\Vat\Models\VatPeriod;
+use App\Domain\Vat\Models\VatProfile;
 use App\Domain\Vat\Models\VatRate;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Domain\Vehicles\Models\TyreSet;
@@ -75,6 +79,10 @@ final class MorphMap
         'signer' => Signer::class,
         'vat_rate' => VatRate::class,
         'vat_code' => VatCode::class,
+        'vat_profile' => VatProfile::class,
+        'vat_net_tax_rate' => VatNetTaxRate::class,
+        'vat_period' => VatPeriod::class,
+        'tax_event' => TaxEvent::class,
         'invoice' => Invoice::class,
         'invoice_line' => InvoiceLine::class,
         'payment' => Payment::class,
@@ -112,6 +120,9 @@ final class MorphMap
             'signature_request' => __('Signature'),
             'signer' => __('Signer'),
             'vat_code' => __('VAT code'),
+            'vat_profile' => __('VAT settings'),
+            'vat_period' => __('VAT period'),
+            'tax_event' => __('Tax entry'),
             'invoice' => __('Invoice'),
             'payment' => __('Payment'),
             'bank_transaction' => __('Bank booking'),

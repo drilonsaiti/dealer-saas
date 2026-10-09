@@ -42,6 +42,10 @@ class InstallDefaultDocumentCategories
         'leasing_contract' => [FolderGroup::Financing, 10, false, 'Leasingvertrag', 'Contrat de leasing', 'Contratto di leasing', 'Leasing contract'],
         'budget_calculation' => [FolderGroup::Financing, 20, true, 'Budgetberechnung', 'Calcul du budget', 'Calcolo del budget', 'Budget calculation'],
         'financing_checklist' => [FolderGroup::Financing, 30, false, 'Checkliste Finanzierungspartner', 'Liste de contrôle du partenaire', 'Lista di controllo del partner', 'Partner checklist'],
+        'vat_report' => [FolderGroup::Company, 10, false, 'MWST-Abrechnung', 'Décompte TVA', 'Rendiconto IVA', 'VAT return'],
+        'vat_detail' => [FolderGroup::Company, 20, false, 'MWST-Detail', 'Détail TVA', 'Dettaglio IVA', 'VAT detail'],
+        'vat_export' => [FolderGroup::Company, 30, false, 'MWST-Export ESTV', 'Export TVA AFC', 'Esportazione IVA AFC', 'VAT export (ESTV)'],
+        'vat_confirmation' => [FolderGroup::Company, 40, false, 'MWST-Einreichungsbestätigung', 'Confirmation de dépôt TVA', 'Conferma di inoltro IVA', 'VAT submission confirmation'],
         'payout_confirmation' => [FolderGroup::Financing, 40, false, 'Auszahlungsbestätigung', 'Confirmation de versement', 'Conferma di pagamento', 'Payout confirmation'],
     ];
 
