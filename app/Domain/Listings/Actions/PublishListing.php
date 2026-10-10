@@ -3,6 +3,7 @@
 namespace App\Domain\Listings\Actions;
 
 use App\Domain\Api\Support\Webhooks;
+use App\Domain\Integrations\Support\ListingSync;
 use App\Domain\Listings\Enums\ListingStatus;
 use App\Domain\Listings\Enums\PublicationStatus;
 use App\Domain\Listings\Models\Listing;
@@ -23,6 +24,7 @@ class PublishListing
     public function __construct(
         private readonly TransitionStockCycle $transition,
         private readonly Webhooks $webhooks,
+        private readonly ListingSync $sync,
     ) {}
 
     public function __invoke(Listing $listing): Listing
@@ -62,7 +64,9 @@ class PublishListing
                 $this->webhooks->dispatch('vehicle.listed', ListingPayload::event($listing->refresh()));
             }
 
-            return $listing->refresh();
+            $this->sync->listing($listing->refresh());
+
+            return $listing;
         });
     }
 
@@ -74,7 +78,8 @@ class PublishListing
 
         return DB::transaction(function () use ($listing): Listing {
             $listing->forceFill(['status' => ListingStatus::Withdrawn, 'withdrawn_at' => now()])->save();
-            $listing->publications()->update(['status' => PublicationStatus::Removed->value, 'last_synced_at' => now()]);
+            // The website follows at once; portals are taken offline by their sync (it needs the external id).
+            $listing->publications()->where('channel', ListingPublication::WEBSITE)->update(['status' => PublicationStatus::Removed->value, 'last_synced_at' => now()]);
             $cycle = $listing->stockCycle;
 
             if ($cycle->status === StockCycleStatus::Listed) {
@@ -82,6 +87,7 @@ class PublishListing
             }
 
             $this->webhooks->dispatch('vehicle.unlisted', ListingPayload::event($listing->refresh()));
+            $this->sync->listing($listing);
 
             return $listing;
         });

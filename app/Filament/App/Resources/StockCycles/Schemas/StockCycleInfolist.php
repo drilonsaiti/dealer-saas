@@ -6,6 +6,10 @@ use App\Domain\Checklists\Actions\SyncChecklist;
 use App\Domain\Checklists\Models\ChecklistItem;
 use App\Domain\Documents\Actions\RequiredDocumentsChecklist;
 use App\Domain\Documents\Enums\RequiredDocumentStatus;
+use App\Domain\Integrations\Support\Channels;
+use App\Domain\Listings\Enums\PublicationStatus;
+use App\Domain\Listings\Models\Listing;
+use App\Domain\Listings\Models\ListingPublication;
 use App\Domain\Preparation\Models\Damage;
 use App\Domain\Purchasing\Enums\VatSituation;
 use App\Domain\Reporting\CalculateMargin;
@@ -54,6 +58,16 @@ final class StockCycleInfolist
         self::$margins ??= new WeakMap;
 
         return self::$margins[$record] ??= app(CalculateMargin::class)($record);
+    }
+
+    private static function listing(StockCycle $record): ?Listing
+    {
+        return Listing::query()->where('stock_cycle_id', $record->getKey())->first()?->setRelation('stockCycle', $record);
+    }
+
+    private static function channelLabel(string $channel): string
+    {
+        return $channel === ListingPublication::WEBSITE ? __('Website') : Channels::label($channel);
     }
 
     public static function configure(Schema $schema): Schema
@@ -190,6 +204,24 @@ final class StockCycleInfolist
                         TextEntry::make('damages_open')->label(__('Damages without repair order'))
                             ->state(fn (StockCycle $record): int => Damage::query()->where('stock_cycle_id', $record->getKey())->whereNull('repair_order_id')->count()),
                         TextEntry::make('released_for_sale_at')->label(__('Released for sale'))->dateTime()->placeholder('–'),
+                    ]),
+                ]),
+            Section::make(__('Listing'))
+                ->visible(fn (StockCycle $record): bool => self::listing($record) !== null)
+                ->collapsible()
+                ->schema([
+                    Grid::make(4)->schema([
+                        TextEntry::make('listing_status')->label(__('Listing'))->badge()
+                            ->state(fn (StockCycle $record): ?string => self::listing($record)?->status->getLabel()),
+                        TextEntry::make('listing_availability')->label(__('Shown as'))
+                            ->state(fn (StockCycle $record): ?string => self::listing($record)?->availability()->getLabel()),
+                        TextEntry::make('listing_channels')->label(__('Channels'))->columnSpan(2)
+                            ->state(fn (StockCycle $record): array => self::listing($record)?->publications()->orderBy('channel')->get()
+                                ->map(fn (ListingPublication $p): string => self::channelLabel($p->channel).': '.$p->status->getLabel()
+                                    .($p->status === PublicationStatus::Failed && $p->last_error !== null ? ' – '.str($p->last_error)->limit(120) : ''))
+                                ->all() ?? [])
+                            ->listWithLineBreaks()
+                            ->placeholder('–'),
                     ]),
                 ]),
             Section::make(__('Leasing and handover'))

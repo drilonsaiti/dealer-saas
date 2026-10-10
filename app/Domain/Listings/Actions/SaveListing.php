@@ -3,6 +3,8 @@
 namespace App\Domain\Listings\Actions;
 
 use App\Domain\Documents\Models\Document;
+use App\Domain\Integrations\Support\ListingSync;
+use App\Domain\Listings\Enums\ListingStatus;
 use App\Domain\Listings\Models\Listing;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Support\BusinessRuleException;
@@ -14,6 +16,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class SaveListing
 {
+    public function __construct(private readonly ListingSync $sync) {}
+
     /**
      * @param  array<string, mixed>  $data  title (array per locale or string), description, highlights, price_rp, show_price, photo_document_ids
      */
@@ -54,6 +58,10 @@ class SaveListing
         }
 
         $listing->fill($data)->save();
+
+        if ($listing->status === ListingStatus::Published && $listing->wasChanged()) {
+            $this->sync->listing($listing); // edits of an online advert go to the portals too
+        }
 
         return $listing->refresh();
     }

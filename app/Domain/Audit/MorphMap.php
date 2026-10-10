@@ -22,6 +22,8 @@ use App\Domain\Financing\Models\Financing;
 use App\Domain\Import\Models\ImportPreset;
 use App\Domain\Import\Models\ImportRow;
 use App\Domain\Import\Models\ImportRun;
+use App\Domain\Integrations\Models\IntegrationAccount;
+use App\Domain\Integrations\Models\IntegrationLog;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Invoicing\Models\InvoiceLine;
 use App\Domain\Listings\Models\Enquiry;
@@ -128,6 +130,8 @@ final class MorphMap
         'api_token' => ApiToken::class,
         'webhook_endpoint' => WebhookEndpoint::class,
         'webhook_delivery' => WebhookDelivery::class,
+        'integration_account' => IntegrationAccount::class,
+        'integration_log' => IntegrationLog::class,
     ];
 
     public static function label(string $alias): string
@@ -177,6 +181,7 @@ final class MorphMap
             'enquiry' => __('Enquiry'),
             'api_token' => __('API token'),
             'webhook_endpoint' => __('Webhook'),
+            'integration_account' => __('Integration'),
             default => $alias,
         };
     }

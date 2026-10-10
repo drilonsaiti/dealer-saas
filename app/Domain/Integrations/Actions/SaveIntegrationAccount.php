@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Domain\Integrations\Actions;
+
+use App\Domain\Integrations\Models\IntegrationAccount;
+use App\Domain\Integrations\Support\Channels;
+use App\Domain\Integrations\Support\ListingSync;
+
+/**
+ * Saves the dealer's account at a portal. Secrets left empty keep the stored value (they are
+ * never shown again). Switching it on sends all online listings; switching it off leaves the
+ * portal as it is (the dealer may still want the cars there).
+ */
+class SaveIntegrationAccount
+{
+    public function __construct(private readonly ListingSync $sync) {}
+
+    /**
+     * @param  array<string, mixed>  $credentials
+     * @param  array<string, mixed>  $settings
+     */
+    public function __invoke(string $provider, array $credentials, array $settings = [], bool $active = false): IntegrationAccount
+    {
+        Channels::for($provider); // unknown provider → exception
+
+        $account = IntegrationAccount::query()->firstOrNew(['provider' => $provider]);
+        $wasActive = $account->exists && $account->is_active;
+        $stored = $account->credentials ?? [];
+
+        foreach ($credentials as $key => $value) {
+            if (filled($value)) {
+                $stored[$key] = trim((string) $value);
+            }
+        }
+
+        $changedCredentials = $stored !== ($account->credentials ?? []);
+
+        $account->fill([
+            'credentials' => $stored,
+            'settings' => [...($account->settings ?? []), ...$settings],
+            'is_active' => $active,
+        ]);
+
+        if ($changedCredentials) {
+            $account->forceFill(['status' => 'unchecked', 'last_error' => null]);
+        }
+
+        $account->save();
+
+        if ($active && ! $wasActive) {
+            $this->sync->all($account);
+        }
+
+        return $account;
+    }
+}

@@ -260,3 +260,22 @@ and "Eigene Garantie 6 Monate". Settings → Garantieprodukte and Settings → C
    or phone, otherwise created) and the dealer gets an e-mail (Mailpit).
 5. Settings → Webhooks → address (e.g. a https://webhook.site URL), events. Publishing, reserving, selling,
    an enquiry or a paid invoice post a signed JSON; the delivery log is on the webhook's page (**Erneut senden**).
+
+## 19. AutoScout24 (Phase 3, step 2)
+
+The AutoScout24 CH DMS API is documented only for customers; until the real access data and
+documentation are there, test against a stand-in (e.g. a https://webhook.site URL in
+`AUTOSCOUT24_BASE_URL` / `AUTOSCOUT24_TOKEN_URL`) or only check the error handling.
+
+1. Settings → Schnittstellen → **Portal verbinden**: AutoScout24, Client-ID, Client-Secret, Kundennummer, Aktiv.
+   Expected: the secret is never shown again; editing with an empty secret keeps it.
+2. **Verbindung testen**. With wrong data: red notification with the reason, status "Fehler", entry in the
+   Abgleich-Protokoll. With working data: "Verbunden".
+3. Publish a car (section 18). Expected: in the vehicle file, section "Inserat" → Kanäle "AutoScout24: Online"
+   (or "Fehlgeschlagen – reason"). Change the price → one "Aktualisieren" entry in the log; saving again
+   without changes adds nothing.
+4. Reserve the car → stays online, marked reserved (or removed, if "Reservierte Fahrzeuge vom Portal nehmen" is on).
+   Sell or withdraw it → "Entfernen" in the log, channel "Entfernt".
+5. **Fahrzeuge vom Portal importieren** (queue worker must run). Expected: one file "In Prüfung" per portal car
+   with list price, an advert draft with texts and photos; a car whose VIN is already known is linked;
+   running it again skips everything. The summary is in the log.

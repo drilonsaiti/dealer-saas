@@ -14,6 +14,8 @@ use App\Domain\Import\Actions\CreateImportRun;
 use App\Domain\Import\Actions\RunImport;
 use App\Domain\Import\Enums\ImporterType;
 use App\Domain\Import\Support\SpreadsheetReader;
+use App\Domain\Integrations\Models\IntegrationAccount;
+use App\Domain\Integrations\Models\IntegrationLog;
 use App\Domain\Invoicing\Actions\IssueInvoice;
 use App\Domain\Invoicing\Actions\SaveInvoiceDraft;
 use App\Domain\Invoicing\Enums\InvoiceType;
@@ -143,6 +145,10 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
         app(ReceiveEnquiry::class)(['name' => "Interessent {$marker}", 'email' => strtolower($marker).'@example.ch', 'message' => "Frage {$marker}"], $listing);
         $hook = WebhookEndpoint::create(['url' => 'https://example.ch/'.$marker, 'secret' => 's', 'events' => ['vehicle.sold']]);
         WebhookDelivery::create(['endpoint_id' => $hook->id, 'event' => 'vehicle.sold', 'payload' => ['marker' => $marker]]);
+
+        // A portal account (inactive, so nothing is sent) with a log entry.
+        $portal = IntegrationAccount::create(['provider' => 'autoscout24', 'credentials' => ['client_id' => $marker]]);
+        IntegrationLog::create(['integration_account_id' => $portal->id, 'listing_id' => $listing->id, 'action' => 'test', 'status' => 'ok', 'message' => "Log {$marker}"]);
 
         // A purchase contract out for signature (templates, signature requests, signers).
         $contract = app(GenerateContract::class)($panda->purchase, 'de', "Vertrag {$marker}");

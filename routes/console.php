@@ -8,6 +8,7 @@ use App\Domain\Import\Actions\RunImport;
 use App\Domain\Import\Enums\ImporterType;
 use App\Domain\Import\Models\ImportPreset;
 use App\Domain\Import\Support\SpreadsheetReader;
+use App\Domain\Integrations\Support\ListingSync;
 use App\Domain\Operations\Models\RestoreDrill;
 use App\Domain\Signatures\Actions\CancelSigning;
 use App\Domain\Signatures\Models\SignatureRequest;
@@ -96,6 +97,24 @@ Artisan::command('warranties:expire', function (TenantContext $context): void {
 })->purpose('Mark warranties past their end date as expired');
 
 Schedule::command('warranties:expire')->dailyAt('02:10');
+
+/*
+ * Nightly catch-up for the portals: every listing is compared with its last sync (unchanged ones
+ * are skipped without a call); failed or missed changes are sent again.
+ */
+Artisan::command('listings:sync', function (TenantContext $context, ListingSync $sync): void {
+    $tenants = $context->bypass(fn () => Tenant::query()->where('status', Tenant::STATUS_ACTIVE)->get());
+
+    foreach ($tenants as $tenant) {
+        $queued = $context->run($tenant, fn (): int => $sync->all());
+
+        if ($queued > 0) {
+            $this->info("{$tenant->name}: {$queued} portal sync(s) queued");
+        }
+    }
+})->purpose('Send listing changes that are still missing on the portals');
+
+Schedule::command('listings:sync')->dailyAt('03:20');
 
 /*
  * Sample files for the manual test workflow (docs/manual-test/README.md).

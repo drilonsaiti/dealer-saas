@@ -12,6 +12,7 @@ use App\Domain\Documents\Models\DocumentTemplate;
 use App\Domain\Financing\Models\BuybackObligation;
 use App\Domain\Financing\Models\Financing;
 use App\Domain\Import\Models\ImportRun;
+use App\Domain\Integrations\Models\IntegrationAccount;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Listings\Listeners\AnnounceListingChanges;
 use App\Domain\Listings\Models\Enquiry;
@@ -59,6 +60,7 @@ use App\Policies\DocumentTemplatePolicy;
 use App\Policies\EnquiryPolicy;
 use App\Policies\FinancingPolicy;
 use App\Policies\ImportRunPolicy;
+use App\Policies\IntegrationAccountPolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\ListingPolicy;
 use App\Policies\NumberSequencePolicy;
@@ -192,6 +194,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Enquiry::class, EnquiryPolicy::class);
         Gate::policy(ApiToken::class, ApiTokenPolicy::class);
         Gate::policy(WebhookEndpoint::class, WebhookEndpointPolicy::class);
+        Gate::policy(IntegrationAccount::class, IntegrationAccountPolicy::class);
     }
 
     /**
