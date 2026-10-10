@@ -33,6 +33,7 @@ use App\Domain\Listings\Models\ListingPublication;
 use App\Domain\Parties\Models\Party;
 use App\Domain\Payments\Actions\RecordPayment;
 use App\Domain\Payments\Models\BankTransaction;
+use App\Domain\Portal\Actions\IssuePortalLink;
 use App\Domain\Preparation\Actions\ManageRepairOrder;
 use App\Domain\Preparation\Actions\RecordConditionReport;
 use App\Domain\Purchasing\Models\Commitment;
@@ -177,6 +178,9 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
         // A WhatsApp account with a message.
         $wa = IntegrationAccount::create(['provider' => 'whatsapp', 'credentials' => ['phone_number_id' => $marker]]);
         ChatMessage::create(['integration_account_id' => $wa->id, 'direction' => 'in', 'external_id' => "wamid.{$marker}", 'phone' => '+41790000000', 'body' => "Chat {$marker}", 'status' => 'received']);
+
+        // A customer portal link for the sale.
+        app(IssuePortalLink::class)($sale);
 
         // A personal calendar link.
         app(IssueCalendarFeed::class)(auth()->user());

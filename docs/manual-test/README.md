@@ -384,3 +384,14 @@ Needs a Meta developer app with a WhatsApp test number and the server reachable 
 3. **Antworten** → arrives on the phone; the tick becomes ✓✓ / blue when read.
 4. After 24 hours without a customer message, **Antworten** is disabled with the reason.
 5. **Zuordnen** assigns the whole conversation to another contact / vehicle file.
+
+## 28. Customer portal (Phase 4, step 4)
+
+1. A reserved or sold car → **Mehr → Kundenportal**, "E-Mail vorbereiten" on → the notification shows the link; the
+   e-mail to the buyer is a draft in the Posteingang (in the buyer's language).
+2. Open the link in a private window (no login): vehicle, steps with handover date, invoices with "offen"/"bezahlt" and
+   PDF, warranty, documents. The dealer's purchase contract or ID copies are **not** listed.
+3. Upload a PDF with "Was ist es?" → appears in the vehicle file (category "Vom Kunden hochgeladen") and in the portal
+   list. A file "test.pdf.exe" is refused with the reason.
+4. **Kundenportal: neuer Link** → the old link shows "404"; **Kundenportal ausschalten** → the new link too.
+5. On a phone the page is readable without zooming.

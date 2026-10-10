@@ -36,6 +36,7 @@ class InstallDefaultDocumentCategories
         'receipt' => [FolderGroup::SalePayments, 40, false, 'Quittung', 'Quittance', 'Ricevuta', 'Receipt'],
         'handover_protocol' => [FolderGroup::SalePayments, 50, false, 'Übergabeprotokoll', 'Procès-verbal de livraison', 'Verbale di consegna', 'Handover protocol'],
         'buyer_identity' => [FolderGroup::SalePayments, 60, true, 'Ausweis Käufer', 'Pièce d’identité de l’acheteur', 'Documento d’identità dell’acquirente', 'Buyer ID'],
+        'customer_upload' => [FolderGroup::SalePayments, 65, false, 'Vom Kunden hochgeladen', 'Envoyé par le client', 'Caricato dal cliente', 'Uploaded by the customer'],
         'correspondence' => [FolderGroup::SalePayments, 70, false, 'Korrespondenz', 'Correspondance', 'Corrispondenza', 'Correspondence'],
         'warranty_policy' => [FolderGroup::Warranty, 10, false, 'Garantiepolice', 'Police de garantie', 'Polizza di garanzia', 'Warranty policy'],
         'warranty_claim' => [FolderGroup::Warranty, 20, false, 'Garantiefall', 'Cas de garantie', 'Caso di garanzia', 'Warranty claim'],

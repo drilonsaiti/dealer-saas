@@ -42,6 +42,7 @@ use App\Domain\Parties\Models\Party;
 use App\Domain\Payments\Models\BankTransaction;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentAllocation;
+use App\Domain\Portal\Models\PortalLink;
 use App\Domain\Preparation\Models\ConditionReport;
 use App\Domain\Preparation\Models\Damage;
 use App\Domain\Preparation\Models\RepairOrder;
@@ -150,6 +151,7 @@ final class MorphMap
         'vehicle_valuation' => VehicleValuation::class,
         'ai_request' => AiRequest::class,
         'chat_message' => ChatMessage::class,
+        'portal_link' => PortalLink::class,
     ];
 
     public static function label(string $alias): string
@@ -208,6 +210,7 @@ final class MorphMap
             'vehicle_valuation' => __('Valuation'),
             'ai_request' => __('AI request'),
             'chat_message' => __('WhatsApp message'),
+            'portal_link' => __('Customer portal'),
             default => $alias,
         };
     }
