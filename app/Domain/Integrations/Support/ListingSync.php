@@ -21,7 +21,7 @@ class ListingSync
             return 0;
         }
 
-        $accounts = IntegrationAccount::query()->active()->pluck('id');
+        $accounts = IntegrationAccount::query()->active()->ofKind(Providers::LISTING)->pluck('id');
 
         foreach ($accounts as $accountId) {
             SyncListingPublication::dispatch($listing->getKey(), $accountId)->afterCommit();
@@ -35,7 +35,7 @@ class ListingSync
      */
     public function all(?IntegrationAccount $account = null): int
     {
-        $accounts = $account !== null ? collect([$account->getKey()]) : IntegrationAccount::query()->active()->pluck('id');
+        $accounts = $account !== null ? collect([$account->getKey()]) : IntegrationAccount::query()->active()->ofKind(Providers::LISTING)->pluck('id');
         $count = 0;
 
         Listing::query()->where('status', '!=', ListingStatus::Draft->value)

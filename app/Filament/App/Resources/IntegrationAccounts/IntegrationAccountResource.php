@@ -3,7 +3,7 @@
 namespace App\Filament\App\Resources\IntegrationAccounts;
 
 use App\Domain\Integrations\Models\IntegrationAccount;
-use App\Domain\Integrations\Support\Channels;
+use App\Domain\Integrations\Support\Providers;
 use App\Filament\App\Resources\IntegrationAccounts\Pages\ManageIntegrationAccounts;
 use App\Filament\App\Resources\IntegrationAccounts\Pages\ViewIntegrationAccount;
 use App\Filament\App\Resources\IntegrationAccounts\RelationManagers\LogsRelationManager;
@@ -71,7 +71,7 @@ class IntegrationAccountResource extends Resource
     {
         return $schema->components([
             Grid::make(3)->schema([
-                TextEntry::make('provider')->label(__('Portal'))->formatStateUsing(fn (string $state): string => Channels::label($state)),
+                TextEntry::make('provider')->label(__('Service'))->formatStateUsing(fn (string $state): string => Providers::label($state)),
                 TextEntry::make('is_active')->label(__('Active'))->badge()
                     ->formatStateUsing(fn (bool $state): string => $state ? __('Active') : __('Off'))
                     ->color(fn (bool $state): string => $state ? 'success' : 'gray'),
@@ -79,7 +79,7 @@ class IntegrationAccountResource extends Resource
                     ->formatStateUsing(fn (string $state): string => self::statusLabel($state))
                     ->color(fn (string $state): string => self::statusColor($state)),
                 TextEntry::make('seller')->label(__('Customer number'))
-                    ->state(fn (IntegrationAccount $record): string => $record->credential('seller_id') ?? '–'),
+                    ->state(fn (IntegrationAccount $record): string => $record->credential('seller_id') ?? $record->credential('customer_number') ?? '–'),
                 TextEntry::make('last_checked_at')->label(__('Last tested'))->since()->placeholder('–'),
                 TextEntry::make('last_synced_at')->label(__('Last sync'))->since()->placeholder('–'),
                 TextEntry::make('last_error')->label(__('Last error'))->color('danger')->placeholder('–')->columnSpanFull(),
@@ -91,7 +91,7 @@ class IntegrationAccountResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('provider')->label(__('Portal'))->formatStateUsing(fn (string $state): string => Channels::label($state)),
+                TextColumn::make('provider')->label(__('Service'))->formatStateUsing(fn (string $state): string => Providers::label($state)),
                 IconColumn::make('is_active')->label(__('Active'))->boolean(),
                 TextColumn::make('status')->label(__('Connection'))->badge()
                     ->formatStateUsing(fn (string $state): string => self::statusLabel($state))

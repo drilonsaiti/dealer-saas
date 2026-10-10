@@ -39,7 +39,7 @@ it('connects AutoScout24, tests it, shows the log and the portal status on the v
 
     Livewire::test(ManageIntegrationAccounts::class)
         ->assertCanSeeTableRecords([$account])
-        ->assertActionHidden('connect'); // only one account per portal
+        ->assertActionVisible('connect'); // Auto-i-DAT can still be connected; AutoScout24 only once
 
     Livewire::test(ViewIntegrationAccount::class, ['record' => $account->getRouteKey()])
         ->assertSee('S-1')

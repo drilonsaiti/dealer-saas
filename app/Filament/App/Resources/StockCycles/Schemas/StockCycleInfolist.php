@@ -7,6 +7,7 @@ use App\Domain\Checklists\Models\ChecklistItem;
 use App\Domain\Documents\Actions\RequiredDocumentsChecklist;
 use App\Domain\Documents\Enums\RequiredDocumentStatus;
 use App\Domain\Integrations\Support\Channels;
+use App\Domain\Integrations\Support\Providers;
 use App\Domain\Listings\Enums\PublicationStatus;
 use App\Domain\Listings\Models\Listing;
 use App\Domain\Listings\Models\ListingPublication;
@@ -15,6 +16,7 @@ use App\Domain\Purchasing\Enums\VatSituation;
 use App\Domain\Reporting\CalculateMargin;
 use App\Domain\Reporting\Margin;
 use App\Domain\Sales\Enums\SaleStatus;
+use App\Domain\VehicleData\Models\VehicleValuation;
 use App\Domain\Vehicles\Enums\Code178Status;
 use App\Domain\Vehicles\Enums\StockCycleStatus;
 use App\Domain\Vehicles\Models\StockCycle;
@@ -63,6 +65,11 @@ final class StockCycleInfolist
     private static function listing(StockCycle $record): ?Listing
     {
         return Listing::query()->where('stock_cycle_id', $record->getKey())->first()?->setRelation('stockCycle', $record);
+    }
+
+    private static function valuation(StockCycle $record): ?VehicleValuation
+    {
+        return VehicleValuation::query()->where('stock_cycle_id', $record->getKey())->latest('created_at')->first();
     }
 
     private static function channelLabel(string $channel): string
@@ -283,6 +290,18 @@ final class StockCycleInfolist
                         TextEntry::make('vehicle.model')->label(__('Model'))->placeholder('–'),
                         TextEntry::make('vehicle.variant')->label(__('Version'))->placeholder('–'),
                         TextEntry::make('vehicle.internal_label')->label(__('Internal label'))->placeholder('–'),
+                        TextEntry::make('valuation')->label(__('Market value'))
+                            ->visible(fn (StockCycle $record): bool => self::valuation($record) !== null)
+                            ->state(function (StockCycle $record): string {
+                                $valuation = self::valuation($record);
+
+                                return __('retail :retail · trade-in :trade', [
+                                    'retail' => $valuation?->retail_rp !== null ? Money::format($valuation->retail_rp) : '–',
+                                    'trade' => $valuation?->trade_in_rp !== null ? Money::format($valuation->trade_in_rp) : '–',
+                                ]);
+                            })
+                            ->helperText(fn (StockCycle $record): ?string => ($v = self::valuation($record)) === null ? null : __(':provider, :date, :km km', ['provider' => Providers::label($v->provider), 'date' => $v->valued_on->format('d.m.Y'), 'km' => number_format($v->mileage, 0, '.', "'")]))
+                            ->columnSpan(2),
                         TextEntry::make('vehicle.stammnummer')
                             ->label(__('Stammnummer'))
                             ->state(fn (StockCycle $record): ?string => $record->vehicle->formattedStammnummer())

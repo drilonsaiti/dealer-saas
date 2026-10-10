@@ -3,8 +3,8 @@
 namespace App\Domain\Integrations\Actions;
 
 use App\Domain\Integrations\Models\IntegrationAccount;
-use App\Domain\Integrations\Support\Channels;
 use App\Domain\Integrations\Support\ListingSync;
+use App\Domain\Integrations\Support\Providers;
 
 /**
  * Saves the dealer's account at a portal. Secrets left empty keep the stored value (they are
@@ -21,7 +21,7 @@ class SaveIntegrationAccount
      */
     public function __invoke(string $provider, array $credentials, array $settings = [], bool $active = false): IntegrationAccount
     {
-        Channels::for($provider); // unknown provider → exception
+        Providers::definition($provider); // unknown provider → exception
 
         $account = IntegrationAccount::query()->firstOrNew(['provider' => $provider]);
         $wasActive = $account->exists && $account->is_active;
@@ -47,7 +47,7 @@ class SaveIntegrationAccount
 
         $account->save();
 
-        if ($active && ! $wasActive) {
+        if ($active && ! $wasActive && Providers::kind($provider) === Providers::LISTING) {
             $this->sync->all($account);
         }
 

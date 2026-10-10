@@ -23,6 +23,21 @@ return [
         'timeout' => 20,
     ],
 
+    /*
+    | Auto-i-DAT (vehicle identification, technical data, equipment, valuation). Licensed
+    | service; the interface documentation comes with the contract. Addresses and field names
+    | used by App\Domain\VehicleData\Providers\AutoIDat\* are an assumption to be checked.
+    */
+    'autoidat' => [
+        'base_url' => env('AUTOIDAT_BASE_URL', 'https://api.auto-i-dat.ch/v1'),
+        'paths' => [
+            'vehicles' => '/vehicles',
+            'vehicle' => '/vehicles/{id}',
+            'valuation' => '/vehicles/{id}/valuation',
+        ],
+        'timeout' => 15,
+    ],
+
     // Failed portal calls are retried after these pauses (seconds); then they stay "failed"
     // until the next change or the nightly catch-up (listings:sync).
     'retry_backoff' => [60, 300, 1800, 7200],

@@ -4,8 +4,8 @@ namespace App\Domain\Integrations\Actions;
 
 use App\Domain\Integrations\Models\IntegrationAccount;
 use App\Domain\Integrations\Models\IntegrationLog;
-use App\Domain\Integrations\Support\Channels;
 use App\Domain\Integrations\Support\IntegrationException;
+use App\Domain\Integrations\Support\Providers;
 
 /**
  * "Test connection": logs in with the dealer's credentials and reads one page of stock.
@@ -18,7 +18,7 @@ class TestIntegration
         $started = hrtime(true);
 
         try {
-            Channels::for($account->provider)->test($account);
+            Providers::make($account->provider)->test($account);
             $error = null;
             $code = null;
         } catch (IntegrationException $e) {

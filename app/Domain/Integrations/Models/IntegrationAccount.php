@@ -4,6 +4,7 @@ namespace App\Domain\Integrations\Models;
 
 use App\Domain\Audit\Concerns\Auditable;
 use App\Domain\Audit\Concerns\TracksAuthors;
+use App\Domain\Integrations\Support\Providers;
 use App\Domain\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -35,6 +36,8 @@ class IntegrationAccount extends Model
 
     public const AUTOSCOUT24 = 'autoscout24';
 
+    public const AUTOIDAT = 'autoidat';
+
     protected $fillable = ['tenant_id', 'provider', 'credentials', 'settings', 'is_active'];
 
     protected $hidden = ['credentials'];
@@ -58,6 +61,14 @@ class IntegrationAccount extends Model
     public function scopeActive(Builder $query): void
     {
         $query->where('is_active', true);
+    }
+
+    /**
+     * @param  Builder<IntegrationAccount>  $query
+     */
+    public function scopeOfKind(Builder $query, string $kind): void
+    {
+        $query->whereIn('provider', Providers::ofKind($kind));
     }
 
     public function credential(string $key): ?string

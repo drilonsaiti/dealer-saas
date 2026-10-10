@@ -28,3 +28,17 @@ file import (AS24i / FTP), a second `ListingChannel` implementation replaces the
 - `listings:sync` (nightly 03:20) queues all listings again; unchanged ones cost no call.
 - Drafts are never sent. Imported cars stay drafts until the file is released and published; then the existing
   portal entry is updated, not duplicated.
+
+## Auto-i-DAT (vehicle data)
+
+**Status:** built against an assumed API shape; the interface documentation comes with the Auto-i-DAT licence.
+
+| What | Where |
+|---|---|
+| Base address, paths (`/vehicles?typeApproval=&vin=`, `/vehicles/{id}/valuation?firstRegistration=&mileage=`) | `config/integrations.php` (`AUTOIDAT_BASE_URL`) |
+| Authentication (bearer API key + `X-Customer-Number`) | `AutoIDatProvider::get()` |
+| Field names and code lists (body, fuel, gearbox, drive, equipment, prices) | `AutoIDatMapper` |
+
+Lookups are cached for 10 minutes per query (the dialog asks several times), every call is in the sync log.
+Taking over data never overwrites filled fields unless "overwrite" is ticked; only the options the user ticks are added
+to the equipment. Valuations are kept per vehicle file with date and mileage (`vehicle_valuations`).

@@ -318,3 +318,16 @@ Use a test mailbox (e.g. a free account with IMAP, or a local Mailpit/Dovecot); 
    bis", repair targets, warranties ending, buy-back reminders and payouts due; each opens the record in Dealer SaaS.
 3. **Neuen Link erstellen** → the old link gives 404, the new one works. **Ausschalten** → 404. A user removed from the
    dealer: the link stops working.
+
+## 23. Vehicle data from Auto-i-DAT (Phase 3, step 6)
+
+Needs Auto-i-DAT access (or a stand-in in `AUTOIDAT_BASE_URL`).
+
+1. Settings → Schnittstellen → **Dienst verbinden** → Auto-i-DAT: Kundennummer, API-Schlüssel, Aktiv.
+   **Verbindung testen**: wrong key → red notification "Zugriff verweigert".
+2. A vehicle file with Typengenehmigung (or FIN) → **Mehr → Fahrzeugdaten abrufen**: choose the variant, tick the options
+   the car really has, leave "überschreiben" off → **Übernehmen**. Expected: empty fields (Variante, Leistung, Gewichte …)
+   filled, filled fields unchanged, options added to the equipment.
+3. With "Bewertung abrufen": notification with sale and trade-in value; the Fahrzeug section shows "Marktwert" with date
+   and mileage. Each call is in the Abgleich-Protokoll of the Auto-i-DAT integration.
+4. AutoScout24 and Auto-i-DAT can both be connected; publishing still goes only to AutoScout24.

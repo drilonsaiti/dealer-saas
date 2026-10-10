@@ -62,6 +62,7 @@ use App\Domain\Vat\Models\VatNetTaxRate;
 use App\Domain\Vat\Models\VatPeriod;
 use App\Domain\Vat\Models\VatProfile;
 use App\Domain\Vat\Models\VatRate;
+use App\Domain\VehicleData\Models\VehicleValuation;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Domain\Vehicles\Models\TyreSet;
 use App\Domain\Vehicles\Models\Vehicle;
@@ -144,6 +145,7 @@ final class MorphMap
         'mailbox' => Mailbox::class,
         'email_message' => EmailMessage::class,
         'calendar_feed' => CalendarFeed::class,
+        'vehicle_valuation' => VehicleValuation::class,
     ];
 
     public static function label(string $alias): string
@@ -199,6 +201,7 @@ final class MorphMap
             'mailbox' => __('Mailbox'),
             'email_message' => __('E-mail'),
             'calendar_feed' => __('Calendar link'),
+            'vehicle_valuation' => __('Valuation'),
             default => $alias,
         };
     }

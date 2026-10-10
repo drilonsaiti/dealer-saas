@@ -11,13 +11,8 @@ use App\Domain\Listings\Models\Listing;
  * A portal the dealer's listings are published on. Each implementation is an adapter: the
  * core never depends on one being available, and failures are retried and logged.
  */
-interface ListingChannel
+interface ListingChannel extends Integration
 {
-    public function key(): string;
-
-    /** Checks the credentials; throws IntegrationException with a readable reason. */
-    public function test(IntegrationAccount $account): void;
-
     /**
      * What would be sent for this listing (its hash tells whether a sync is needed).
      *

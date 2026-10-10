@@ -45,6 +45,7 @@ use App\Domain\Tenancy\Enums\Role;
 use App\Domain\Tenancy\Models\Tenant;
 use App\Domain\Vat\Actions\SaveVatProfile;
 use App\Domain\Vat\Models\VatCode;
+use App\Domain\VehicleData\Models\VehicleValuation;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Domain\Vehicles\Models\TyreSet;
 use App\Domain\Warranty\Models\Warranty;
@@ -164,6 +165,9 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
         $mailbox = app(SaveMailbox::class)(null, ['name' => "Mail {$marker}", 'email' => strtolower($marker).'@dealer.ch', 'imap_host' => 'imap.example.ch', 'imap_username' => $marker, 'imap_password' => 'x']);
         $mail = app(StoreIncomingEmail::class)($mailbox, "From: kunde@example.ch\r\nSubject: Mail {$marker}\r\nMessage-ID: <{$marker}@example.ch>\r\n\r\nText {$marker}");
         app(SaveEmailDraft::class)->reply($mail, ['body' => "Antwort {$marker}"]);
+
+        // A valuation from the vehicle data provider.
+        VehicleValuation::create(['stock_cycle_id' => $panda->id, 'provider' => 'autoidat', 'valued_on' => '2026-03-01', 'mileage' => 1000, 'retail_rp' => 500_000, 'reference' => "V-{$marker}"]);
 
         // A personal calendar link.
         app(IssueCalendarFeed::class)(auth()->user());

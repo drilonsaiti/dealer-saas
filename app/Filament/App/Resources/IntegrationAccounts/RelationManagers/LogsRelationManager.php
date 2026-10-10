@@ -28,6 +28,8 @@ class LogsRelationManager extends RelationManager
             'remove' => __('Remove'),
             'test' => __('Test connection'),
             'import' => __('Import'),
+            'lookup' => __('Vehicle data'),
+            'valuation' => __('Valuation'),
             default => $action,
         };
     }
