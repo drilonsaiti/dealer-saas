@@ -8,6 +8,7 @@ use App\Filament\App\Resources\Invoices\InvoiceActions;
 use App\Filament\App\Resources\StockCycles\Actions\ContractActions;
 use App\Filament\App\Resources\StockCycles\Actions\LeasingWarrantyActions;
 use App\Filament\App\Resources\StockCycles\Actions\ListingActions;
+use App\Filament\App\Resources\StockCycles\Actions\PricingActions;
 use App\Filament\App\Resources\StockCycles\Actions\StockCycleActions;
 use App\Filament\App\Resources\StockCycles\Actions\VehicleDataActions;
 use App\Filament\App\Resources\StockCycles\StockCycleResource;
@@ -50,6 +51,7 @@ class ViewStockCycle extends ViewRecord
                 LeasingWarrantyActions::addWarranty(),
                 LeasingWarrantyActions::code178(),
                 VehicleDataActions::fetch(),
+                PricingActions::apply(),
                 StockCycleActions::preparation(),
                 ListingActions::withdraw(),
                 EditAction::make(),

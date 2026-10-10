@@ -3,9 +3,13 @@
 namespace App\Filament\App\Pages\Tenancy;
 
 use App\Domain\Ai\Models\AiRequest;
+use App\Domain\Pricing\Actions\SuggestPrice;
 use App\Domain\Tenancy\Models\Tenant;
+use App\Filament\Support\MoneyInput;
+use App\Support\Money;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -87,6 +91,22 @@ class EditCompanyProfile extends EditTenantProfile
                                 'used' => AiRequest::query()->where('created_at', '>=', now()->startOfMonth())->count(),
                                 'limit' => (int) config('dealer.ai.monthly_requests', 500),
                             ])),
+                ]),
+            Section::make(__('Price suggestions'))
+                ->description(__('The longer a car stands, the lower the suggested price (on the planned price); never below cost plus the minimum margin, and not above a known market value.'))
+                ->collapsed()
+                ->schema([
+                    Repeater::make('settings.pricing.steps')->label(__('Steps'))
+                        ->schema([
+                            TextInput::make('days')->label(__('From day'))->integer()->minValue(1)->required(),
+                            TextInput::make('percent')->label(__('Reduction'))->numeric()->minValue(0)->maxValue(50)->suffix('%')->required(),
+                        ])
+                        ->columns(2)
+                        ->default(SuggestPrice::DEFAULT_STEPS)
+                        ->addActionLabel(__('Add step'))
+                        ->reorderable(false),
+                    MoneyInput::make('settings.pricing.min_margin_rp')->label(__('Minimum margin'))
+                        ->placeholder(Money::format(SuggestPrice::DEFAULT_MIN_MARGIN_RP)),
                 ]),
             Section::make(__('Security'))
                 ->schema([

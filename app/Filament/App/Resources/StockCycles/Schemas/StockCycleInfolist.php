@@ -12,6 +12,8 @@ use App\Domain\Listings\Enums\PublicationStatus;
 use App\Domain\Listings\Models\Listing;
 use App\Domain\Listings\Models\ListingPublication;
 use App\Domain\Preparation\Models\Damage;
+use App\Domain\Pricing\Actions\SuggestPrice;
+use App\Domain\Pricing\Support\PriceSuggestion;
 use App\Domain\Purchasing\Enums\VatSituation;
 use App\Domain\Reporting\CalculateMargin;
 use App\Domain\Reporting\Margin;
@@ -67,9 +69,14 @@ final class StockCycleInfolist
         return Listing::query()->where('stock_cycle_id', $record->getKey())->first()?->setRelation('stockCycle', $record);
     }
 
+    private static function suggestion(StockCycle $record): ?PriceSuggestion
+    {
+        return app(SuggestPrice::class)($record);
+    }
+
     private static function valuation(StockCycle $record): ?VehicleValuation
     {
-        return VehicleValuation::query()->where('stock_cycle_id', $record->getKey())->latest('created_at')->first();
+        return VehicleValuation::query()->where('stock_cycle_id', $record->getKey())->latest('valued_on')->latest('created_at')->first();
     }
 
     private static function channelLabel(string $channel): string
@@ -197,6 +204,19 @@ final class StockCycleInfolist
                             ->state(fn (StockCycle $record): string => Money::format(self::margin($record)->marginAfterVatRp()))
                             ->weight('bold')
                             ->color(fn (StockCycle $record): string => (self::margin($record)->marginAfterVatRp() ?? 0) < 0 ? 'danger' : 'success'),
+                    ]),
+                ]),
+            Section::make(__('Price suggestion'))
+                ->visible(fn (StockCycle $record): bool => self::suggestion($record)?->lowersPrice() ?? false)
+                ->collapsible()
+                ->schema([
+                    Grid::make(4)->schema([
+                        TextEntry::make('suggested_price')->label(__('Suggested price'))->weight('bold')->color('warning')
+                            ->state(fn (StockCycle $record): string => Money::format(self::suggestion($record)?->suggestedRp))
+                            ->helperText(fn (StockCycle $record): string => __(':amount less than now', ['amount' => Money::format(self::suggestion($record)?->differenceRp() ?? 0)])),
+                        TextEntry::make('suggestion_reasons')->label(__('Why'))->columnSpan(3)
+                            ->state(fn (StockCycle $record): array => self::suggestion($record)->reasons ?? [])
+                            ->listWithLineBreaks(),
                     ]),
                 ]),
             Section::make(__('Preparation'))

@@ -359,3 +359,14 @@ Needs `DEALER_AI_API_KEY` (Anthropic) in `.env`.
 3. Posteingang → e-mail (e.g. in French) → **Antworten** → **Mit KI entwerfen** (optional "Probefahrt anbieten").
    Expected: reply in French above the quoted e-mail; unknown points as [placeholders]. Nothing is sent until **Senden**.
 4. Switch AI off → both buttons disappear. With a wrong key: red notification with the reason; nothing changes in the form.
+
+## 26. Price suggestions (Phase 4, step 2)
+
+1. Einstellungen → Firmenprofil → Preisvorschläge: steps (default from day 45 −3 %, 60 −5 %, 90 −8 %, 120 −12 %) and
+   minimum margin (default CHF 500). Change a step and save.
+2. A car "Verkaufsbereit" or "Inseriert" bought more than 45 days ago (purchase date) with a planned price → the vehicle
+   file shows "Preisvorschlag" with the amount and the reasons; the dashboard "Am längsten an Lager" shows it too.
+3. With a valuation (section 23) below the price, the suggestion follows the market value; it never goes below purchase
+   price + costs + minimum margin.
+4. **Mehr → Preisvorschlag übernehmen** (the amount can be changed) → list price and advert change; AutoScout24 gets the
+   new price (section 19).
