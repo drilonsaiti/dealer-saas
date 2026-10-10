@@ -46,6 +46,7 @@ class InstallDefaultDocumentCategories
         'vat_detail' => [FolderGroup::Company, 20, false, 'MWST-Detail', 'Détail TVA', 'Dettaglio IVA', 'VAT detail'],
         'vat_export' => [FolderGroup::Company, 30, false, 'MWST-Export ESTV', 'Export TVA AFC', 'Esportazione IVA AFC', 'VAT export (ESTV)'],
         'vat_confirmation' => [FolderGroup::Company, 40, false, 'MWST-Einreichungsbestätigung', 'Confirmation de dépôt TVA', 'Conferma di inoltro IVA', 'VAT submission confirmation'],
+        'accounting_export' => [FolderGroup::Company, 50, false, 'Buchhaltungsexport', 'Export comptable', 'Esportazione contabile', 'Accounting export'],
         'payout_confirmation' => [FolderGroup::Financing, 40, false, 'Auszahlungsbestätigung', 'Confirmation de versement', 'Conferma di pagamento', 'Payout confirmation'],
     ];
 

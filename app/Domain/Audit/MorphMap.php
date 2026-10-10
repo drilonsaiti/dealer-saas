@@ -2,6 +2,9 @@
 
 namespace App\Domain\Audit;
 
+use App\Domain\Accounting\Models\AccountingExport;
+use App\Domain\Accounting\Models\AccountingExportItem;
+use App\Domain\Accounting\Models\AccountMapping;
 use App\Domain\Api\Models\ApiToken;
 use App\Domain\Api\Models\WebhookDelivery;
 use App\Domain\Api\Models\WebhookEndpoint;
@@ -132,6 +135,9 @@ final class MorphMap
         'webhook_delivery' => WebhookDelivery::class,
         'integration_account' => IntegrationAccount::class,
         'integration_log' => IntegrationLog::class,
+        'account_mapping' => AccountMapping::class,
+        'accounting_export' => AccountingExport::class,
+        'accounting_export_item' => AccountingExportItem::class,
     ];
 
     public static function label(string $alias): string
@@ -182,6 +188,8 @@ final class MorphMap
             'api_token' => __('API token'),
             'webhook_endpoint' => __('Webhook'),
             'integration_account' => __('Integration'),
+            'account_mapping' => __('Account'),
+            'accounting_export' => __('Accounting export'),
             default => $alias,
         };
     }

@@ -279,3 +279,17 @@ documentation are there, test against a stand-in (e.g. a https://webhook.site UR
 5. **Fahrzeuge vom Portal importieren** (queue worker must run). Expected: one file "In Prüfung" per portal car
    with list price, an advert draft with texts and photos; a car whose VIN is already known is linked;
    running it again skips everything. The summary is in the log.
+
+## 20. Accounting export (Phase 3, step 3)
+
+1. Log in as Accounting (or Administrator) → Finanzen → Buchhaltungsexport → **Konten**: the Swiss SME numbers are
+   shown in grey; enter e.g. 3000 for "Fahrzeugverkauf" and an own number for a bank account → Speichern.
+2. **Neuer Export**, "Bis und mit" = end of last month. The dialog shows how many invoices, payments, purchases and
+   costs are waiting. Export → a line "2026-001" with the number of bookings; **Herunterladen (CSV)**.
+3. Open the CSV in Excel: one booking per row (Datum, Beleg, Soll, Haben, Betrag, MWST-Satz, Text, Fahrzeugdossier …).
+   The sum of all debits equals the sum of all credits; with the effective method VAT goes to 2200 / 1170, with the
+   net tax rate method revenue is gross.
+4. **Neuer Export** again for the same date → "nothing new to export". Enter an invoice dated last month → it comes
+   with the next export.
+5. **Export rückgängig machen** on the latest export → its records are exported again next time; older exports
+   cannot be undone. Sales users do not see the menu.

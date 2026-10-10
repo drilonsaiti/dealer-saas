@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Accounting\Models\AccountingExport;
 use App\Domain\Api\Models\ApiToken;
 use App\Domain\Api\Models\WebhookEndpoint;
 use App\Domain\Audit\Models\AuditLog;
@@ -45,6 +46,7 @@ use App\Domain\Vehicles\Models\Vehicle;
 use App\Domain\Warranty\Models\Warranty;
 use App\Domain\Warranty\Models\WarrantyClaim;
 use App\Domain\Warranty\Models\WarrantyProduct;
+use App\Policies\AccountingExportPolicy;
 use App\Policies\ApiTokenPolicy;
 use App\Policies\AuditLogPolicy;
 use App\Policies\BankAccountPolicy;
@@ -195,6 +197,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ApiToken::class, ApiTokenPolicy::class);
         Gate::policy(WebhookEndpoint::class, WebhookEndpointPolicy::class);
         Gate::policy(IntegrationAccount::class, IntegrationAccountPolicy::class);
+        Gate::policy(AccountingExport::class, AccountingExportPolicy::class);
     }
 
     /**

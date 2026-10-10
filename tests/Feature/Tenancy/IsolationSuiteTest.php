@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Accounting\Actions\CreateAccountingExport;
+use App\Domain\Accounting\Actions\SaveAccountMappings;
 use App\Domain\Api\Actions\IssueApiToken;
 use App\Domain\Api\Models\WebhookDelivery;
 use App\Domain\Api\Models\WebhookEndpoint;
@@ -149,6 +151,10 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
         // A portal account (inactive, so nothing is sent) with a log entry.
         $portal = IntegrationAccount::create(['provider' => 'autoscout24', 'credentials' => ['client_id' => $marker]]);
         IntegrationLog::create(['integration_account_id' => $portal->id, 'listing_id' => $listing->id, 'action' => 'test', 'status' => 'ok', 'message' => "Log {$marker}"]);
+
+        // Accounting: an own account number and an export (with its items and journal file).
+        app(SaveAccountMappings::class)(['vehicle_sales' => '3010']);
+        app(CreateAccountingExport::class)('2026-12-31');
 
         // A purchase contract out for signature (templates, signature requests, signers).
         $contract = app(GenerateContract::class)($panda->purchase, 'de', "Vertrag {$marker}");

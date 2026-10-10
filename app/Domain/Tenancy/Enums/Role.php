@@ -58,6 +58,7 @@ enum Role: string implements HasLabel
                 Permission::VatView,
                 Permission::VatManage,
                 Permission::VatClose,
+                Permission::AccountingExport,
             ],
             self::Sales => [
                 Permission::SettingsView,
