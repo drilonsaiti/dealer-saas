@@ -2,10 +2,14 @@
 
 namespace App\Filament\App\Resources\Warranties;
 
+use App\Domain\Inbox\Enums\EmailStatus;
+use App\Domain\Inbox\Models\EmailMessage;
 use App\Domain\Warranty\Actions\AddWarranty;
 use App\Domain\Warranty\Actions\RegisterWarranty;
+use App\Domain\Warranty\Actions\SendToWarrantyProvider;
 use App\Domain\Warranty\Enums\WarrantyStatus;
 use App\Domain\Warranty\Models\Warranty;
+use App\Filament\App\Resources\EmailMessages\EmailMessageResource;
 use App\Filament\App\Resources\StockCycles\StockCycleResource;
 use App\Filament\App\Resources\Warranties\Pages\ListWarranties;
 use App\Filament\App\Resources\Warranties\Pages\ViewWarranty;
@@ -27,6 +31,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 /**
@@ -86,6 +91,10 @@ class WarrantyResource extends Resource
                         TextEntry::make('cost_rp')->label(__('Premium (your cost)'))->formatStateUsing(fn (int $state): string => Money::format($state)),
                         TextEntry::make('deductible_rp')->label(__('Deductible'))->formatStateUsing(fn (int $state): string => Money::format($state)),
                         TextEntry::make('certificate.title')->label(__('Certificate'))->placeholder('–'),
+                        TextEntry::make('submitted_at')->label(__('Sent to provider'))
+                            ->visible(fn (Warranty $record): bool => SendToWarrantyProvider::supports($record->product))
+                            ->state(fn (Warranty $record): string => self::emailState($record->submitted_at, $record->submission_email_id))
+                            ->url(fn (Warranty $record): ?string => $record->submission_email_id === null ? null : EmailMessageResource::getUrl('view', ['record' => $record->submission_email_id])),
                     ]),
                 ]),
         ]);
@@ -140,6 +149,46 @@ class WarrantyResource extends Resource
                 }
 
                 Notification::make()->title(__('Policy registered.'))->success()->send();
+            });
+    }
+
+    /**
+     * "Draft prepared 10.10.2026" / "sent 11.10.2026" / "not yet", for a registration or claim e-mail.
+     */
+    public static function emailState(?Carbon $prepared, ?string $emailId): string
+    {
+        if ($prepared === null) {
+            return __('not yet');
+        }
+
+        $email = $emailId === null ? null : EmailMessage::query()->find($emailId);
+
+        return $email?->status === EmailStatus::Sent
+            ? __('sent :date', ['date' => $email->sent_at?->format('d.m.Y H:i') ?? ''])
+            : __('draft prepared :date – send it in the inbox', ['date' => $prepared->format('d.m.Y')]);
+    }
+
+    public static function sendToProvider(): Action
+    {
+        return Action::make('sendToProvider')
+            ->label(__('Send to provider'))
+            ->icon(Heroicon::OutlinedPaperAirplane)
+            ->color('gray')
+            ->visible(fn (Warranty $record): bool => SendToWarrantyProvider::supports($record->product)
+                && in_array($record->status, [WarrantyStatus::Draft, WarrantyStatus::Active], true)
+                && (auth()->user()?->can('update', $record) ?? false))
+            ->requiresConfirmation()
+            ->modalDescription(fn (Warranty $record): string => __('A registration form (PDF) is filed in the vehicle file and an e-mail to :address is prepared in the inbox. Nothing is sent before you click "Send" there.', ['address' => $record->product->submissionAddress() ?? '–']))
+            ->action(function (Warranty $record, Action $action): void {
+                try {
+                    $message = app(SendToWarrantyProvider::class)->warranty($record);
+                    Notification::make()->title($message)->success()
+                        ->actions([Action::make('open')->label(__('Open draft'))->url(EmailMessageResource::getUrl('view', ['record' => $record->refresh()->submission_email_id]))])
+                        ->send();
+                } catch (BusinessRuleException $e) {
+                    Notification::make()->title($e->getMessage())->danger()->persistent()->send();
+                    $action->halt();
+                }
             });
     }
 

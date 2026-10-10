@@ -2,12 +2,16 @@
 
 namespace App\Filament\App\Resources\Warranties\RelationManagers;
 
+use App\Domain\Documents\Models\Document;
 use App\Domain\Parties\Enums\PartyRole;
+use App\Domain\Warranty\Actions\AttachClaimDocuments;
 use App\Domain\Warranty\Actions\HandleWarrantyClaim;
+use App\Domain\Warranty\Actions\SendToWarrantyProvider;
 use App\Domain\Warranty\Enums\ClaimStatus;
 use App\Domain\Warranty\Enums\WarrantyStatus;
 use App\Domain\Warranty\Models\Warranty;
 use App\Domain\Warranty\Models\WarrantyClaim;
+use App\Filament\App\Resources\Warranties\WarrantyResource;
 use App\Filament\Support\MoneyInput;
 use App\Filament\Support\PartySelect;
 use App\Support\BusinessRuleException;
@@ -15,6 +19,7 @@ use App\Support\Money;
 use Closure;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -24,6 +29,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 /**
  * Warranty cases: report → decide (who pays what) → settle (dealer share becomes a cost of
@@ -73,6 +79,34 @@ class ClaimsRelationManager extends RelationManager
                     ->action(fn (array $data, Action $action) => $this->run($action, fn () => app(HandleWarrantyClaim::class)->report($this->warranty(), $data), __('Claim recorded.'))),
             ])
             ->recordActions([
+                Action::make('documents')
+                    ->label(fn (WarrantyClaim $record): string => __('Documents (:count)', ['count' => Document::query()->linkedTo($record)->count()]))
+                    ->icon(Heroicon::OutlinedPaperClip)
+                    ->color('gray')
+                    ->visible(fn (WarrantyClaim $record): bool => auth()->user()?->can('update', $record) ?? false)
+                    ->modalDescription(__('Photos, diagnosis and workshop invoices. They are filed in the vehicle file and go to the provider with the claim report.'))
+                    ->schema([
+                        FileUpload::make('files')->label(__('Files'))->multiple()->required()->storeFiles(false)
+                            ->acceptedFileTypes(['application/pdf', 'image/png', 'image/jpeg', 'image/heic'])
+                            ->maxSize((int) config('dealer.documents.max_upload_kb')),
+                    ])
+                    ->action(fn (WarrantyClaim $record, array $data, Action $action) => $this->run($action, function () use ($record, $data): void {
+                        app(AttachClaimDocuments::class)($record, array_values(array_map(
+                            fn (TemporaryUploadedFile $file): array => [(string) $file->getRealPath(), $file->getClientOriginalName()],
+                            array_filter((array) $data['files'], fn ($f): bool => $f instanceof TemporaryUploadedFile),
+                        )));
+                    }, __('Documents saved.'))),
+                Action::make('sendToProvider')
+                    ->label(fn (WarrantyClaim $record): string => $record->reported_at === null ? __('Send to provider') : __('Send to provider again'))
+                    ->icon(Heroicon::OutlinedPaperAirplane)
+                    ->color('gray')
+                    ->visible(fn (WarrantyClaim $record): bool => SendToWarrantyProvider::supports($record->warranty->product) && (auth()->user()?->can('update', $record) ?? false))
+                    ->tooltip(fn (WarrantyClaim $record): ?string => $record->reported_at === null ? null : WarrantyResource::emailState($record->reported_at, $record->report_email_id))
+                    ->requiresConfirmation()
+                    ->modalDescription(__('A claim report (PDF) with the claim documents is prepared as an e-mail in the inbox. Nothing is sent before you click "Send" there.'))
+                    ->action(fn (WarrantyClaim $record, Action $action) => $this->run($action, function () use ($record): void {
+                        app(SendToWarrantyProvider::class)->claim($record);
+                    }, __('The claim report is ready as a draft in the inbox. Check it and click "Send".'))),
                 Action::make('decide')
                     ->label(__('Decide'))
                     ->icon(Heroicon::OutlinedScale)

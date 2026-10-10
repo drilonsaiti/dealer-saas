@@ -11,6 +11,6 @@ class ViewWarranty extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        return [WarrantyResource::register(), WarrantyResource::remove()];
+        return [WarrantyResource::register(), WarrantyResource::sendToProvider(), WarrantyResource::remove()];
     }
 }

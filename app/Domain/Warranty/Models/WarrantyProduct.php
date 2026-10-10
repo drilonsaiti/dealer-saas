@@ -27,6 +27,8 @@ use Spatie\Translatable\HasTranslations;
  * @property int $price_rp
  * @property int $commission_rp
  * @property bool $is_active
+ * @property string $submission
+ * @property string|null $provider_email
  * @property-read Party|null $provider
  */
 class WarrantyProduct extends Model
@@ -39,7 +41,33 @@ class WarrantyProduct extends Model
     /** @var list<string> */
     public array $translatable = ['name', 'coverage'];
 
-    protected $fillable = ['tenant_id', 'provider_party_id', 'name', 'duration_months', 'km_limit', 'coverage_limit_rp', 'coverage', 'deductible_rp', 'cost_rp', 'price_rp', 'commission_rp', 'is_active'];
+    protected $fillable = ['tenant_id', 'provider_party_id', 'name', 'duration_months', 'km_limit', 'coverage_limit_rp', 'coverage', 'deductible_rp', 'cost_rp', 'price_rp', 'commission_rp', 'is_active', 'submission', 'provider_email'];
+
+    protected $attributes = ['submission' => 'manual'];
+
+    public const SUBMIT_MANUAL = 'manual';
+
+    public const SUBMIT_EMAIL = 'email';
+
+    /**
+     * The name in the current language, else German (the language every product has).
+     */
+    public function label(): string
+    {
+        return $this->getTranslation('name', app()->getLocale(), false) ?: (string) $this->getTranslation('name', 'de', false);
+    }
+
+    /**
+     * Where registrations and claims go: the product's address, else the provider's e-mail.
+     */
+    public function submissionAddress(): ?string
+    {
+        if ($this->submission !== self::SUBMIT_EMAIL) {
+            return null;
+        }
+
+        return $this->provider_email ?: $this->provider?->email;
+    }
 
     protected function casts(): array
     {

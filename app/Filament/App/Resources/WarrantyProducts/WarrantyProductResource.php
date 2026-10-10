@@ -10,11 +10,13 @@ use App\Filament\Support\PartySelect;
 use App\Support\Money;
 use BackedEnum;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
@@ -67,6 +69,13 @@ class WarrantyProductResource extends Resource
                 MoneyInput::make('cost_rp')->label(__('Premium (your cost)'))->default(0)->required(),
                 MoneyInput::make('price_rp')->label(__('Price to the customer'))->default(0)->required(),
                 MoneyInput::make('commission_rp')->label(__('Commission from the provider'))->default(0),
+            ]),
+            Grid::make(2)->schema([
+                Select::make('submission')->label(__('Registrations and claims'))->live()->required()->default('manual')
+                    ->options(['manual' => __('Own warranty / by hand'), 'email' => __('Send to the provider by e-mail')]),
+                TextInput::make('provider_email')->label(__('E-mail of the provider'))->email()->maxLength(200)
+                    ->visible(fn (Get $get): bool => $get('submission') === 'email')
+                    ->helperText(__('Empty: the e-mail of the provider contact.')),
             ]),
             Textarea::make('coverage.de')->label(__('What is covered'))->rows(3),
             Toggle::make('is_active')->label(__('Active'))->default(true),

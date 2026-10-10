@@ -18,6 +18,8 @@ use Illuminate\Support\Carbon;
  * file, so the real margin of that sale stays correct.
  *
  * @property string $id
+ * @property Carbon|null $reported_at
+ * @property string|null $report_email_id
  * @property string $tenant_id
  * @property string $warranty_id
  * @property Carbon $occurred_on
@@ -50,6 +52,7 @@ class WarrantyClaim extends Model
     protected function casts(): array
     {
         return [
+            'reported_at' => 'datetime',
             'occurred_on' => 'date:Y-m-d',
             'closed_on' => 'date:Y-m-d',
             'mileage' => 'integer',

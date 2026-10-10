@@ -331,3 +331,18 @@ Needs Auto-i-DAT access (or a stand-in in `AUTOIDAT_BASE_URL`).
 3. With "Bewertung abrufen": notification with sale and trade-in value; the Fahrzeug section shows "Marktwert" with date
    and mileage. Each call is in the Abgleich-Protokoll of the Auto-i-DAT integration.
 4. AutoScout24 and Auto-i-DAT can both be connected; publishing still goes only to AutoScout24.
+
+## 24. Warranty providers by e-mail (Phase 3, step 7)
+
+Needs a mailbox with SMTP (section 21) and Gotenberg.
+
+1. Settings → Garantieprodukte → product with Anbieter (e.g. NSA) → "Anmeldungen und Schäden" = "Per E-Mail an den
+   Anbieter senden", optionally an own e-mail address (empty = e-mail of the provider contact).
+2. Sell a car with this warranty → Garantien → the warranty → **An Anbieter senden**. Expected: PDF "Garantie-Anmeldung"
+   in the vehicle file (Garantie), a draft in the Posteingang (filter Entwürfe) to the provider with the PDF; on the
+   warranty "Entwurf vorbereitet … – im Posteingang senden". Nothing is sent yet.
+3. Send the draft in the inbox → the warranty shows "gesendet …".
+4. Report a claim → **Dokumente** (upload photo and Kostenvoranschlag) → **An Anbieter senden**: draft with
+   "garantiefall.pdf" and both documents attached.
+5. A product set to "Eigene Garantie / von Hand" has no "An Anbieter senden"; without SMTP mailbox or provider e-mail a
+   red notification says what is missing.

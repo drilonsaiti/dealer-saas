@@ -6,6 +6,7 @@ use App\Domain\Documents\Models\Document;
 use App\Domain\Documents\Models\DocumentLink;
 use App\Domain\Inbox\Enums\EmailStatus;
 use App\Domain\Inbox\Models\EmailMessage;
+use App\Domain\Inbox\Models\Mailbox;
 use App\Support\BusinessRuleException;
 
 /**
@@ -33,6 +34,34 @@ class SaveEmailDraft
         $data['to'] ??= $original->from_address;
 
         return $this->save($draft, $data);
+    }
+
+    /**
+     * A new e-mail prepared by the system (e.g. a warranty registration): a draft in the inbox,
+     * with documents the system chose, sent only when a person clicks "Send".
+     *
+     * @param  array{body: string, subject: string, to: string, cc?: string|null}  $data
+     * @param  list<string>  $documentIds
+     */
+    public function compose(Mailbox $mailbox, array $data, ?string $stockCycleId = null, ?string $partyId = null, array $documentIds = []): EmailMessage
+    {
+        $draft = new EmailMessage(['mailbox_id' => $mailbox->getKey(), 'direction' => EmailMessage::OUT, 'status' => EmailStatus::Draft]);
+        $draft->forceFill(['stock_cycle_id' => $stockCycleId, 'party_id' => $partyId]);
+        $this->save($draft, $data);
+
+        foreach (array_unique($documentIds) as $id) {
+            DocumentLink::query()->firstOrCreate(['document_id' => $id, 'linkable_type' => $draft->getMorphClass(), 'linkable_id' => $draft->getKey()]);
+        }
+
+        return $draft;
+    }
+
+    /**
+     * The mailbox the system writes from: the first active one that can send.
+     */
+    public static function sendingMailbox(): ?Mailbox
+    {
+        return Mailbox::query()->active()->whereNotNull('smtp_host')->whereNotNull('smtp_port')->orderBy('created_at')->first();
     }
 
     /**

@@ -21,6 +21,8 @@ use Illuminate\Support\Carbon;
  * active from handover with start date and km; claims hang off it.
  *
  * @property string $id
+ * @property Carbon|null $submitted_at
+ * @property string|null $submission_email_id
  * @property string $tenant_id
  * @property string $stock_cycle_id
  * @property string|null $sale_id
@@ -58,6 +60,7 @@ class Warranty extends Model
     protected function casts(): array
     {
         return [
+            'submitted_at' => 'datetime',
             'starts_on' => 'date:Y-m-d',
             'ends_on' => 'date:Y-m-d',
             'km_at_start' => 'integer',

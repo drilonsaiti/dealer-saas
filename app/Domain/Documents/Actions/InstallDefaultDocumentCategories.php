@@ -39,6 +39,7 @@ class InstallDefaultDocumentCategories
         'correspondence' => [FolderGroup::SalePayments, 70, false, 'Korrespondenz', 'Correspondance', 'Corrispondenza', 'Correspondence'],
         'warranty_policy' => [FolderGroup::Warranty, 10, false, 'Garantiepolice', 'Police de garantie', 'Polizza di garanzia', 'Warranty policy'],
         'warranty_claim' => [FolderGroup::Warranty, 20, false, 'Garantiefall', 'Cas de garantie', 'Caso di garanzia', 'Warranty claim'],
+        'warranty_submission' => [FolderGroup::Warranty, 30, false, 'Meldung an Garantieanbieter', 'Annonce au garant', 'Notifica al garante', 'Notice to warranty provider'],
         'leasing_contract' => [FolderGroup::Financing, 10, false, 'Leasingvertrag', 'Contrat de leasing', 'Contratto di leasing', 'Leasing contract'],
         'budget_calculation' => [FolderGroup::Financing, 20, true, 'Budgetberechnung', 'Calcul du budget', 'Calcolo del budget', 'Budget calculation'],
         'financing_checklist' => [FolderGroup::Financing, 30, false, 'Checkliste Finanzierungspartner', 'Liste de contrôle du partenaire', 'Lista di controllo del partner', 'Partner checklist'],

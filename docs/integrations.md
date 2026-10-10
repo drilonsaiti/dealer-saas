@@ -42,3 +42,10 @@ file import (AS24i / FTP), a second `ListingChannel` implementation replaces the
 Lookups are cached for 10 minutes per query (the dialog asks several times), every call is in the sync log.
 Taking over data never overwrites filled fields unless "overwrite" is ticked; only the options the user ticks are added
 to the equipment. Valuations are kept per vehicle file with date and mileage (`vehicle_valuations`).
+
+## Warranty providers (NSA, MultiPart …)
+
+Neither offers a public API, so registrations and claims go by e-mail (`EmailWarrantyGateway`): a PDF (registration
+form or claim report) is filed in the vehicle file and an e-mail draft to the provider is prepared in the inbox, with the
+claim documents attached. A person checks and sends it. The route is chosen per warranty product (`submission`); an API
+adapter implementing `WarrantyProviderGateway` can be added per provider later without changing the screens.

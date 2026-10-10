@@ -6,7 +6,7 @@ isolated by the application **and** by PostgreSQL Row-Level Security.
 
 Technical concept: see the "Dealer Management SaaS – Technical Concept" document.
 
-## Status: Phases 1, 2 and 3 done (AutoScout24 connector to be checked against the AS24 CH API documentation)
+## Status: Phases 1, 2 and 3 done (AutoScout24 and Auto-i-DAT adapters to be checked against the providers' API documentation); Phase 4 in progress
 
 | Area | What exists |
 | --- | --- |
@@ -28,6 +28,7 @@ Technical concept: see the "Dealer Management SaaS – Technical Concept" docume
 | VAT (MWST) | Dated VAT settings (method, agreed/received, period, approved net tax rates); tax entries from issued invoices and payments by versioned rules (auto / confirm / blocked, with explanation); half-year preview with ESTV form fields and net tax per rate; close (`vat.close`) freezes the figures, files report PDF + CSV; eCH-0217 v2 XML export (structure checked against the official eCH example; schema check when `resources/schemas/eCH-0217-2-0-0.xsd` is present); submitted and paid steps; corrections for closed periods; margin after net tax |
 | Leasing | Leasing / credit per sale (bank = invoice recipient, collected first instalment credited, expected payout), status flow with 14-day revocation period, partner checklist per bank, payout from the bank import, buy-back obligations with reminder and exercise into a new vehicle file, code 178 blocks resale |
 | Warranty | Warranty products per dealer (own or provider), sold with the car (price on the sale, premium as cost), policy with versioned certificate, active from handover, claims with dealer share booked on the original file, expiry |
+| Warranty providers | Per warranty product: own warranty / by hand, or sent to the provider (NSA, MultiPart …) by e-mail: "Send to provider" files a registration form (PDF) and prepares an e-mail draft in the inbox; claims get documents (photos, invoices) and a claim report sent the same way; the state (draft prepared / sent) shows on the warranty. API adapters can replace the e-mail route per product once a provider offers an official API |
 | Preparation | Condition reports with damages and photos, repair orders (estimate → approved → done with the actual cost), target date, release for sale blocked by open repair orders |
 | Handover | Checklist from versioned templates with automatic rules (promises, paid or paid out, warranty registered, documents); required items block the handover |
 | Listings & API | Own listings per vehicle file (texts in 4 languages, price, photos, cover); availability follows the file (reserved, sold for 7 days); public REST API v1 (JSON:API, dealer tokens, rate limits, signed photo URLs), website enquiries with contact matching, signed webhooks with delivery log; WordPress plugin (`integrations/wordpress`), see `docs/api.md` |
