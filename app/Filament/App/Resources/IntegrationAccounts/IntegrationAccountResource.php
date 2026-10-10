@@ -82,6 +82,13 @@ class IntegrationAccountResource extends Resource
                     ->state(fn (IntegrationAccount $record): string => $record->credential('seller_id') ?? $record->credential('customer_number') ?? '–'),
                 TextEntry::make('last_checked_at')->label(__('Last tested'))->since()->placeholder('–'),
                 TextEntry::make('last_synced_at')->label(__('Last sync'))->since()->placeholder('–'),
+                TextEntry::make('webhook_url')->label(__('Webhook address (callback URL)'))->copyable()->fontFamily('mono')->columnSpan(2)
+                    ->visible(fn (IntegrationAccount $record): bool => $record->provider === IntegrationAccount::WHATSAPP)
+                    ->state(fn (IntegrationAccount $record): string => route('webhooks.whatsapp.receive', ['account' => $record->getKey()]))
+                    ->helperText(__('Enter it with the verify token in the Meta app (WhatsApp → Configuration) and subscribe to "messages".')),
+                TextEntry::make('verify_token')->label(__('Verify token'))->copyable()->fontFamily('mono')
+                    ->visible(fn (IntegrationAccount $record): bool => $record->provider === IntegrationAccount::WHATSAPP)
+                    ->state(fn (IntegrationAccount $record): string => (string) $record->setting('verify_token')),
                 TextEntry::make('last_error')->label(__('Last error'))->color('danger')->placeholder('–')->columnSpanFull(),
             ]),
         ]);

@@ -125,7 +125,7 @@ it('offers "Fetch vehicle data" in the vehicle file and settings for both servic
     Livewire::test(ManageIntegrationAccounts::class)
         ->callAction('connect', data: ['provider' => 'autoscout24', 'client_id' => 'cid', 'client_secret' => 's', 'seller_id' => 'S-1'])
         ->assertHasNoActionErrors()
-        ->assertActionHidden('connect');
+        ->assertActionVisible('connect'); // WhatsApp can still be connected
 
     expect(IntegrationAccount::query()->pluck('provider')->sort()->values()->all())->toBe(['autoidat', 'autoscout24']);
 });

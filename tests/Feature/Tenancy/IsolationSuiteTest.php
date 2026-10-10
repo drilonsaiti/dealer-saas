@@ -8,6 +8,7 @@ use App\Domain\Api\Models\WebhookDelivery;
 use App\Domain\Api\Models\WebhookEndpoint;
 use App\Domain\Audit\MorphMap;
 use App\Domain\Calendar\Actions\IssueCalendarFeed;
+use App\Domain\Chat\Models\ChatMessage;
 use App\Domain\Checklists\Actions\SyncChecklist;
 use App\Domain\Documents\Actions\GenerateContract;
 use App\Domain\Documents\Actions\SetRequiredDocumentStatus;
@@ -172,6 +173,10 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
 
         // An AI request log entry.
         AiRequest::create(['purpose' => 'listing_text', 'model' => 'test', 'status' => 'ok', 'subject_type' => 'stock_cycle', 'subject_id' => $panda->id]);
+
+        // A WhatsApp account with a message.
+        $wa = IntegrationAccount::create(['provider' => 'whatsapp', 'credentials' => ['phone_number_id' => $marker]]);
+        ChatMessage::create(['integration_account_id' => $wa->id, 'direction' => 'in', 'external_id' => "wamid.{$marker}", 'phone' => '+41790000000', 'body' => "Chat {$marker}", 'status' => 'received']);
 
         // A personal calendar link.
         app(IssueCalendarFeed::class)(auth()->user());

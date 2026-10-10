@@ -23,9 +23,9 @@ class MessageMatcher
     /**
      * @return array{party: Party|null, cycle: StockCycle|null, by: string|null}
      */
-    public function match(?string $fromEmail, string $subject, string $text): array
+    public function match(?string $fromEmail, string $subject, string $text, ?Party $party = null): array
     {
-        $party = $fromEmail !== null ? Party::query()->where('email', mb_strtolower($fromEmail))->orderBy('created_at')->first() : null;
+        $party ??= $fromEmail !== null ? Party::query()->where('email', mb_strtolower($fromEmail))->orderBy('created_at')->first() : null;
         $haystack = mb_substr($subject."\n".$text, 0, 20_000);
 
         foreach (['vin', 'stammnummer', 'file_number', 'plate'] as $by) {

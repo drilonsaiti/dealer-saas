@@ -49,3 +49,16 @@ Neither offers a public API, so registrations and claims go by e-mail (`EmailWar
 form or claim report) is filed in the vehicle file and an e-mail draft to the provider is prepared in the inbox, with the
 claim documents attached. A person checks and sends it. The route is chosen per warranty product (`submission`); an API
 adapter implementing `WarrantyProviderGateway` can be added per provider later without changing the screens.
+
+## WhatsApp Business (Cloud API)
+
+Uses Meta's public Cloud API (`config/integrations.php`, `WHATSAPP_GRAPH_URL`, default `v21.0`).
+
+1. In Meta Business: WhatsApp → API setup → phone number ID; a system user with a permanent token (`whatsapp_business_messaging`);
+   App settings → App secret.
+2. Settings → Integrations → Connect service → WhatsApp Business: enter the three values, active.
+3. The integration page shows the **webhook address** and **verify token**: enter both in the Meta app
+   (WhatsApp → Configuration → Webhook) and subscribe to `messages`.
+
+Incoming webhooks are accepted only with a valid `X-Hub-Signature-256` (HMAC with the app secret). Free text replies are
+possible within 24 hours after the customer's last message; message templates (needed later) are not built yet.

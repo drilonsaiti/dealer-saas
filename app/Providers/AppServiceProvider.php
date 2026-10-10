@@ -9,6 +9,7 @@ use App\Domain\Api\Models\ApiToken;
 use App\Domain\Api\Models\WebhookEndpoint;
 use App\Domain\Audit\Models\AuditLog;
 use App\Domain\Audit\MorphMap;
+use App\Domain\Chat\Models\ChatMessage;
 use App\Domain\Checklists\Models\ChecklistTemplate;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Documents\Models\DocumentTemplate;
@@ -58,6 +59,7 @@ use App\Policies\AuditLogPolicy;
 use App\Policies\BankAccountPolicy;
 use App\Policies\BankTransactionPolicy;
 use App\Policies\BuybackObligationPolicy;
+use App\Policies\ChatMessagePolicy;
 use App\Policies\ChecklistTemplatePolicy;
 use App\Policies\CommitmentPolicy;
 use App\Policies\ConditionReportPolicy;
@@ -210,6 +212,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(AccountingExport::class, AccountingExportPolicy::class);
         Gate::policy(Mailbox::class, MailboxPolicy::class);
         Gate::policy(EmailMessage::class, EmailMessagePolicy::class);
+        Gate::policy(ChatMessage::class, ChatMessagePolicy::class);
     }
 
     /**

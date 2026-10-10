@@ -370,3 +370,17 @@ Needs `DEALER_AI_API_KEY` (Anthropic) in `.env`.
    price + costs + minimum margin.
 4. **Mehr → Preisvorschlag übernehmen** (the amount can be changed) → list price and advert change; AutoScout24 gets the
    new price (section 19).
+
+## 27. WhatsApp Business (Phase 4, step 3)
+
+Needs a Meta developer app with a WhatsApp test number and the server reachable over https (for the webhook).
+
+1. Settings → Schnittstellen → **Dienst verbinden** → WhatsApp Business: Telefonnummer-ID, Zugriffstoken, App-Secret, Aktiv.
+   **Verbindung testen**. The page shows Webhook-Adresse and Verify-Token: enter them in the Meta app and subscribe to
+   "messages" (Meta checks the address at once).
+2. From a phone, write to the business number: "Ist der Wagen 123.456.789 noch da?" and send a photo. Expected: menu
+   **WhatsApp** with a badge; the conversation shows both messages, the contact (if the mobile number is known) and the
+   vehicle file; the photo is in the vehicle file's documents.
+3. **Antworten** → arrives on the phone; the tick becomes ✓✓ / blue when read.
+4. After 24 hours without a customer message, **Antworten** is disabled with the reason.
+5. **Zuordnen** assigns the whole conversation to another contact / vehicle file.

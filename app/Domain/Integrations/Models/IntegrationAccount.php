@@ -38,6 +38,8 @@ class IntegrationAccount extends Model
 
     public const AUTOIDAT = 'autoidat';
 
+    public const WHATSAPP = 'whatsapp';
+
     protected $fillable = ['tenant_id', 'provider', 'credentials', 'settings', 'is_active'];
 
     protected $hidden = ['credentials'];

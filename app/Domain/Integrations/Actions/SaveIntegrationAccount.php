@@ -5,6 +5,7 @@ namespace App\Domain\Integrations\Actions;
 use App\Domain\Integrations\Models\IntegrationAccount;
 use App\Domain\Integrations\Support\ListingSync;
 use App\Domain\Integrations\Support\Providers;
+use Illuminate\Support\Str;
 
 /**
  * Saves the dealer's account at a portal. Secrets left empty keep the stored value (they are
@@ -35,9 +36,15 @@ class SaveIntegrationAccount
 
         $changedCredentials = $stored !== ($account->credentials ?? []);
 
+        $settings = [...($account->settings ?? []), ...$settings];
+
+        if ($provider === IntegrationAccount::WHATSAPP && blank($settings['verify_token'] ?? null)) {
+            $settings['verify_token'] = Str::random(32); // entered in the Meta app with the webhook address
+        }
+
         $account->fill([
             'credentials' => $stored,
-            'settings' => [...($account->settings ?? []), ...$settings],
+            'settings' => $settings,
             'is_active' => $active,
         ]);
 

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Integrations\Support;
 
+use App\Domain\Chat\Providers\WhatsApp\WhatsAppCloud;
 use App\Domain\Integrations\Channels\AutoScout24\AutoScout24Channel;
 use App\Domain\Integrations\Contracts\Integration;
 use App\Domain\Integrations\Models\IntegrationAccount;
@@ -17,6 +18,8 @@ final class Providers
     public const LISTING = 'listing';
 
     public const VEHICLE_DATA = 'vehicle_data';
+
+    public const MESSAGING = 'messaging';
 
     /**
      * @return array<string, array{label: string, kind: string, class: class-string<Integration>, fields: array<string, array{label: string, secret?: bool, help?: string}>}>
@@ -41,6 +44,16 @@ final class Providers
                 'fields' => [
                     'customer_number' => ['label' => __('Customer number'), 'help' => __('Your Auto-i-DAT customer number.')],
                     'api_key' => ['label' => __('API key'), 'secret' => true],
+                ],
+            ],
+            IntegrationAccount::WHATSAPP => [
+                'label' => 'WhatsApp Business',
+                'kind' => self::MESSAGING,
+                'class' => WhatsAppCloud::class,
+                'fields' => [
+                    'phone_number_id' => ['label' => __('Phone number ID'), 'help' => __('From Meta Business: WhatsApp → API setup.')],
+                    'access_token' => ['label' => __('Access token'), 'secret' => true, 'help' => __('A permanent token of a system user.')],
+                    'app_secret' => ['label' => __('App secret'), 'secret' => true, 'help' => __('Used to check that webhooks come from Meta.')],
                 ],
             ],
         ];

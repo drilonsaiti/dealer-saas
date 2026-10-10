@@ -38,6 +38,16 @@ return [
         'timeout' => 15,
     ],
 
+    /*
+    | WhatsApp Business Platform, Cloud API (Meta). The dealer's own phone number id, access
+    | token and app secret (webhook signatures).
+    */
+    'whatsapp' => [
+        'base_url' => env('WHATSAPP_GRAPH_URL', 'https://graph.facebook.com/v21.0'),
+        'timeout' => 20,
+        'service_window_hours' => 24, // free text only within 24 h after the customer's last message
+    ],
+
     // Failed portal calls are retried after these pauses (seconds); then they stay "failed"
     // until the next change or the nightly catch-up (listings:sync).
     'retry_backoff' => [60, 300, 1800, 7200],

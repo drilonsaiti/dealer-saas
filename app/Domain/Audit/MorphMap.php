@@ -12,6 +12,7 @@ use App\Domain\Api\Models\WebhookEndpoint;
 use App\Domain\Audit\Models\AuditLog;
 use App\Domain\Audit\Models\StatusHistory;
 use App\Domain\Calendar\Models\CalendarFeed;
+use App\Domain\Chat\Models\ChatMessage;
 use App\Domain\Checklists\Models\Checklist;
 use App\Domain\Checklists\Models\ChecklistItem;
 use App\Domain\Checklists\Models\ChecklistTemplate;
@@ -148,6 +149,7 @@ final class MorphMap
         'calendar_feed' => CalendarFeed::class,
         'vehicle_valuation' => VehicleValuation::class,
         'ai_request' => AiRequest::class,
+        'chat_message' => ChatMessage::class,
     ];
 
     public static function label(string $alias): string
@@ -205,6 +207,7 @@ final class MorphMap
             'calendar_feed' => __('Calendar link'),
             'vehicle_valuation' => __('Valuation'),
             'ai_request' => __('AI request'),
+            'chat_message' => __('WhatsApp message'),
             default => $alias,
         };
     }
