@@ -95,4 +95,18 @@ return [
         'clamav' => env('MAIL_CLAMAV'),
     ],
 
+    /*
+    | AI assistance (Phase 4): listing texts and e-mail reply drafts. Off unless an API key is
+    | configured here AND the dealer switches it on (company profile). Only what the task needs
+    | is sent (vehicle data; for replies the e-mail text); the result is always a suggestion a
+    | person edits and confirms. Every request is logged with its token usage.
+    */
+    'ai' => [
+        'api_key' => env('DEALER_AI_API_KEY'), // Anthropic API key
+        'base_url' => env('DEALER_AI_BASE_URL', 'https://api.anthropic.com'),
+        'model' => env('DEALER_AI_MODEL', 'claude-sonnet-5-5'),
+        'timeout' => (int) env('DEALER_AI_TIMEOUT', 60),
+        'monthly_requests' => (int) env('DEALER_AI_MONTHLY_REQUESTS', 500), // per dealer
+    ],
+
 ];

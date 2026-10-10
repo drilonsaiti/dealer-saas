@@ -2,6 +2,8 @@
 
 namespace App\Filament\App\Resources\EmailMessages;
 
+use App\Domain\Ai\Actions\DraftEmailReply;
+use App\Domain\Ai\Support\Assistant;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Inbox\Actions\AssignEmail;
 use App\Domain\Inbox\Actions\SaveEmailDraft;
@@ -18,6 +20,8 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Icons\Heroicon;
 
 /**
@@ -123,7 +127,37 @@ final class EmailActions
             ->orderByDesc('documents.created_at')->limit(100)->get()
             ->mapWithKeys(fn (Document $d): array => [$d->getKey() => $d->title])->all();
 
+        $original = $record->direction === EmailMessage::IN ? $record : $record->replyTo;
+
         return [
+            Actions::make([
+                Action::make('aiDraft')
+                    ->label(__('Draft with AI'))
+                    ->icon(Heroicon::OutlinedSparkles)
+                    ->color('gray')
+                    ->schema([
+                        TextInput::make('instruction')->label(__('What should the reply say? (optional)'))
+                            ->placeholder(__('e.g. offer a test drive on Saturday')),
+                    ])
+                    ->modalDescription(__('The customer e-mail and the facts of the vehicle file are sent to the AI service. The suggestion replaces the text; check it before sending.'))
+                    ->modalSubmitActionLabel(__('Draft'))
+                    ->action(function (array $data, Set $set, Action $action) use ($original): void {
+                        if ($original === null) {
+                            return;
+                        }
+
+                        try {
+                            $text = app(DraftEmailReply::class)($original, filled($data['instruction'] ?? null) ? (string) $data['instruction'] : null);
+                        } catch (BusinessRuleException $e) {
+                            Notification::make()->title($e->getMessage())->danger()->send();
+                            $action->halt();
+
+                            return;
+                        }
+
+                        $set('body', $text."\n\n".self::quote($original));
+                    }),
+            ])->visible(fn (): bool => $original !== null && app(Assistant::class)->available()),
             TextInput::make('to')->label(__('To'))->required()->helperText(__('Several addresses separated by commas.')),
             TextInput::make('cc')->label(__('Cc')),
             TextInput::make('subject')->label(__('Subject'))->required()->maxLength(500),

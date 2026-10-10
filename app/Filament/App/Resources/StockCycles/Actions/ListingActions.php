@@ -2,6 +2,8 @@
 
 namespace App\Filament\App\Resources\StockCycles\Actions;
 
+use App\Domain\Ai\Actions\WriteListingText;
+use App\Domain\Ai\Support\Assistant;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Listings\Actions\PublishListing;
 use App\Domain\Listings\Actions\SaveListing;
@@ -17,13 +19,16 @@ use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Support\Icons\Heroicon;
 
 /**
@@ -68,6 +73,42 @@ final class ListingActions
                 ];
             })
             ->schema(fn (StockCycle $record): array => [
+                Actions::make([
+                    Action::make('aiText')
+                        ->label(__('Write texts with AI'))
+                        ->icon(Heroicon::OutlinedSparkles)
+                        ->color('gray')
+                        ->schema([
+                            Textarea::make('notes')->label(__('Notes for the text (optional)'))->rows(3)
+                                ->placeholder(__('e.g. 1st owner, full service history, new tyres')),
+                        ])
+                        ->modalDescription(__('Only the vehicle data of this file is sent to the AI service, no customer data. The suggestion replaces the texts in this form; check them before publishing.'))
+                        ->modalSubmitActionLabel(__('Write'))
+                        ->action(function (array $data, Set $set, Action $action) use ($record): void {
+                            try {
+                                $texts = app(WriteListingText::class)($record, filled($data['notes'] ?? null) ? (string) $data['notes'] : null);
+                            } catch (BusinessRuleException $e) {
+                                Notification::make()->title($e->getMessage())->danger()->send();
+                                $action->halt();
+
+                                return;
+                            }
+
+                            foreach ($texts['title'] as $locale => $title) {
+                                $set("title.{$locale}", $title);
+                            }
+
+                            foreach ($texts['description'] as $locale => $html) {
+                                $set("description.{$locale}", $html);
+                            }
+
+                            if ($texts['highlights'] !== []) {
+                                $set('highlights', $texts['highlights']);
+                            }
+
+                            Notification::make()->title(__('Texts written. Please check them.'))->success()->send();
+                        }),
+                ])->visible(fn (): bool => app(Assistant::class)->available()),
                 Tabs::make()->tabs(array_map(fn (string $locale): Tab => Tab::make(strtoupper($locale))->schema([
                     TextInput::make("title.{$locale}")->label(__('Title'))->required($locale === 'de')->maxLength(120),
                     RichEditor::make("description.{$locale}")->label(__('Description'))->toolbarButtons(['bold', 'italic', 'bulletList', 'orderedList'])

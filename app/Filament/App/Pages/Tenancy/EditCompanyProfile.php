@@ -2,6 +2,7 @@
 
 namespace App\Filament\App\Pages\Tenancy;
 
+use App\Domain\Ai\Models\AiRequest;
 use App\Domain\Tenancy\Models\Tenant;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
@@ -74,6 +75,18 @@ class EditCompanyProfile extends EditTenantProfile
                             ->visibility('private')
                             ->columnSpanFull(),
                     ]),
+                ]),
+            Section::make(__('AI assistance'))
+                ->description(__('Suggestions for advert texts and e-mail replies. Only the data needed for the task is sent to the AI service (Anthropic): vehicle data for adverts; the customer e-mail and the vehicle facts for replies. Nothing is published or sent without a person.'))
+                ->schema([
+                    Toggle::make('settings.ai.enabled')->label(__('Use AI assistance'))
+                        ->disabled(fn (): bool => blank(config('dealer.ai.api_key')))
+                        ->helperText(fn (): string => blank(config('dealer.ai.api_key'))
+                            ? __('Not set up on this server (DEALER_AI_API_KEY).')
+                            : __('This month: :used of :limit requests.', [
+                                'used' => AiRequest::query()->where('created_at', '>=', now()->startOfMonth())->count(),
+                                'limit' => (int) config('dealer.ai.monthly_requests', 500),
+                            ])),
                 ]),
             Section::make(__('Security'))
                 ->schema([

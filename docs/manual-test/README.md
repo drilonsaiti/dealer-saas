@@ -346,3 +346,16 @@ Needs a mailbox with SMTP (section 21) and Gotenberg.
    "garantiefall.pdf" and both documents attached.
 5. A product set to "Eigene Garantie / von Hand" has no "An Anbieter senden"; without SMTP mailbox or provider e-mail a
    red notification says what is missing.
+
+## 25. AI texts and reply drafts (Phase 4, step 1)
+
+Needs `DEALER_AI_API_KEY` (Anthropic) in `.env`.
+
+1. Einstellungen → Firmenprofil → KI-Unterstützung: "KI-Unterstützung verwenden" on → Speichern. The helper text shows
+   the requests used this month. Without the key the switch is greyed out.
+2. Vehicle file → **Inserat veröffentlichen/bearbeiten** → **Texte mit KI schreiben** (optional notes) → **Schreiben**.
+   Expected: title, description per language and highlights filled; German without "ß"; no price, no invented equipment.
+   Edit and save as usual.
+3. Posteingang → e-mail (e.g. in French) → **Antworten** → **Mit KI entwerfen** (optional "Probefahrt anbieten").
+   Expected: reply in French above the quoted e-mail; unknown points as [placeholders]. Nothing is sent until **Senden**.
+4. Switch AI off → both buttons disappear. With a wrong key: red notification with the reason; nothing changes in the form.

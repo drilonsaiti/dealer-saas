@@ -2,6 +2,7 @@
 
 use App\Domain\Accounting\Actions\CreateAccountingExport;
 use App\Domain\Accounting\Actions\SaveAccountMappings;
+use App\Domain\Ai\Models\AiRequest;
 use App\Domain\Api\Actions\IssueApiToken;
 use App\Domain\Api\Models\WebhookDelivery;
 use App\Domain\Api\Models\WebhookEndpoint;
@@ -168,6 +169,9 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
 
         // A valuation from the vehicle data provider.
         VehicleValuation::create(['stock_cycle_id' => $panda->id, 'provider' => 'autoidat', 'valued_on' => '2026-03-01', 'mileage' => 1000, 'retail_rp' => 500_000, 'reference' => "V-{$marker}"]);
+
+        // An AI request log entry.
+        AiRequest::create(['purpose' => 'listing_text', 'model' => 'test', 'status' => 'ok', 'subject_type' => 'stock_cycle', 'subject_id' => $panda->id]);
 
         // A personal calendar link.
         app(IssueCalendarFeed::class)(auth()->user());

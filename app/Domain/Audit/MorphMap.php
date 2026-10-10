@@ -5,6 +5,7 @@ namespace App\Domain\Audit;
 use App\Domain\Accounting\Models\AccountingExport;
 use App\Domain\Accounting\Models\AccountingExportItem;
 use App\Domain\Accounting\Models\AccountMapping;
+use App\Domain\Ai\Models\AiRequest;
 use App\Domain\Api\Models\ApiToken;
 use App\Domain\Api\Models\WebhookDelivery;
 use App\Domain\Api\Models\WebhookEndpoint;
@@ -146,6 +147,7 @@ final class MorphMap
         'email_message' => EmailMessage::class,
         'calendar_feed' => CalendarFeed::class,
         'vehicle_valuation' => VehicleValuation::class,
+        'ai_request' => AiRequest::class,
     ];
 
     public static function label(string $alias): string
@@ -202,6 +204,7 @@ final class MorphMap
             'email_message' => __('E-mail'),
             'calendar_feed' => __('Calendar link'),
             'vehicle_valuation' => __('Valuation'),
+            'ai_request' => __('AI request'),
             default => $alias,
         };
     }

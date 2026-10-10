@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Domain\Accounting\Models\AccountingExport;
+use App\Domain\Ai\Support\AnthropicTextGenerator;
+use App\Domain\Ai\Support\TextGenerator;
 use App\Domain\Api\Models\ApiToken;
 use App\Domain\Api\Models\WebhookEndpoint;
 use App\Domain\Audit\Models\AuditLog;
@@ -118,6 +120,7 @@ class AppServiceProvider extends ServiceProvider
             default => new LogSmsSender,
         });
         $this->app->bind(ImapTransport::class, SocketTransport::class);
+        $this->app->bind(TextGenerator::class, AnthropicTextGenerator::class);
     }
 
     public function boot(): void
