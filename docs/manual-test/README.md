@@ -293,3 +293,19 @@ documentation are there, test against a stand-in (e.g. a https://webhook.site UR
    with the next export.
 5. **Export rückgängig machen** on the latest export → its records are exported again next time; older exports
    cannot be undone. Sales users do not see the menu.
+
+## 21. E-mail inbox (Phase 3, step 4)
+
+Use a test mailbox (e.g. a free account with IMAP, or a local Mailpit/Dovecot); run the scheduler or `php artisan mail:fetch`.
+
+1. Settings → Postfächer → **Neues Postfach**: address, IMAP server/port/encryption/user/password, SMTP for replies.
+   **Verbindung testen** → "Verbindung funktioniert"; a wrong password → red notification with the server's answer.
+2. Send a mail to it from another account with a PDF attached and the Stammnummer (e.g. 123.456.789) or VIN of a car
+   in the text. **Jetzt abholen** → Posteingang shows it (bold until opened), assigned to the car and, if the sender's
+   e-mail is a known contact, to that contact. The PDF is in the vehicle file's Documents (Korrespondenz) and in the
+   E-Mails tab of the file. The mail stays unread on the server.
+3. Send a mail with an attachment named `test.pdf.exe` or a `.docm`: it appears under "Nicht übernommen (Quarantäne)".
+4. **Antworten**: text, optionally documents of the file → **Entwurf speichern**. Nothing is sent (Filter "Entwürfe").
+   **Senden** → arrives in the other account as reply in the same conversation; the original is "Erledigt".
+5. A mail without any number: **Zuordnen** to a vehicle file → its attachments move to that file.
+6. Read-only users do not see the inbox; only administrators see the mailbox settings.

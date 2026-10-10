@@ -35,4 +35,5 @@ enum Permission: string
     case VatManage = 'vat.manage';
     case VatClose = 'vat.close';
     case AccountingExport = 'accounting.export';
+    case EmailManage = 'email.manage';
 }

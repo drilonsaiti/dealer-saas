@@ -13,6 +13,10 @@ use App\Domain\Documents\Models\DocumentTemplate;
 use App\Domain\Financing\Models\BuybackObligation;
 use App\Domain\Financing\Models\Financing;
 use App\Domain\Import\Models\ImportRun;
+use App\Domain\Inbox\Imap\ImapTransport;
+use App\Domain\Inbox\Imap\SocketTransport;
+use App\Domain\Inbox\Models\EmailMessage;
+use App\Domain\Inbox\Models\Mailbox;
 use App\Domain\Integrations\Models\IntegrationAccount;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Listings\Listeners\AnnounceListingChanges;
@@ -59,12 +63,14 @@ use App\Policies\CostCategoryPolicy;
 use App\Policies\CostPolicy;
 use App\Policies\DocumentPolicy;
 use App\Policies\DocumentTemplatePolicy;
+use App\Policies\EmailMessagePolicy;
 use App\Policies\EnquiryPolicy;
 use App\Policies\FinancingPolicy;
 use App\Policies\ImportRunPolicy;
 use App\Policies\IntegrationAccountPolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\ListingPolicy;
+use App\Policies\MailboxPolicy;
 use App\Policies\NumberSequencePolicy;
 use App\Policies\PartyPolicy;
 use App\Policies\PaymentPolicy;
@@ -111,6 +117,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(SmsSender::class, fn () => match (config('dealer.signatures.sms_driver')) {
             default => new LogSmsSender,
         });
+        $this->app->bind(ImapTransport::class, SocketTransport::class);
     }
 
     public function boot(): void
@@ -198,6 +205,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(WebhookEndpoint::class, WebhookEndpointPolicy::class);
         Gate::policy(IntegrationAccount::class, IntegrationAccountPolicy::class);
         Gate::policy(AccountingExport::class, AccountingExportPolicy::class);
+        Gate::policy(Mailbox::class, MailboxPolicy::class);
+        Gate::policy(EmailMessage::class, EmailMessagePolicy::class);
     }
 
     /**

@@ -25,6 +25,8 @@ use App\Domain\Financing\Models\Financing;
 use App\Domain\Import\Models\ImportPreset;
 use App\Domain\Import\Models\ImportRow;
 use App\Domain\Import\Models\ImportRun;
+use App\Domain\Inbox\Models\EmailMessage;
+use App\Domain\Inbox\Models\Mailbox;
 use App\Domain\Integrations\Models\IntegrationAccount;
 use App\Domain\Integrations\Models\IntegrationLog;
 use App\Domain\Invoicing\Models\Invoice;
@@ -138,6 +140,8 @@ final class MorphMap
         'account_mapping' => AccountMapping::class,
         'accounting_export' => AccountingExport::class,
         'accounting_export_item' => AccountingExportItem::class,
+        'mailbox' => Mailbox::class,
+        'email_message' => EmailMessage::class,
     ];
 
     public static function label(string $alias): string
@@ -190,6 +194,8 @@ final class MorphMap
             'integration_account' => __('Integration'),
             'account_mapping' => __('Account'),
             'accounting_export' => __('Accounting export'),
+            'mailbox' => __('Mailbox'),
+            'email_message' => __('E-mail'),
             default => $alias,
         };
     }

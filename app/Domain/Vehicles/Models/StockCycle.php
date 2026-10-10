@@ -6,6 +6,7 @@ use App\Domain\Audit\Concerns\Auditable;
 use App\Domain\Audit\Concerns\TracksAuthors;
 use App\Domain\Audit\Models\StatusHistory;
 use App\Domain\Documents\Models\Document;
+use App\Domain\Inbox\Models\EmailMessage;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Preparation\Models\ConditionReport;
 use App\Domain\Preparation\Models\RepairOrder;
@@ -293,5 +294,13 @@ class StockCycle extends Model
     public function repairOrders(): HasMany
     {
         return $this->hasMany(RepairOrder::class);
+    }
+
+    /**
+     * @return HasMany<EmailMessage, $this>
+     */
+    public function emailMessages(): HasMany
+    {
+        return $this->hasMany(EmailMessage::class);
     }
 }

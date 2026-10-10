@@ -16,6 +16,9 @@ use App\Domain\Import\Actions\CreateImportRun;
 use App\Domain\Import\Actions\RunImport;
 use App\Domain\Import\Enums\ImporterType;
 use App\Domain\Import\Support\SpreadsheetReader;
+use App\Domain\Inbox\Actions\SaveEmailDraft;
+use App\Domain\Inbox\Actions\SaveMailbox;
+use App\Domain\Inbox\Actions\StoreIncomingEmail;
 use App\Domain\Integrations\Models\IntegrationAccount;
 use App\Domain\Integrations\Models\IntegrationLog;
 use App\Domain\Invoicing\Actions\IssueInvoice;
@@ -155,6 +158,11 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
         // Accounting: an own account number and an export (with its items and journal file).
         app(SaveAccountMappings::class)(['vehicle_sales' => '3010']);
         app(CreateAccountingExport::class)('2026-12-31');
+
+        // Inbox: a mailbox with a received e-mail and a reply draft.
+        $mailbox = app(SaveMailbox::class)(null, ['name' => "Mail {$marker}", 'email' => strtolower($marker).'@dealer.ch', 'imap_host' => 'imap.example.ch', 'imap_username' => $marker, 'imap_password' => 'x']);
+        $mail = app(StoreIncomingEmail::class)($mailbox, "From: kunde@example.ch\r\nSubject: Mail {$marker}\r\nMessage-ID: <{$marker}@example.ch>\r\n\r\nText {$marker}");
+        app(SaveEmailDraft::class)->reply($mail, ['body' => "Antwort {$marker}"]);
 
         // A purchase contract out for signature (templates, signature requests, signers).
         $contract = app(GenerateContract::class)($panda->purchase, 'de', "Vertrag {$marker}");

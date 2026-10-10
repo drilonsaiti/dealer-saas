@@ -8,6 +8,8 @@ use App\Domain\Import\Actions\RunImport;
 use App\Domain\Import\Enums\ImporterType;
 use App\Domain\Import\Models\ImportPreset;
 use App\Domain\Import\Support\SpreadsheetReader;
+use App\Domain\Inbox\Actions\FetchMailbox;
+use App\Domain\Inbox\Models\Mailbox;
 use App\Domain\Integrations\Support\ListingSync;
 use App\Domain\Operations\Models\RestoreDrill;
 use App\Domain\Signatures\Actions\CancelSigning;
@@ -115,6 +117,30 @@ Artisan::command('listings:sync', function (TenantContext $context, ListingSync 
 })->purpose('Send listing changes that are still missing on the portals');
 
 Schedule::command('listings:sync')->dailyAt('03:20');
+
+/*
+ * E-mail inbox: new messages of every active mailbox, per dealer. Errors are kept on the
+ * mailbox (shown in Settings → Mailboxes) and do not stop the other mailboxes.
+ */
+Artisan::command('mail:fetch', function (TenantContext $context, FetchMailbox $fetch): void {
+    $tenants = $context->bypass(fn () => Tenant::query()->where('status', Tenant::STATUS_ACTIVE)->get());
+
+    foreach ($tenants as $tenant) {
+        $context->run($tenant, function () use ($tenant, $fetch): void {
+            foreach (Mailbox::query()->active()->get() as $mailbox) {
+                $result = $fetch($mailbox);
+
+                if ($result['error'] !== null) {
+                    $this->warn("{$tenant->name} / {$mailbox->email}: {$result['error']}");
+                } elseif ($result['new'] > 0) {
+                    $this->info("{$tenant->name} / {$mailbox->email}: {$result['new']} new");
+                }
+            }
+        });
+    }
+})->purpose('Fetch new e-mails of all active dealer mailboxes');
+
+Schedule::command('mail:fetch')->everyFiveMinutes()->withoutOverlapping(10);
 
 /*
  * Sample files for the manual test workflow (docs/manual-test/README.md).

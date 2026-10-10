@@ -13,6 +13,7 @@ use App\Filament\App\Resources\StockCycles\RelationManagers\CommitmentsRelationM
 use App\Filament\App\Resources\StockCycles\RelationManagers\ConditionReportsRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\CostsRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\DocumentsRelationManager;
+use App\Filament\App\Resources\StockCycles\RelationManagers\EmailsRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\InvoicesRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\RepairOrdersRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\StatusHistoryRelationManager;
@@ -163,6 +164,7 @@ class StockCycleResource extends Resource
             ConditionReportsRelationManager::class,
             RepairOrdersRelationManager::class,
             InvoicesRelationManager::class,
+            EmailsRelationManager::class,
             WarrantiesRelationManager::class,
             CommitmentsRelationManager::class,
             StatusHistoryRelationManager::class,

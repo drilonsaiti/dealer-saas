@@ -82,4 +82,17 @@ return [
         'queue_connection' => env('IMPORT_QUEUE_CONNECTION'),
     ],
 
+    /*
+    | E-mail inbox: fetched every 5 minutes (mail:fetch), at most this many new messages per
+    | mailbox and run. Attachments with these extensions are never stored (quarantined).
+    | clamav: "tcp://clamav:3310" or "unix:///run/clamav/clamd.ctl" to scan every attachment;
+    | when set and the scanner cannot be reached, attachments are quarantined (fail closed).
+    */
+    'mail' => [
+        'fetch_limit' => (int) env('MAIL_FETCH_LIMIT', 50),
+        'max_attachment_mb' => (int) env('MAIL_MAX_ATTACHMENT_MB', 25),
+        'blocked_extensions' => ['exe', 'com', 'bat', 'cmd', 'scr', 'pif', 'cpl', 'msi', 'msp', 'jar', 'js', 'jse', 'vbs', 'vbe', 'wsf', 'wsh', 'ps1', 'psm1', 'hta', 'lnk', 'reg', 'iso', 'img', 'vhd', 'dll', 'sys', 'docm', 'xlsm', 'pptm', 'dotm', 'xlam', 'one', 'apk', 'app', 'sh'],
+        'clamav' => env('MAIL_CLAMAV'),
+    ],
+
 ];
