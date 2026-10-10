@@ -7,6 +7,7 @@ use App\Domain\Vehicles\Models\StockCycle;
 use App\Filament\App\Resources\Invoices\InvoiceActions;
 use App\Filament\App\Resources\StockCycles\Actions\ContractActions;
 use App\Filament\App\Resources\StockCycles\Actions\LeasingWarrantyActions;
+use App\Filament\App\Resources\StockCycles\Actions\ListingActions;
 use App\Filament\App\Resources\StockCycles\Actions\StockCycleActions;
 use App\Filament\App\Resources\StockCycles\StockCycleResource;
 use Filament\Actions\ActionGroup;
@@ -33,6 +34,7 @@ class ViewStockCycle extends ViewRecord
         return [
             StockCycleActions::recordPurchase(),
             StockCycleActions::releaseForSale(),
+            ListingActions::edit(),
             StockCycleActions::reserve(),
             StockCycleActions::sell(),
             StockCycleActions::handOver(),
@@ -47,6 +49,7 @@ class ViewStockCycle extends ViewRecord
                 LeasingWarrantyActions::addWarranty(),
                 LeasingWarrantyActions::code178(),
                 StockCycleActions::preparation(),
+                ListingActions::withdraw(),
                 EditAction::make(),
                 StockCycleActions::documentChecklist(),
                 StockCycleActions::export(),

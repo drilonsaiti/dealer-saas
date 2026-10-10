@@ -12,6 +12,14 @@ final class Money
 {
     public const THOUSANDS_SEPARATOR = '’';
 
+    /**
+     * Plain decimal for machines (APIs, exports): 2290000 → "22900.00".
+     */
+    public static function decimal(int $rappen): string
+    {
+        return number_format($rappen / 100, 2, '.', '');
+    }
+
     public static function format(?int $rappen, bool $withCurrency = true, string $currency = 'CHF'): string
     {
         if ($rappen === null) {

@@ -67,6 +67,13 @@ return [
     ],
 
     /*
+    | Own listings: a sold car stays visible as "sold" on the website for this many days.
+    */
+    'listings' => [
+        'sold_visible_days' => (int) env('LISTINGS_SOLD_VISIBLE_DAYS', 7),
+    ],
+
+    /*
     | Imports can run for many minutes (a 1 GB document folder). In production they go to a
     | queue connection whose retry_after is longer than the job (redis-long / database-long).
     | Empty: the default connection.

@@ -1,5 +1,8 @@
 <?php
 
+use App\Domain\Api\Actions\IssueApiToken;
+use App\Domain\Api\Models\WebhookDelivery;
+use App\Domain\Api\Models\WebhookEndpoint;
 use App\Domain\Audit\MorphMap;
 use App\Domain\Checklists\Actions\SyncChecklist;
 use App\Domain\Documents\Actions\GenerateContract;
@@ -14,6 +17,9 @@ use App\Domain\Import\Support\SpreadsheetReader;
 use App\Domain\Invoicing\Actions\IssueInvoice;
 use App\Domain\Invoicing\Actions\SaveInvoiceDraft;
 use App\Domain\Invoicing\Enums\InvoiceType;
+use App\Domain\Listings\Actions\ReceiveEnquiry;
+use App\Domain\Listings\Actions\SaveListing;
+use App\Domain\Listings\Models\ListingPublication;
 use App\Domain\Parties\Models\Party;
 use App\Domain\Payments\Actions\RecordPayment;
 use App\Domain\Payments\Models\BankTransaction;
@@ -129,6 +135,14 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
         // Preparation: condition report with a damage and a repair order.
         $report = app(RecordConditionReport::class)($panda, ['summary' => "Zustand {$marker}"], [['area' => 'front', 'kind' => 'scratch']]);
         app(ManageRepairOrder::class)->create($panda, ['description' => "Reparatur {$marker}"], [$report->damages->first()->id]);
+
+        // Listing with a website publication, an API token, an enquiry and a webhook with a delivery.
+        $listing = app(SaveListing::class)($panda, ['title' => "Panda {$marker}", 'price_rp' => 600_000]);
+        ListingPublication::create(['listing_id' => $listing->id, 'channel' => 'website']);
+        app(IssueApiToken::class)("Token {$marker}", ['listings:read']);
+        app(ReceiveEnquiry::class)(['name' => "Interessent {$marker}", 'email' => strtolower($marker).'@example.ch', 'message' => "Frage {$marker}"], $listing);
+        $hook = WebhookEndpoint::create(['url' => 'https://example.ch/'.$marker, 'secret' => 's', 'events' => ['vehicle.sold']]);
+        WebhookDelivery::create(['endpoint_id' => $hook->id, 'event' => 'vehicle.sold', 'payload' => ['marker' => $marker]]);
 
         // A purchase contract out for signature (templates, signature requests, signers).
         $contract = app(GenerateContract::class)($panda->purchase, 'de', "Vertrag {$marker}");

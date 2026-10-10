@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Domain\Api\Models\ApiToken;
+use App\Domain\Api\Models\WebhookEndpoint;
 use App\Domain\Audit\Models\AuditLog;
 use App\Domain\Audit\MorphMap;
 use App\Domain\Checklists\Models\ChecklistTemplate;
@@ -11,6 +13,9 @@ use App\Domain\Financing\Models\BuybackObligation;
 use App\Domain\Financing\Models\Financing;
 use App\Domain\Import\Models\ImportRun;
 use App\Domain\Invoicing\Models\Invoice;
+use App\Domain\Listings\Listeners\AnnounceListingChanges;
+use App\Domain\Listings\Models\Enquiry;
+use App\Domain\Listings\Models\Listing;
 use App\Domain\Parties\Models\Party;
 use App\Domain\Payments\Models\BankTransaction;
 use App\Domain\Payments\Models\Payment;
@@ -32,12 +37,14 @@ use App\Domain\Tenancy\Models\TenantMembership;
 use App\Domain\Tenancy\TenantContext;
 use App\Domain\Vat\Models\VatPeriod;
 use App\Domain\Vat\Models\VatProfile;
+use App\Domain\Vehicles\Events\StockCycleStatusChanged;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Domain\Vehicles\Models\TyreSet;
 use App\Domain\Vehicles\Models\Vehicle;
 use App\Domain\Warranty\Models\Warranty;
 use App\Domain\Warranty\Models\WarrantyClaim;
 use App\Domain\Warranty\Models\WarrantyProduct;
+use App\Policies\ApiTokenPolicy;
 use App\Policies\AuditLogPolicy;
 use App\Policies\BankAccountPolicy;
 use App\Policies\BankTransactionPolicy;
@@ -49,9 +56,11 @@ use App\Policies\CostCategoryPolicy;
 use App\Policies\CostPolicy;
 use App\Policies\DocumentPolicy;
 use App\Policies\DocumentTemplatePolicy;
+use App\Policies\EnquiryPolicy;
 use App\Policies\FinancingPolicy;
 use App\Policies\ImportRunPolicy;
 use App\Policies\InvoicePolicy;
+use App\Policies\ListingPolicy;
 use App\Policies\NumberSequencePolicy;
 use App\Policies\PartyPolicy;
 use App\Policies\PaymentPolicy;
@@ -68,21 +77,25 @@ use App\Policies\VehiclePolicy;
 use App\Policies\WarrantyClaimPolicy;
 use App\Policies\WarrantyPolicy;
 use App\Policies\WarrantyProductPolicy;
+use App\Policies\WebhookEndpointPolicy;
 use App\Support\SwissFormat;
 use Filament\Forms\Components\DatePicker;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Events\TransactionRolledBack;
+use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobExceptionOccurred;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -110,6 +123,15 @@ class AppServiceProvider extends ServiceProvider
         // A rollback also rolls back set_config() calls made inside the transaction;
         // re-sync the database settings with the context the application believes in.
         Event::listen(TransactionRolledBack::class, fn () => $this->app->make(TenantContext::class)->reapply());
+
+        Event::listen(StockCycleStatusChanged::class, AnnounceListingChanges::class);
+
+        // Public API: per token (the website plugin), enquiries additionally per visitor IP.
+        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(120)->by('token:'.($request->attributes->get('api_token_id') ?? $request->ip())));
+        RateLimiter::for('api-enquiries', fn (Request $request) => [
+            Limit::perMinute(10)->by('token:'.($request->attributes->get('api_token_id') ?? 'none')),
+            Limit::perHour(5)->by('visitor:'.($request->input('visitor_ip') ?: $request->ip())),
+        ]);
     }
 
     /**
@@ -166,6 +188,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(ChecklistTemplate::class, ChecklistTemplatePolicy::class);
         Gate::policy(ConditionReport::class, ConditionReportPolicy::class);
         Gate::policy(RepairOrder::class, RepairOrderPolicy::class);
+        Gate::policy(Listing::class, ListingPolicy::class);
+        Gate::policy(Enquiry::class, EnquiryPolicy::class);
+        Gate::policy(ApiToken::class, ApiTokenPolicy::class);
+        Gate::policy(WebhookEndpoint::class, WebhookEndpointPolicy::class);
     }
 
     /**

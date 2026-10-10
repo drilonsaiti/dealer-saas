@@ -2,7 +2,9 @@
 
 namespace App\Domain\Payments\Actions;
 
+use App\Domain\Api\Support\Webhooks;
 use App\Domain\Financing\Actions\SyncFinancingPayout;
+use App\Domain\Invoicing\Enums\InvoiceStatus;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Payments\Enums\PaymentDirection;
 use App\Domain\Payments\Models\Payment;
@@ -26,6 +28,7 @@ class RecordPayment
     public function __construct(
         private readonly RecordTaxEvents $taxEvents,
         private readonly SyncFinancingPayout $payouts,
+        private readonly Webhooks $webhooks,
     ) {}
 
     /**
@@ -75,6 +78,7 @@ class RecordPayment
         }
 
         $open = Balances::openOf($record);
+        $wasPaid = $record instanceof Invoice && $record->status === InvoiceStatus::Paid;
 
         if ($amount > $open) {
             throw new BusinessRuleException(__('Only :amount is still open.', ['amount' => Money::format($open)]));
@@ -96,6 +100,10 @@ class RecordPayment
 
         if ($record instanceof Invoice) {
             ($this->payouts)($record);
+
+            if (! $wasPaid && $record->refresh()->status === InvoiceStatus::Paid) {
+                $this->webhooks->dispatch('invoice.paid', ['invoice_id' => $record->getKey(), 'number' => $record->number, 'total' => Money::decimal($record->total_rp), 'paid_on' => $payment->paid_on->toDateString()]);
+            }
         }
 
         return $allocation;

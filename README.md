@@ -6,7 +6,7 @@ isolated by the application **and** by PostgreSQL Row-Level Security.
 
 Technical concept: see the "Dealer Management SaaS – Technical Concept" document.
 
-## Status: Phase 1 and Phase 2 done (contracts, signatures, invoices, VAT, leasing, warranty, handover)
+## Status: Phases 1 and 2 done; Phase 3 in progress (listings, website API, portals, e-mail, exports)
 
 | Area | What exists |
 | --- | --- |
@@ -30,6 +30,7 @@ Technical concept: see the "Dealer Management SaaS – Technical Concept" docume
 | Warranty | Warranty products per dealer (own or provider), sold with the car (price on the sale, premium as cost), policy with versioned certificate, active from handover, claims with dealer share booked on the original file, expiry |
 | Preparation | Condition reports with damages and photos, repair orders (estimate → approved → done with the actual cost), target date, release for sale blocked by open repair orders |
 | Handover | Checklist from versioned templates with automatic rules (promises, paid or paid out, warranty registered, documents); required items block the handover |
+| Listings & API | Own listings per vehicle file (texts in 4 languages, price, photos, cover); availability follows the file (reserved, sold for 7 days); public REST API v1 (JSON:API, dealer tokens, rate limits, signed photo URLs), website enquiries with contact matching, signed webhooks with delivery log; WordPress plugin (`integrations/wordpress`), see `docs/api.md` |
 | Ops | Docker (local + single-VPS production), CI (Pint, Larastan level 6, Pest), backup and restore-drill scripts; drill results under Platform → Restore drills, with a warning when none succeeded in 35 days |
 
 ## Local setup

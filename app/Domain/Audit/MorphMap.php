@@ -2,6 +2,9 @@
 
 namespace App\Domain\Audit;
 
+use App\Domain\Api\Models\ApiToken;
+use App\Domain\Api\Models\WebhookDelivery;
+use App\Domain\Api\Models\WebhookEndpoint;
 use App\Domain\Audit\Models\AuditLog;
 use App\Domain\Audit\Models\StatusHistory;
 use App\Domain\Checklists\Models\Checklist;
@@ -21,6 +24,9 @@ use App\Domain\Import\Models\ImportRow;
 use App\Domain\Import\Models\ImportRun;
 use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Invoicing\Models\InvoiceLine;
+use App\Domain\Listings\Models\Enquiry;
+use App\Domain\Listings\Models\Listing;
+use App\Domain\Listings\Models\ListingPublication;
 use App\Domain\Operations\Models\RestoreDrill;
 use App\Domain\Parties\Models\Party;
 use App\Domain\Payments\Models\BankTransaction;
@@ -116,6 +122,12 @@ final class MorphMap
         'condition_report' => ConditionReport::class,
         'damage' => Damage::class,
         'repair_order' => RepairOrder::class,
+        'listing' => Listing::class,
+        'listing_publication' => ListingPublication::class,
+        'enquiry' => Enquiry::class,
+        'api_token' => ApiToken::class,
+        'webhook_endpoint' => WebhookEndpoint::class,
+        'webhook_delivery' => WebhookDelivery::class,
     ];
 
     public static function label(string $alias): string
@@ -161,6 +173,10 @@ final class MorphMap
             'condition_report' => __('Condition report'),
             'damage' => __('Damage'),
             'repair_order' => __('Repair order'),
+            'listing' => __('Listing'),
+            'enquiry' => __('Enquiry'),
+            'api_token' => __('API token'),
+            'webhook_endpoint' => __('Webhook'),
             default => $alias,
         };
     }

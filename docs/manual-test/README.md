@@ -244,3 +244,19 @@ and "Eigene Garantie 6 Monate". Settings → Garantieprodukte and Settings → C
 4. **Für Verkauf freigeben** (header): refused while an order that "blockiert die Freigabe" is open;
    otherwise the file is "Verkaufsbereit" with who and when. **Mehr → Termin Aufbereitung** sets the target date,
    shown red in the "Aufbereitung" section when it has passed.
+
+## 18. Own listings, website, API and webhooks (Phase 3, step 1)
+
+1. A vehicle file "Verkaufsbereit" with at least one photo (Documents tab, category Foto) → **Inserat veröffentlichen**:
+   title per language (empty languages take German), description, highlights, price, photos and cover →
+   **Veröffentlichen**. Expected: file "Inseriert", button "Inserat bearbeiten"; **Mehr → Inserat zurückziehen** undoes it.
+2. Settings → API-Tokens → **Neues API-Token** (copy it from the notification; it is shown once).
+3. `curl -H "Authorization: Bearer dsk_…" http://localhost:8000/api/v1/vehicles?lang=fr` lists the car;
+   the photo URLs open in the browser without token. Reserve the car: `availability` becomes "reserved";
+   after the sale "sold" for 7 days, then it disappears. A wrong token gives 401. Details: `docs/api.md`.
+4. WordPress: copy `integrations/wordpress/dealer-saas-stock` to `wp-content/plugins`, activate, Settings → Dealer SaaS
+   (API address `http://<host>/api/v1`, token, detail page), **Verbindung testen**. Pages with `[dealer_stock]` and
+   `[dealer_vehicle]`. Send the enquiry form: Dealer SaaS → **Anfragen** shows it with the contact (found by e-mail
+   or phone, otherwise created) and the dealer gets an e-mail (Mailpit).
+5. Settings → Webhooks → address (e.g. a https://webhook.site URL), events. Publishing, reserving, selling,
+   an enquiry or a paid invoice post a signed JSON; the delivery log is on the webhook's page (**Erneut senden**).
