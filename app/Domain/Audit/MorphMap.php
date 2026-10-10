@@ -10,6 +10,7 @@ use App\Domain\Api\Models\WebhookDelivery;
 use App\Domain\Api\Models\WebhookEndpoint;
 use App\Domain\Audit\Models\AuditLog;
 use App\Domain\Audit\Models\StatusHistory;
+use App\Domain\Calendar\Models\CalendarFeed;
 use App\Domain\Checklists\Models\Checklist;
 use App\Domain\Checklists\Models\ChecklistItem;
 use App\Domain\Checklists\Models\ChecklistTemplate;
@@ -142,6 +143,7 @@ final class MorphMap
         'accounting_export_item' => AccountingExportItem::class,
         'mailbox' => Mailbox::class,
         'email_message' => EmailMessage::class,
+        'calendar_feed' => CalendarFeed::class,
     ];
 
     public static function label(string $alias): string
@@ -196,6 +198,7 @@ final class MorphMap
             'accounting_export' => __('Accounting export'),
             'mailbox' => __('Mailbox'),
             'email_message' => __('E-mail'),
+            'calendar_feed' => __('Calendar link'),
             default => $alias,
         };
     }

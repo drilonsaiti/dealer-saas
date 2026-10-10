@@ -6,6 +6,7 @@ use App\Domain\Api\Actions\IssueApiToken;
 use App\Domain\Api\Models\WebhookDelivery;
 use App\Domain\Api\Models\WebhookEndpoint;
 use App\Domain\Audit\MorphMap;
+use App\Domain\Calendar\Actions\IssueCalendarFeed;
 use App\Domain\Checklists\Actions\SyncChecklist;
 use App\Domain\Documents\Actions\GenerateContract;
 use App\Domain\Documents\Actions\SetRequiredDocumentStatus;
@@ -163,6 +164,9 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
         $mailbox = app(SaveMailbox::class)(null, ['name' => "Mail {$marker}", 'email' => strtolower($marker).'@dealer.ch', 'imap_host' => 'imap.example.ch', 'imap_username' => $marker, 'imap_password' => 'x']);
         $mail = app(StoreIncomingEmail::class)($mailbox, "From: kunde@example.ch\r\nSubject: Mail {$marker}\r\nMessage-ID: <{$marker}@example.ch>\r\n\r\nText {$marker}");
         app(SaveEmailDraft::class)->reply($mail, ['body' => "Antwort {$marker}"]);
+
+        // A personal calendar link.
+        app(IssueCalendarFeed::class)(auth()->user());
 
         // A purchase contract out for signature (templates, signature requests, signers).
         $contract = app(GenerateContract::class)($panda->purchase, 'de', "Vertrag {$marker}");

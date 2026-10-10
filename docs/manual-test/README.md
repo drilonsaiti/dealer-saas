@@ -309,3 +309,12 @@ Use a test mailbox (e.g. a free account with IMAP, or a local Mailpit/Dovecot); 
    **Senden** → arrives in the other account as reply in the same conversation; the original is "Erledigt".
 5. A mail without any number: **Zuordnen** to a vehicle file → its attachments move to that file.
 6. Read-only users do not see the inbox; only administrators see the mailbox settings.
+
+## 22. Calendar subscription (Phase 3, step 5)
+
+1. Einstellungen → Mein Kalender → **Kalender-Link erstellen**; copy the link (shown once).
+2. Outlook: Kalender hinzufügen → Aus dem Internet; Google Calendar: Weitere Kalender → Per URL; Apple: Ablage → Neues
+   Kalenderabonnement. Expected: all-day entries for planned handovers, reservations ending, MFK due, "verkaufsbereit
+   bis", repair targets, warranties ending, buy-back reminders and payouts due; each opens the record in Dealer SaaS.
+3. **Neuen Link erstellen** → the old link gives 404, the new one works. **Ausschalten** → 404. A user removed from the
+   dealer: the link stops working.

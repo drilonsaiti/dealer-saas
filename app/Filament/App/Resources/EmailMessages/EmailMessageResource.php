@@ -91,7 +91,7 @@ class EmailMessageResource extends Resource
                         ->listWithLineBreaks(),
                 ]),
             TextEntry::make('body_text')->hiddenLabel()->columnSpanFull()
-                ->extraAttributes(['style' => 'white-space:pre-wrap; font-family: ui-sans-serif, system-ui; line-height:1.5'])
+                ->extraAttributes(['style' => 'white-space:pre-line; line-height:1.5'])
                 ->placeholder(__('(no text)')),
         ]);
     }

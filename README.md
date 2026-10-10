@@ -6,7 +6,7 @@ isolated by the application **and** by PostgreSQL Row-Level Security.
 
 Technical concept: see the "Dealer Management SaaS – Technical Concept" document.
 
-## Status: Phases 1 and 2 done; Phase 3 in progress (listings, website API, portals, exports and e-mail done; calendar feed next)
+## Status: Phases 1, 2 and 3 done (AutoScout24 connector to be checked against the AS24 CH API documentation)
 
 | Area | What exists |
 | --- | --- |
@@ -34,6 +34,7 @@ Technical concept: see the "Dealer Management SaaS – Technical Concept" docume
 | Portals | AutoScout24 connector with the dealer's own credentials (Settings → Integrations): published listings are created, updated (only when something changed), marked reserved and removed when sold or withdrawn, in the queue with retries and a nightly catch-up (`listings:sync`); errors on the vehicle file and in the sync log; first import of the portal stock (VIN match, idempotent). Field names and addresses are an assumption until checked against the AutoScout24 CH DMS API documentation (`config/integrations.php`, `docs/integrations.md`) |
 | Accounting export | Journal for the accountant (Finance → Accounting export): issued invoices and credit notes, payments in/out, vehicle purchases and confirmed costs as double-entry bookings (CSV with BOM, semicolons, Swiss date), Swiss SME default accounts (1000, 1020, 1100, 1170, 2000, 2030, 2200, 3200, 3400, 4200, 4400) changeable per booking type, bank account and cost category; VAT split with the effective method, gross with the net tax rate method; every record exported once (unique key), late records come with the next export, the latest export can be undone |
 | E-mail inbox | Dealer mailboxes (Settings → Mailboxes, IMAP in / SMTP out, passwords encrypted) fetched every 5 minutes (`mail:fetch`, own IMAP client, read-only on the server, idempotent by Message-ID and UID); e-mails matched to contact (sender) and vehicle file (VIN, Stammnummer, file number, plate, thread, the contact's one open sale); attachments into the file (category Korrespondenz), programs and macro files quarantined, optional ClamAV scan (fail closed); replies as drafts with file documents, sent only on click via the mailbox's SMTP in the same thread; e-mails tab on the vehicle file |
+| Calendar | Personal iCal subscription per user and dealer (Settings → My calendar, secret link shown once, renew or switch off): planned handovers, reservations ending, MFK due, preparation and repair targets, warranties ending, buy-back reminders and dates, leasing payouts due, as all-day events with a link to the record; stops working when the user leaves the dealer |
 | Ops | Docker (local + single-VPS production), CI (Pint, Larastan level 6, Pest), backup and restore-drill scripts; drill results under Platform → Restore drills, with a warning when none succeeded in 35 days |
 
 ## Local setup
