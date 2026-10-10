@@ -6,11 +6,13 @@ use App\Domain\Checklists\Actions\SyncChecklist;
 use App\Domain\Checklists\Models\ChecklistItem;
 use App\Domain\Documents\Actions\RequiredDocumentsChecklist;
 use App\Domain\Documents\Enums\RequiredDocumentStatus;
+use App\Domain\Preparation\Models\Damage;
 use App\Domain\Purchasing\Enums\VatSituation;
 use App\Domain\Reporting\CalculateMargin;
 use App\Domain\Reporting\Margin;
 use App\Domain\Sales\Enums\SaleStatus;
 use App\Domain\Vehicles\Enums\Code178Status;
+use App\Domain\Vehicles\Enums\StockCycleStatus;
 use App\Domain\Vehicles\Models\StockCycle;
 use App\Filament\App\Resources\Financings\FinancingResource;
 use App\Filament\App\Resources\Parties\PartyResource;
@@ -149,7 +151,7 @@ final class StockCycleInfolist
                                 'confirmed' => Money::format(self::margin($record)->confirmedCostsRp, false),
                                 'open' => Money::format(self::margin($record)->openCostsRp, false),
                                 'promises' => Money::format(self::margin($record)->openPromisesRp, false),
-                            ])),
+                            ]).(self::margin($record)->openRepairsRp > 0 ? ', '.__('approved repairs :amount', ['amount' => Money::format(self::margin($record)->openRepairsRp, false)]) : '')),
                         TextEntry::make('margin_value')
                             ->label(__('Margin'))
                             ->state(function (StockCycle $record): string {
@@ -174,6 +176,20 @@ final class StockCycleInfolist
                             ->state(fn (StockCycle $record): string => Money::format(self::margin($record)->marginAfterVatRp()))
                             ->weight('bold')
                             ->color(fn (StockCycle $record): string => (self::margin($record)->marginAfterVatRp() ?? 0) < 0 ? 'danger' : 'success'),
+                    ]),
+                ]),
+            Section::make(__('Preparation'))
+                ->visible(fn (StockCycle $record): bool => $record->status->isInStock() && ! in_array($record->status, [StockCycleStatus::Listed, StockCycleStatus::Reserved], true))
+                ->collapsible()
+                ->schema([
+                    Grid::make(4)->schema([
+                        TextEntry::make('prep_target_on')->label(__('Ready for sale by'))->date()->placeholder('–')
+                            ->color(fn (StockCycle $record): ?string => $record->prep_target_on?->isPast() && $record->status !== StockCycleStatus::ReadyForSale ? 'danger' : null),
+                        TextEntry::make('open_repairs')->label(__('Open repair orders'))
+                            ->state(fn (StockCycle $record): int => $record->repairOrders()->open()->count()),
+                        TextEntry::make('damages_open')->label(__('Damages without repair order'))
+                            ->state(fn (StockCycle $record): int => Damage::query()->where('stock_cycle_id', $record->getKey())->whereNull('repair_order_id')->count()),
+                        TextEntry::make('released_for_sale_at')->label(__('Released for sale'))->dateTime()->placeholder('–'),
                     ]),
                 ]),
             Section::make(__('Leasing and handover'))

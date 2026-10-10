@@ -17,6 +17,8 @@ use App\Domain\Invoicing\Enums\InvoiceType;
 use App\Domain\Parties\Models\Party;
 use App\Domain\Payments\Actions\RecordPayment;
 use App\Domain\Payments\Models\BankTransaction;
+use App\Domain\Preparation\Actions\ManageRepairOrder;
+use App\Domain\Preparation\Actions\RecordConditionReport;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Sales\Enums\SaleItemKind;
 use App\Domain\Sales\Models\Sale;
@@ -123,6 +125,10 @@ function fillDealer(Tenant $tenant, string $marker, string $stammnummer): void
         WarrantyClaim::create(['warranty_id' => $warranty->id, 'occurred_on' => '2026-05-01', 'mileage' => 1000, 'description' => "Schaden {$marker}"]);
         app(SyncChecklist::class)->handover($sale);
         app(SyncChecklist::class)->partner($financing);
+
+        // Preparation: condition report with a damage and a repair order.
+        $report = app(RecordConditionReport::class)($panda, ['summary' => "Zustand {$marker}"], [['area' => 'front', 'kind' => 'scratch']]);
+        app(ManageRepairOrder::class)->create($panda, ['description' => "Reparatur {$marker}"], [$report->damages->first()->id]);
 
         // A purchase contract out for signature (templates, signature requests, signers).
         $contract = app(GenerateContract::class)($panda->purchase, 'de', "Vertrag {$marker}");

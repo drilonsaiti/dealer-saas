@@ -2,6 +2,8 @@
 
 namespace App\Domain\Reporting;
 
+use App\Domain\Preparation\Enums\RepairOrderStatus;
+use App\Domain\Preparation\Models\RepairOrder;
 use App\Domain\Purchasing\Enums\CostStatus;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
@@ -33,6 +35,12 @@ class CalculateMargin
             ->whereNull('cost_id')
             ->sum('estimated_cost_rp');
 
+        // An approved repair order counts with its approved amount until it is done (real cost).
+        $repairs = (int) RepairOrder::query()
+            ->where('stock_cycle_id', $cycle->getKey())
+            ->where('status', RepairOrderStatus::Approved->value)
+            ->sum('approved_rp');
+
         $sale = Sale::query()->active()->with('items')->where('stock_cycle_id', $cycle->getKey())->first();
 
         [$revenue, $basis] = match (true) {
@@ -52,9 +60,10 @@ class CalculateMargin
             confirmedCostsRp: $confirmed,
             openCostsRp: $open,
             openPromisesRp: $promises,
-            isProvisional: $basis !== Margin::BASIS_SALE || $open > 0 || $promises > 0 || $purchase === null,
+            isProvisional: $basis !== Margin::BASIS_SALE || $open > 0 || $promises > 0 || $repairs > 0 || $purchase === null,
             netTaxRp: $netRate === null || $basis === Margin::BASIS_NONE ? null : (int) round($revenue * (float) $netRate / 100),
             netTaxRate: $netRate,
+            openRepairsRp: $repairs,
         );
     }
 

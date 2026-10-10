@@ -94,6 +94,7 @@ class TransitionStockCycle
             StockCycleStatus::Reserved => [...$this->code178Problems($cycle), ...($this->activeSale($cycle)?->status === SaleStatus::Reserved ? [] : [__('Reserve the vehicle for a customer first.')])],
             StockCycleStatus::Sold => $this->activeSale($cycle)?->status === SaleStatus::Contracted ? [] : [__('Record the sale contract first.')],
             StockCycleStatus::Listed => [...$this->code178Problems($cycle), ...$this->listingProblems($cycle)],
+            StockCycleStatus::ReadyForSale => $this->repairProblems($cycle),
             StockCycleStatus::Delivered => $this->deliveryProblems($cycle, $data),
             StockCycleStatus::Archived => $this->archiveProblems($cycle),
             default => [],
@@ -145,6 +146,18 @@ class TransitionStockCycle
         }
 
         return [];
+    }
+
+    /**
+     * Open repair orders that block the release keep the car out of sale (concept 10.5).
+     *
+     * @return list<string>
+     */
+    private function repairProblems(StockCycle $cycle): array
+    {
+        $open = $cycle->repairOrders()->open()->where('blocks_release', true)->count();
+
+        return $open > 0 ? [__('Repair orders still open: :count. Finish or cancel them first.', ['count' => $open])] : [];
     }
 
     /**

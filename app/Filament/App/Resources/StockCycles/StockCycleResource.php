@@ -10,9 +10,11 @@ use App\Filament\App\Resources\StockCycles\Pages\EditStockCycle;
 use App\Filament\App\Resources\StockCycles\Pages\ListStockCycles;
 use App\Filament\App\Resources\StockCycles\Pages\ViewStockCycle;
 use App\Filament\App\Resources\StockCycles\RelationManagers\CommitmentsRelationManager;
+use App\Filament\App\Resources\StockCycles\RelationManagers\ConditionReportsRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\CostsRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\DocumentsRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\InvoicesRelationManager;
+use App\Filament\App\Resources\StockCycles\RelationManagers\RepairOrdersRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\StatusHistoryRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\TyreSetsRelationManager;
 use App\Filament\App\Resources\StockCycles\RelationManagers\WarrantiesRelationManager;
@@ -158,6 +160,8 @@ class StockCycleResource extends Resource
         return [
             DocumentsRelationManager::class,
             CostsRelationManager::class,
+            ConditionReportsRelationManager::class,
+            RepairOrdersRelationManager::class,
             InvoicesRelationManager::class,
             WarrantiesRelationManager::class,
             CommitmentsRelationManager::class,

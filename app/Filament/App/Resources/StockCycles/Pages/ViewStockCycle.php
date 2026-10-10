@@ -32,6 +32,7 @@ class ViewStockCycle extends ViewRecord
     {
         return [
             StockCycleActions::recordPurchase(),
+            StockCycleActions::releaseForSale(),
             StockCycleActions::reserve(),
             StockCycleActions::sell(),
             StockCycleActions::handOver(),
@@ -45,6 +46,7 @@ class ViewStockCycle extends ViewRecord
                 LeasingWarrantyActions::financing(),
                 LeasingWarrantyActions::addWarranty(),
                 LeasingWarrantyActions::code178(),
+                StockCycleActions::preparation(),
                 EditAction::make(),
                 StockCycleActions::documentChecklist(),
                 StockCycleActions::export(),

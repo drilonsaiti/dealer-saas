@@ -7,6 +7,8 @@ use App\Domain\Audit\Concerns\TracksAuthors;
 use App\Domain\Audit\Models\StatusHistory;
 use App\Domain\Documents\Models\Document;
 use App\Domain\Invoicing\Models\Invoice;
+use App\Domain\Preparation\Models\ConditionReport;
+use App\Domain\Preparation\Models\RepairOrder;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\Purchase;
@@ -52,6 +54,9 @@ use Illuminate\Support\Carbon;
  * @property int|null $list_price_rp
  * @property int|null $mileage_in
  * @property int|null $mileage_out
+ * @property Carbon|null $prep_target_on
+ * @property Carbon|null $released_for_sale_at
+ * @property string|null $released_for_sale_by
  * @property string|null $notes
  * @property string|null $legacy_ref
  * @property-read Vehicle $vehicle
@@ -76,6 +81,7 @@ class StockCycle extends Model
         'vehicle_id',
         'planned_price_rp',
         'list_price_rp',
+        'prep_target_on',
         'mileage_in',
         'notes',
         'legacy_ref',
@@ -96,6 +102,8 @@ class StockCycle extends Model
             'list_price_rp' => 'integer',
             'mileage_in' => 'integer',
             'mileage_out' => 'integer',
+            'prep_target_on' => 'date:Y-m-d',
+            'released_for_sale_at' => 'datetime',
         ];
     }
 
@@ -269,5 +277,21 @@ class StockCycle extends Model
     public function warranties(): HasMany
     {
         return $this->hasMany(Warranty::class);
+    }
+
+    /**
+     * @return HasMany<ConditionReport, $this>
+     */
+    public function conditionReports(): HasMany
+    {
+        return $this->hasMany(ConditionReport::class)->orderByDesc('reported_on');
+    }
+
+    /**
+     * @return HasMany<RepairOrder, $this>
+     */
+    public function repairOrders(): HasMany
+    {
+        return $this->hasMany(RepairOrder::class);
     }
 }

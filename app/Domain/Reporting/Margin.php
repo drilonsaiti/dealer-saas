@@ -29,11 +29,12 @@ final readonly class Margin
         public bool $isProvisional,
         public ?int $netTaxRp = null,
         public ?string $netTaxRate = null,
+        public int $openRepairsRp = 0,
     ) {}
 
     public function costsRp(): int
     {
-        return $this->confirmedCostsRp + $this->openCostsRp + $this->openPromisesRp;
+        return $this->confirmedCostsRp + $this->openCostsRp + $this->openPromisesRp + $this->openRepairsRp;
     }
 
     /**

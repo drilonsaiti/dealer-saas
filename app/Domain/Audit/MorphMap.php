@@ -26,6 +26,9 @@ use App\Domain\Parties\Models\Party;
 use App\Domain\Payments\Models\BankTransaction;
 use App\Domain\Payments\Models\Payment;
 use App\Domain\Payments\Models\PaymentAllocation;
+use App\Domain\Preparation\Models\ConditionReport;
+use App\Domain\Preparation\Models\Damage;
+use App\Domain\Preparation\Models\RepairOrder;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\CostCategory;
@@ -110,6 +113,9 @@ final class MorphMap
         'checklist_template_item' => ChecklistTemplateItem::class,
         'checklist' => Checklist::class,
         'checklist_item' => ChecklistItem::class,
+        'condition_report' => ConditionReport::class,
+        'damage' => Damage::class,
+        'repair_order' => RepairOrder::class,
     ];
 
     public static function label(string $alias): string
@@ -152,6 +158,9 @@ final class MorphMap
             'warranty_claim' => __('Warranty claim'),
             'checklist_template' => __('Checklist template'),
             'checklist' => __('Checklist'),
+            'condition_report' => __('Condition report'),
+            'damage' => __('Damage'),
+            'repair_order' => __('Repair order'),
             default => $alias,
         };
     }

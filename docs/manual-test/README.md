@@ -233,3 +233,14 @@ and "Eigene Garantie 6 Monate". Settings → Garantieprodukte and Settings → C
    **Abrechnen**: the dealer share is a confirmed cost on the original vehicle file, even if it is archived.
    A claim after the end date or above the km limit is flagged "Ausserhalb der Deckung".
 5. Garantien → "Läuft innert 30 Tagen ab"; `php artisan warranties:expire` (daily) marks ended ones expired.
+
+## 17. Preparation (concept 10.5)
+
+1. A purchased or arrived vehicle file → tab **Zustand** → **Neuer Zustandsbericht**: rate each area, add damages
+   (where, what, severity, photos). The photos land in the vehicle file's documents (folder 02).
+2. Tab **Reparaturaufträge** → **Neuer Reparaturauftrag**: workshop, work, estimate, tick the damages it repairs.
+   **Freigeben** with the approved amount: the margin's costs show "freigegebene Reparaturen" (provisional).
+3. **Erledigt** with the workshop invoice amount: a confirmed cost of the file; the approved estimate disappears.
+4. **Für Verkauf freigeben** (header): refused while an order that "blockiert die Freigabe" is open;
+   otherwise the file is "Verkaufsbereit" with who and when. **Mehr → Termin Aufbereitung** sets the target date,
+   shown red in the "Aufbereitung" section when it has passed.

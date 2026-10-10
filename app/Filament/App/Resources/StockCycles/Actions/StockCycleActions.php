@@ -9,6 +9,7 @@ use App\Domain\Documents\Actions\RequiredDocumentsChecklist;
 use App\Domain\Documents\Actions\SetRequiredDocumentStatus;
 use App\Domain\Documents\Enums\RequiredDocumentStatus;
 use App\Domain\Documents\Models\Document;
+use App\Domain\Preparation\Actions\ReleaseForSale;
 use App\Domain\Purchasing\Actions\RecordPurchase;
 use App\Domain\Purchasing\Models\Purchase;
 use App\Domain\Sales\Actions\CancelSale;
@@ -181,6 +182,35 @@ final class StockCycleActions
                 Textarea::make('reason')->label(__('Reason'))->rows(2)->required(),
             ])
             ->action(fn (StockCycle $record, array $data, Action $action) => self::run($action, fn () => app(CancelSale::class)($record->activeSale, (string) $data['reason']), __('Cancelled.')));
+    }
+
+    public static function releaseForSale(): Action
+    {
+        return Action::make('releaseForSale')
+            ->label(__('Release for sale'))
+            ->icon(Heroicon::OutlinedCheckBadge)
+            ->color('success')
+            ->visible(fn (StockCycle $record): bool => in_array($record->status, [StockCycleStatus::Purchased, StockCycleStatus::Arrived, StockCycleStatus::InPreparation, StockCycleStatus::NotReady], true)
+                && (auth()->user()?->can('update', $record) ?? false))
+            ->requiresConfirmation()
+            ->modalDescription(fn (StockCycle $record): string => ($open = $record->repairOrders()->open()->where('blocks_release', true)->count()) > 0
+                ? __('Repair orders still open: :count. Finish or cancel them first.', ['count' => $open])
+                : __('Preparation is finished: the car becomes "ready for sale".'))
+            ->action(fn (StockCycle $record, Action $action) => self::run($action, fn () => app(ReleaseForSale::class)($record), __('Ready for sale.')));
+    }
+
+    public static function preparation(): Action
+    {
+        return Action::make('preparation')
+            ->label(__('Preparation target date'))
+            ->icon(Heroicon::OutlinedCalendarDays)
+            ->visible(fn (StockCycle $record): bool => $record->status->isOpen() && (auth()->user()?->can('update', $record) ?? false))
+            ->fillForm(fn (StockCycle $record): array => ['prep_target_on' => $record->prep_target_on?->toDateString()])
+            ->schema([DatePicker::make('prep_target_on')->label(__('Ready for sale by'))])
+            ->action(function (StockCycle $record, array $data): void {
+                $record->forceFill(['prep_target_on' => $data['prep_target_on'] ?? null])->save();
+                Notification::make()->title(__('Saved.'))->success()->send();
+            });
     }
 
     public static function handOver(): Action

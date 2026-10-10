@@ -14,6 +14,8 @@ use App\Domain\Invoicing\Models\Invoice;
 use App\Domain\Parties\Models\Party;
 use App\Domain\Payments\Models\BankTransaction;
 use App\Domain\Payments\Models\Payment;
+use App\Domain\Preparation\Models\ConditionReport;
+use App\Domain\Preparation\Models\RepairOrder;
 use App\Domain\Purchasing\Models\Commitment;
 use App\Domain\Purchasing\Models\Cost;
 use App\Domain\Purchasing\Models\CostCategory;
@@ -42,6 +44,7 @@ use App\Policies\BankTransactionPolicy;
 use App\Policies\BuybackObligationPolicy;
 use App\Policies\ChecklistTemplatePolicy;
 use App\Policies\CommitmentPolicy;
+use App\Policies\ConditionReportPolicy;
 use App\Policies\CostCategoryPolicy;
 use App\Policies\CostPolicy;
 use App\Policies\DocumentPolicy;
@@ -53,6 +56,7 @@ use App\Policies\NumberSequencePolicy;
 use App\Policies\PartyPolicy;
 use App\Policies\PaymentPolicy;
 use App\Policies\PurchasePolicy;
+use App\Policies\RepairOrderPolicy;
 use App\Policies\SalePolicy;
 use App\Policies\StockCyclePolicy;
 use App\Policies\TenantMembershipPolicy;
@@ -160,6 +164,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(WarrantyClaim::class, WarrantyClaimPolicy::class);
         Gate::policy(WarrantyProduct::class, WarrantyProductPolicy::class);
         Gate::policy(ChecklistTemplate::class, ChecklistTemplatePolicy::class);
+        Gate::policy(ConditionReport::class, ConditionReportPolicy::class);
+        Gate::policy(RepairOrder::class, RepairOrderPolicy::class);
     }
 
     /**
